@@ -7,6 +7,8 @@ import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.router.Next;
 import com.akilisha.oss.web.express.request.ExpressRequest;
 import com.akilisha.oss.web.express.response.ExpressResponse;
+import com.akilisha.oss.web.shared.router.ExpressRouter;
+import com.akilisha.oss.web.shared.router.MatchedRoute;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.Header;
@@ -28,7 +30,7 @@ class CookiesFilterTest {
     void test_handle_static_resource_request() {
         var app = express();
 
-        app.use(app.cookies(CookieOptions.create(Map.of())));
+        app.use(app.cookies(CookieOptions.Factory.newFactory().build()));
 
         // TODO - figure out how to execute cookies middleware
         app.get("/", (req, res, next) -> {

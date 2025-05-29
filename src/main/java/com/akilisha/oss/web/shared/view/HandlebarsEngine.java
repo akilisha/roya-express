@@ -1,17 +1,17 @@
-package com.akilisha.oss.web.jetty.view;
+package com.akilisha.oss.web.shared.view;
 
 import com.akilisha.oss.web.core.application.Application;
 import com.akilisha.oss.web.core.view.ViewEngine;
 import com.akilisha.oss.web.core.view.ViewRenderer;
-import com.github.mustachejava.MustacheFactory;
+import com.github.jknack.handlebars.Handlebars;
 
-public abstract class MustacheEngine implements ViewEngine<MustacheFactory> {
+public abstract class HandlebarsEngine implements ViewEngine<Handlebars> {
 
     private final Application application;
-    private String name = "mustache";
+    private String name = "hbs";
     private ViewRenderer renderer;
 
-    protected MustacheEngine(Application application) {
+    protected HandlebarsEngine(Application application) {
         this.application = application;
     }
 
@@ -38,7 +38,7 @@ public abstract class MustacheEngine implements ViewEngine<MustacheFactory> {
     @Override
     public ViewRenderer renderer() {
         if (this.renderer == null) {
-            this.renderer = new MustacheView(folders());
+            this.renderer = new HandlebarsView(folders());
         }
         return this.renderer;
     }

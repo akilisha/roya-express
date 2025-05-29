@@ -7,6 +7,7 @@ import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.router.Route;
 import com.akilisha.oss.web.shared.router.MatchedRoute;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -16,16 +17,15 @@ import java.util.function.Function;
 
 import static com.akilisha.oss.web.shared.datetime.Clock.fromNow;
 
-public class ExpressRequest implements Request {
+public class ExpressRequest extends HttpServletRequestWrapper implements Request {
 
     final Application app;
-    final HttpServletRequest request;
     final Response response;
     private MatchedRoute matchedRoute;
 
     public ExpressRequest(Application app, HttpServletRequest request, Response response) {
+        super(request);
         this.app = app;
-        this.request = request;
         this.response = response;
     }
 
@@ -40,19 +40,19 @@ public class ExpressRequest implements Request {
 
     @Override
     public String baseUrl() {
-        return this.request.getRequestURI();
+        return this.getRequestURI();
     }
 
     @Override
     public <C> C body(Class<C> bodyType) {
         try {
-            String acceptType = request.getHeader("Accept");
+            String acceptType = getHeader("Accept");
             String mediaType = acceptType.replaceAll("(^\\b.+/.+\\b)(;.*)$", "$1");
             RequestBody<C> requestBody = app.body(MimeTypes.from(mediaType));
             if (requestBody == null)
                 throw new IllegalStateException("Missing 'accept' header: " + acceptType);
 
-            return requestBody.parse(request.getInputStream(), bodyType);
+            return requestBody.parse(getInputStream(), bodyType);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -61,11 +61,11 @@ public class ExpressRequest implements Request {
     @Override
     public Collection<RequestCookie> cookies() {
         Collection<RequestCookie> cookies = new ArrayList<>();
-        Enumeration<String> cookieHeaders = request.getHeaders("Cookie");
+        Enumeration<String> cookieHeaders = getHeaders("Cookie");
         if (cookieHeaders != null) {
             while (cookieHeaders.hasMoreElements()) {
                 String cookieHeader = cookieHeaders.nextElement();
-                String[] cookieStrings = request.getHeader(cookieHeader).split(";");
+                String[] cookieStrings = getHeader(cookieHeader).split(";");
                 for (String cookieValue : cookieStrings) {
                     String[] parts = cookieValue.trim().split("=", 2); // Limit split to 2 parts
                     if (parts.length == 2) {
@@ -117,7 +117,7 @@ public class ExpressRequest implements Request {
 
     @Override
     public String method() {
-        return this.request.getMethod();
+        return this.getMethod();
     }
 
     @Override
@@ -142,12 +142,12 @@ public class ExpressRequest implements Request {
 
     @Override
     public String path() {
-        return this.request.getContextPath();
+        return String.format("%s/", this.getPathInfo()).replace("//", "/");
     }
 
     @Override
     public String protocol() {
-        return this.request.getScheme();
+        return this.getScheme();
     }
 
     @Override
@@ -212,7 +212,7 @@ public class ExpressRequest implements Request {
 
     @Override
     public Object get(String header) {
-        return request.getHeader(header);
+        return getHeader(header);
     }
 
     @Override

@@ -20,7 +20,7 @@ dependencies {
     implementation "org.jboss.weld.se:weld-se-core:6.0.3.Final"
 
     implementation "org.slf4j:slf4j-api:2.0.17"
-    compileOnly "ch.qos.logback:logback-classic:1.5.18"
+    implementation "ch.qos.logback:logback-classic:1.5.18"
     implementation "info.picocli:picocli:4.7.7"
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.1")

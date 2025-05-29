@@ -1,4 +1,4 @@
-package com.akilisha.oss.web.express.view;
+package com.akilisha.oss.web.shared.view;
 
 import com.akilisha.oss.web.core.application.Application;
 import com.akilisha.oss.web.core.view.ViewEngine;

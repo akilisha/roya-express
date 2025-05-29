@@ -7,8 +7,7 @@ import com.akilisha.oss.web.core.view.RenderCallback;
 import com.akilisha.oss.web.core.view.ViewEngine;
 import com.akilisha.oss.web.core.view.ViewRenderer;
 import com.akilisha.oss.web.express.content.*;
-import com.akilisha.oss.web.express.integration.HttpCoreRouteResolver;
-import com.akilisha.oss.web.express.router.*;
+import com.akilisha.oss.web.express.integration.ExpressRouteResolver;
 import com.akilisha.oss.web.shared.application.AppSettings;
 import com.akilisha.oss.web.shared.content.BaseRouterOptions;
 import com.akilisha.oss.web.shared.router.*;
@@ -35,7 +34,7 @@ public class Express extends ExpressRouter implements Application {
 
     private Express(RootRoutable rootRoutable) {
         super(new BaseRouterOptions(true, true, true), rootRoutable, new ContextRoutable());
-        contextRoutable.registerRouter("/", this);
+        this.contextRoutable.registerRouter("/", this);
     }
 
     public static Application express() {
@@ -196,7 +195,7 @@ public class Express extends ExpressRouter implements Application {
         // start assembling server components
         final ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
                 .setListenerPort(port)
-                .setRequestRouter(new HttpCoreRouteResolver(this, contextRoutable));
+                .setRequestRouter(new ExpressRouteResolver(this, contextRoutable));
 
         // create and start server
         try (HttpServer server = bootstrap.create()) {

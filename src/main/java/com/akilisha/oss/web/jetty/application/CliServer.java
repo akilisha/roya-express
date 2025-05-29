@@ -4,14 +4,23 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import com.akilisha.oss.web.core.application.Application;
+import com.akilisha.oss.web.jetty.integration.FilterRouteResolver;
+import com.akilisha.oss.web.jetty.integration.ServletRouteHandler;
 import com.akilisha.oss.web.shared.logging.CliAppender;
+import com.akilisha.oss.web.shared.router.ContextRoutable;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpFilter;
 import org.apache.commons.cli.*;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.server.handler.*;
+import org.eclipse.jetty.server.handler.DefaultHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.jboss.weld.environment.se.Weld;
@@ -19,15 +28,14 @@ import org.jboss.weld.environment.se.WeldContainer;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.EnumSet;
 
 public class CliServer {
-
-    private final ContextHandlerCollection collectionHandler = new ContextHandlerCollection();
     private Server server;
 
-    public static void main(String[] args) throws Exception {
-        Weld weld = new Weld();
-        WeldContainer container = weld.initialize();
+    public static void bootstrap(String[] args, Application router, ContextRoutable routable) throws Exception {
+//        Weld weld = new Weld();
+//        WeldContainer container = weld.initialize();
 
         Options options = new Options();
         options.addOption(new Option("h", "host", true, "host domain name or ip address"));
@@ -47,17 +55,11 @@ public class CliServer {
 
         configureLogback();
 
-        CliServer cliServer = container.select(CliServer.class).get();
+//        CliServer cliServer = container.select(CliServer.class).get();
+        CliServer cliServer = new CliServer();
 
         //setup server
-        cliServer.setupHttpServer();
-
-//        // load route handlers
-//        for (RouteHandler service : container.select(RouteHandler.class).stream().toList()) {
-//            ContextHandler contextHandler = new ContextHandler(service.context());
-//            contextHandler.setHandler((Handler) service);
-//            cliServer.addContextHandler(contextHandler);
-//        }
+        cliServer.setupHttpServer(router, routable);
 
         cliServer.start(host, port, securePort, keystore, secret);
     }
@@ -115,7 +117,7 @@ public class CliServer {
         return plainConnector;
     }
 
-    private void setupHttpServer() throws Exception {
+    private void setupHttpServer(Application application, ContextRoutable routable) throws Exception {
         QueuedThreadPool threadPool = new QueuedThreadPool();
         threadPool.setName("cli-server");
 
@@ -123,9 +125,10 @@ public class CliServer {
         this.server = new Server(threadPool);
 
         // Static resources
-        ServletContextHandler servletResourceHandler = createResourceHandler();
+        FilterRouteResolver filterRouteResolver = new FilterRouteResolver(application, routable);
+        ServletContextHandler servletContextHandler = createResourceHandler(filterRouteResolver);
         // Use HandlersList so that handling is passed to the next handler until match is found
-        server.setHandler(new HandlerList(collectionHandler, servletResourceHandler, new DefaultHandler()));
+        server.setHandler(new HandlerList(servletContextHandler, new DefaultHandler()));
     }
 
     private void start(String host, int port, int securePort, String keyStorePath, String keyStoreSecret) throws Exception {
@@ -156,24 +159,25 @@ public class CliServer {
         System.out.printf("Server started on %s:%d\n", host, port);
     }
 
-    public void addContextHandler(ContextHandler contextHandler) {
-        collectionHandler.addHandler(contextHandler);
-    }
-
-    public ServletContextHandler createResourceHandler() throws IOException {
+    public ServletContextHandler createResourceHandler(HttpFilter resolveFilter) throws IOException {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
-        // Create and configure a ResourceHandler.
-        ResourceHandler handler = new ResourceHandler();
-        // Configure the directory where static resources are located.
-        handler.setBaseResource(Resource.newResource("./dist"));
-        // Configure directory listing.
-        handler.setDirectoriesListed(false);
-        // Configure welcome files.
-        handler.setWelcomeFiles(new String[]{"index.html"});
-        // Configure whether to accept range requests.
-        handler.setAcceptRanges(true);
-        context.setHandler(handler);
+
+        ServletHolder resourceServlet = context.addServlet(DefaultServlet.class, "/");
+        resourceServlet.setInitParameter("resourceBase", "./dist");
+        resourceServlet.setInitParameter("welcomeFiles", "index.html");
+        resourceServlet.setAsyncSupported(true);
+
+        ServletHolder servletHolder = context.addServlet(ServletRouteHandler.class, "/*");
+        servletHolder.setInitOrder(0);
+
+        // add request handler resolver
+//        FilterHolder filterHolder = context.addFilter(FilterRouteResolver.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        FilterHolder filterHolder = new FilterHolder(resolveFilter);
+        filterHolder.setAsyncSupported(true);
+        filterHolder.setInitParameter("asyncSupported", "true");
+        context.addFilter(filterHolder, "/*", EnumSet.of(DispatcherType.REQUEST));
+
         return context;
     }
 }

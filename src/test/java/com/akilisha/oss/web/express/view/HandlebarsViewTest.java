@@ -1,6 +1,7 @@
 package com.akilisha.oss.web.express.view;
 
 import com.akilisha.oss.web.core.response.Response;
+import com.akilisha.oss.web.shared.view.HandlebarsView;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

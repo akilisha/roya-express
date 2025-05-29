@@ -30,7 +30,7 @@ public class Express extends ExpressRouter implements Application {
 
     private Express(RootRoutable rootRoutable) {
         super(new BaseRouterOptions(true, true, true), rootRoutable, new ContextRoutable());
-        contextRoutable.registerRouter("/", this);
+        this.contextRoutable.registerRouter("/", this);
     }
 
     public static Application express() {
@@ -193,7 +193,14 @@ public class Express extends ExpressRouter implements Application {
 
     @Override
     public void listen(String host, int port, Consumer<PrintStream> listener) throws Exception {
-        CliServer.main(startupOptions);
+        String[] bootOptions = new String[startupOptions.length + 4];
+        System.arraycopy(startupOptions, 0, bootOptions, 0, startupOptions.length);
+        bootOptions[startupOptions.length] = "-h";
+        bootOptions[startupOptions.length + 1] = host;
+        bootOptions[startupOptions.length + 2] = "-p";
+        bootOptions[startupOptions.length + 3] = Integer.toString(port);
+        CliServer.bootstrap(bootOptions, this, this.contextRoutable);
+        listener.accept(System.out);
     }
 
     @Override

@@ -7,8 +7,7 @@ import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.view.ViewRenderer;
 import com.akilisha.oss.web.jetty.content.CookieMaker;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.*;
 import org.eclipse.jetty.http.HttpStatus;
 
 import java.io.IOException;
@@ -20,22 +19,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class ExpressResponse implements Response {
+public class ExpressResponse extends HttpServletResponseWrapper implements Response {
 
     final Application app;
-    final HttpServletResponse response;
     final Map<String, String> headers = new HashMap<>();
     final Map<String, Object> locals = new HashMap<>();
     final ObjectMapper objectMapper = new ObjectMapper();
     final Collection<Cookie> cookieStore = new ArrayList<>();
 
-    public ExpressResponse(Application app, HttpServletResponse response) {
+    public ExpressResponse(Application app,  HttpServletResponse response) {
+        super(response);
         this.app = app;
-        this.response = response;
     }
 
     public HttpServletResponse unwrapResponse() {
-        return response;
+        return this;
     }
 
     @Override
@@ -66,7 +64,7 @@ public class ExpressResponse implements Response {
     @Override
     public void cookie(String name, String value, CookieOptions options) {
         Cookie cookie = CookieMaker.makeCookie(name, value, options);
-        response.addCookie(cookie);
+        addCookie(cookie);
     }
 
     @Override
@@ -98,18 +96,18 @@ public class ExpressResponse implements Response {
     public void json(Object data) {
         try {
             String json = objectMapper.writeValueAsString(data);
-            addCookies(response);
-            response.setStatus(HttpStatus.OK_200);
-            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().println(json);
+            addCookies();
+            setStatus(HttpStatus.OK_200);
+            setCharacterEncoding(StandardCharsets.UTF_8.name());
+            getWriter().println(json);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void addCookies(HttpServletResponse response) {
+    private void addCookies() {
         for (Cookie cookie : cookieStore) {
-            response.addCookie(cookie);
+            addCookie(cookie);
         }
     }
 
@@ -137,14 +135,14 @@ public class ExpressResponse implements Response {
     public void render(String view, Object data) {
         ViewRenderer viewRenderer = app.engine().renderer();
         viewRenderer.render(view, data, (err, content) -> {
-            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            setCharacterEncoding(StandardCharsets.UTF_8.name());
             try {
                 if (err == null) {
-                    response.setStatus(HttpStatus.OK_200);
-                    response.getWriter().println(content);
+                    setStatus(HttpStatus.OK_200);
+                    getWriter().println(content);
                 } else {
-                    response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
-                    response.getWriter().println(err.getMessage());
+                    setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    getWriter().println(err.getMessage());
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -155,9 +153,9 @@ public class ExpressResponse implements Response {
     @Override
     public void send(Object data) {
         try {
-            response.setStatus(HttpStatus.OK_200);
-            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().println(data.toString());
+            setStatus(HttpStatus.OK_200);
+            setCharacterEncoding(StandardCharsets.UTF_8.name());
+            getWriter().println(data.toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

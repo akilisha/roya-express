@@ -16,12 +16,12 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 
 import java.util.Map;
 
-public class HttpCoreRouteResolver implements HttpRequestMapper<HttpRequestHandler> {
+public class ExpressRouteResolver implements HttpRequestMapper<HttpRequestHandler> {
 
     final Application application;
     final ContextRoutable routable;
 
-    public HttpCoreRouteResolver(Application application, ContextRoutable routable) {
+    public ExpressRouteResolver(Application application, ContextRoutable routable) {
         super();
         this.application = application;
         this.routable = routable;
@@ -34,10 +34,11 @@ public class HttpCoreRouteResolver implements HttpRequestMapper<HttpRequestHandl
             ExpressResponse expressResponse = new ExpressResponse(application, res);
             ExpressRequest expressRequest = new ExpressRequest(application, req, expressResponse, ctx);
             MatchedRoute matchedRoute = (MatchedRoute) routable.search(expressRequest.method(), expressRequest.path());
+            expressRequest.setMatchedRoute(matchedRoute);
+
             Next completion = new Completion();
             for (Route matched : matchedRoute.requestHandlers()) {
                 if (!completion.hasException()) {
-                    expressRequest.setMatchedRoute(matchedRoute);
                     matched.handle(expressRequest, expressResponse, completion);
                 } else {
                     expressResponse.send(Map.of("error", completion.getException().getMessage()));

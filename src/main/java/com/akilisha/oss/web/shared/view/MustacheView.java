@@ -1,4 +1,4 @@
-package com.akilisha.oss.web.jetty.view;
+package com.akilisha.oss.web.shared.view;
 
 import com.akilisha.oss.web.core.view.RenderCallback;
 import com.akilisha.oss.web.core.view.ViewRenderer;
