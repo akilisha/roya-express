@@ -57,21 +57,21 @@ public interface Request {
 
     boolean stale();
 
-    String subdomains();
+    String[] subdomains();
 
     boolean xhr();
 
-    void accepts(String contentType);
+    boolean accepts(String... contentTypes);
 
-    void acceptsCharsets(Charset... charset);
+    boolean acceptsCharsets(Charset... charsets);
 
-    void acceptsEncodings(String... encoding);
+    boolean acceptsEncodings(String... encodings);
 
-    void acceptsLanguages(String... language);
+    boolean acceptsLanguages(String... languages);
 
     Object get(String header);
 
     boolean is(String contentType);
 
-    Range range(int size);
+    Range range(int size, boolean combine);
 }

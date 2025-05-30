@@ -18,7 +18,6 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
-import java.util.Map;
 
 import static com.akilisha.oss.web.express.application.Express.express;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +45,7 @@ class CookiesFilterTest {
         HttpContext httpContext = mock(HttpContext.class);
         Request request = new ExpressRequest(app, classicHttpRequest, response, httpContext);
         Next next = mock(Next.class);
-        when(classicHttpRequest.getHeaders("Cookie")).thenReturn( new Header[] { new Header() {
+        when(classicHttpRequest.getHeaders("Cookie")).thenReturn(new Header[]{new Header() {
             @Override
             public boolean isSensitive() {
                 return false;
@@ -61,7 +60,7 @@ class CookiesFilterTest {
             public String getValue() {
                 return "sessionID=12345; user=john";
             }
-        } });
+        }});
 
         MatchedRoute matched = (MatchedRoute) ((ExpressRouter) app).getRootRoutable().search("get", "/");
         matched.requestHandlers()[0].handle(request, response, next);

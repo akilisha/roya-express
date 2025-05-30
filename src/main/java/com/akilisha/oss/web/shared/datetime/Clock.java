@@ -17,7 +17,7 @@ public class Clock {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime then = now.plus(amount, unit);
         ZonedDateTime later = then.atZone(ZoneId.systemDefault());
-       return  Date.from(later.toInstant());
+        return Date.from(later.toInstant());
     }
 
     public static Date fromNow(Duration duration) {

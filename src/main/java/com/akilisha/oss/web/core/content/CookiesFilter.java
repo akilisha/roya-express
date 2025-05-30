@@ -8,6 +8,7 @@ import com.akilisha.oss.web.core.router.Route;
 public class CookiesFilter implements Route {
 
     final CookieOptions options;
+
     public CookiesFilter(CookieOptions options1) {
         this.options = options1;
     }

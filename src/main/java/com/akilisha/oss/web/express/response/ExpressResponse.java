@@ -2,6 +2,7 @@ package com.akilisha.oss.web.express.response;
 
 import com.akilisha.oss.web.core.application.Application;
 import com.akilisha.oss.web.core.content.CookieOptions;
+import com.akilisha.oss.web.core.content.DownloadOptions;
 import com.akilisha.oss.web.core.content.SendFileOptions;
 import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.view.ViewRenderer;
@@ -17,9 +18,7 @@ import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicHeader;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -59,7 +58,7 @@ public class ExpressResponse implements Response {
     }
 
     @Override
-    public void append(String field, String... value) {
+    public void append(String field, String... values) {
 
     }
 
@@ -75,27 +74,27 @@ public class ExpressResponse implements Response {
     }
 
     @Override
-    public void clearCookie(String name, CookieOptions options) {
+    public void clearCookie(String name, String path, CookieOptions options) {
 
     }
 
     @Override
-    public void download(String path, String filename) {
+    public void download(String path, String filename, DownloadOptions options, Consumer<Exception> callback) {
 
     }
 
     @Override
-    public void end(Object data, Charset encoding) {
+    public void end(int status) {
 
     }
 
     @Override
-    public <T> void format(T contract) {
+    public void format(Object data, Map<String, Consumer<Object>> renderer) {
 
     }
 
     @Override
-    public Object get(String field) {
+    public String get(String field) {
         return null;
     }
 
@@ -124,7 +123,7 @@ public class ExpressResponse implements Response {
     }
 
     @Override
-    public void links(Collection<String> links) {
+    public void links(Map<String, String> links) {
 
     }
 
@@ -159,7 +158,7 @@ public class ExpressResponse implements Response {
     }
 
     @Override
-    public void sendFile(String filename, SendFileOptions options, Consumer<Exception> callback) {
+    public void sendFile(String path, SendFileOptions options, Consumer<Exception> callback) {
 
     }
 
@@ -169,12 +168,22 @@ public class ExpressResponse implements Response {
     }
 
     @Override
+    public void set(String field, String... values) {
+
+    }
+
+    @Override
+    public void status(int status) {
+
+    }
+
+    @Override
     public void type(String mimeType) {
 
     }
 
     @Override
-    public Response vary(String header, String value) {
-        return null;
+    public void vary(String field) {
+
     }
 }

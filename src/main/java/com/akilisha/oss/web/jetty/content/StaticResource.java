@@ -16,5 +16,6 @@ public record StaticResource(ResourceDir resource) implements Route {
         HttpServletResponse resp = ((ExpressResponse) response).unwrapResponse();
 
         // TODO: figure out static content with jetty
+        throw new UnsupportedOperationException("feature not implemented yet");
     }
 }

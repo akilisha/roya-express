@@ -1,7 +1,6 @@
 package com.akilisha.oss.web.express.content;
 
 import com.akilisha.oss.web.core.content.CookieOptions;
-import org.apache.hc.client5.http.cookie.Cookie;
 import org.apache.hc.client5.http.impl.cookie.BasicClientCookie;
 
 import java.time.Instant;

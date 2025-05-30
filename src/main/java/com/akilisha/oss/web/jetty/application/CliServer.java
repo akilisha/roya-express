@@ -23,11 +23,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.jboss.weld.environment.se.Weld;
-import org.jboss.weld.environment.se.WeldContainer;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.EnumSet;
 
 public class CliServer {
@@ -126,7 +123,7 @@ public class CliServer {
 
         // Static resources
         FilterRouteResolver filterRouteResolver = new FilterRouteResolver(application, routable);
-        ServletContextHandler servletContextHandler = createResourceHandler(filterRouteResolver);
+        ServletContextHandler servletContextHandler = configureRouteHandler(filterRouteResolver);
         // Use HandlersList so that handling is passed to the next handler until match is found
         server.setHandler(new HandlerList(servletContextHandler, new DefaultHandler()));
     }
@@ -159,7 +156,7 @@ public class CliServer {
         System.out.printf("Server started on %s:%d\n", host, port);
     }
 
-    public ServletContextHandler createResourceHandler(HttpFilter resolveFilter) throws IOException {
+    public ServletContextHandler configureRouteHandler(HttpFilter resolveFilter) {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
 
@@ -172,7 +169,6 @@ public class CliServer {
         servletHolder.setInitOrder(0);
 
         // add request handler resolver
-//        FilterHolder filterHolder = context.addFilter(FilterRouteResolver.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         FilterHolder filterHolder = new FilterHolder(resolveFilter);
         filterHolder.setAsyncSupported(true);
         filterHolder.setInitParameter("asyncSupported", "true");

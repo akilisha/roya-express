@@ -12,8 +12,10 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.akilisha.oss.web.shared.datetime.Clock.fromNow;
 
@@ -40,7 +42,7 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
 
     @Override
     public String baseUrl() {
-        return this.getRequestURI();
+        return getRequestURI();
     }
 
     @Override
@@ -50,7 +52,7 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
             String mediaType = acceptType.replaceAll("(^\\b.+/.+\\b)(;.*)$", "$1");
             RequestBody<C> requestBody = app.body(MimeTypes.from(mediaType));
             if (requestBody == null)
-                throw new IllegalStateException("Missing 'accept' header: " + acceptType);
+                throw new IllegalStateException(String.format("Missing 'accept' header: %s", acceptType));
 
             return requestBody.parse(getInputStream(), bodyType);
         } catch (IOException e) {
@@ -92,27 +94,59 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
 
     @Override
     public boolean fresh() {
+        String cacheControl = getHeader("Cache-Control");
+        if (cacheControl != null && cacheControl.equalsIgnoreCase("no-cache")) {
+            return false;
+        }
+        String expires = getHeader("Expires");
+        if (expires != null) {
+            if (expires.equalsIgnoreCase("0")) {
+                return false;
+            } else {
+                Instant expiresDate = Instant.parse(expires);
+                Instant now = Instant.now();
+                return !now.isBefore(expiresDate);
+            }
+        }
+        String lastModified = getHeader("Last-Modified");
+        if (lastModified != null) {
+            Instant lastModifiedDate = Instant.parse(lastModified);
+            Instant now = Instant.now();
+            return !now.isBefore(lastModifiedDate);
+        }
+
         return false;
     }
 
     @Override
     public String host() {
-        return "";
+        //Returns the fully qualified name of the client or the last proxy that sent the request.
+        //It may perform a reverse DNS lookup to resolve the IP address to a hostname.
+        //If the lookup fails or is disabled for performance reasons, it returns the IP address as a String.
+        return getRemoteHost();
     }
 
     @Override
     public String hostname() {
-        return "";
+        //Returns the hostname of the server to which the request was sent.
+        //It is extracted from the "Host" header, if present, or resolved by the server.
+        //This method might return the server's IP address or "localhost" if the hostname cannot be resolved.
+        return getServerName();
     }
 
     @Override
     public String ip() {
-        return "";
+        String ipAddress = Optional.ofNullable(getHeader("X-FORWARDED-FOR"))
+                .orElse(getHeader("X-Real-IP"));
+        if (ipAddress == null) {
+            ipAddress = getRemoteAddr();
+        }
+        return ipAddress;
     }
 
     @Override
     public Collection<String> ips() {
-        return List.of();
+        return List.of(ip());
     }
 
     @Override
@@ -152,7 +186,7 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
 
     @Override
     public String query() {
-        return "";
+        return getQueryString();
     }
 
     @Override
@@ -167,47 +201,73 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
 
     @Override
     public boolean secure() {
-        return false;
+        return isSecure();
     }
 
     @Override
     public Collection<RequestCookie> signedCookie() {
-        return List.of();
+        return cookies().stream().filter(RequestCookie::isSecure).collect(Collectors.toList());
     }
 
     @Override
     public boolean stale() {
-        return false;
+        return !fresh();
     }
 
     @Override
-    public String subdomains() {
-        return "";
+    public String[] subdomains() {
+        String host = getRemoteHost();
+        return Arrays.stream(host.replaceFirst("^.+(\\b.+\\..+)$", "").split("\\."))
+                .filter(p -> !p.isEmpty()).toArray(String[]::new);
     }
 
     @Override
     public boolean xhr() {
+        return "XMLHttpRequest".equals(getHeader("X-Requested-With"));
+    }
+
+    @Override
+    public boolean accepts(String... contentTypes) {
+        // application should respond with 406 "Not Acceptable" is this returns false
+        for (String contentType : contentTypes) {
+            if (getHeader("Accept").contains(contentType)) {
+                return true;
+            }
+        }
         return false;
     }
 
     @Override
-    public void accepts(String contentType) {
-
+    public boolean acceptsCharsets(Charset... charsets) {
+        // application should respond with 406 "Not Acceptable" is this returns false
+        for (Charset charset : charsets) {
+            if (getHeader("Accept-Charset").contains(charset.name())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public void acceptsCharsets(Charset... charset) {
-
+    public boolean acceptsEncodings(String... encodings) {
+        // application should respond with 406 "Not Acceptable" is this returns false
+        for (String encoding : encodings) {
+            if (getHeader("Accept-Encoding").contains(encoding)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public void acceptsEncodings(String... encoding) {
-
-    }
-
-    @Override
-    public void acceptsLanguages(String... language) {
-
+    public boolean acceptsLanguages(String... languages) {
+        // application should respond with 406 "Not Acceptable" is this returns false
+        for (String language : languages) {
+            if (getHeader("Accept-Language").contains(language)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -222,7 +282,7 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
     }
 
     @Override
-    public Range range(int size) {
-        return null;
+    public Range range(int size, boolean combine) {
+        throw new UnsupportedOperationException("feature not implemented");
     }
 }

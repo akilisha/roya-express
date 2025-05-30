@@ -188,7 +188,7 @@ public class ExpressRequest implements Request {
     }
 
     @Override
-    public String subdomains() {
+    public String[] subdomains() {
         return "";
     }
 
@@ -198,22 +198,22 @@ public class ExpressRequest implements Request {
     }
 
     @Override
-    public void accepts(String contentType) {
+    public boolean accepts(String... contentTypes) {
 
     }
 
     @Override
-    public void acceptsCharsets(Charset... charset) {
+    public boolean acceptsCharsets(Charset... charsets) {
 
     }
 
     @Override
-    public void acceptsEncodings(String... encoding) {
+    public boolean acceptsEncodings(String... encodings) {
 
     }
 
     @Override
-    public void acceptsLanguages(String... language) {
+    public boolean acceptsLanguages(String... languages) {
 
     }
 
@@ -233,7 +233,7 @@ public class ExpressRequest implements Request {
     }
 
     @Override
-    public Range range(int size) {
+    public Range range(int size, boolean combine) {
         return null;
     }
 }

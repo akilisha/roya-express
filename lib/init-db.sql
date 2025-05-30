@@ -29,22 +29,22 @@ create table if not exists tbl_board
     board_id     uuid                 default random_uuid() primary key,
     owner_id     uuid,
     title        varchar(64) not null,
-    type         varchar(10) not null default 'DM',
+    dotfiles     varchar(10) not null default 'DM',
     date_created timestamp   not null default now(),
     last_updated timestamp   not null default now(),
-    constraint unique_wall unique(owner_id, title)
+    constraint unique_wall unique (owner_id, title)
 );
 
 create table if not exists tbl_user
 (
-    user_id       uuid        default random_uuid() primary key,
-    profile_id varchar(64) not null references tbl_profile (oauth_id),
-    mood          varchar(10) default 'NONE',
-    status        varchar(10) default 'NONE',
-    title         varchar(32),
-    bio           varchar(256),
-    wall_id       uuid        not null not null references tbl_board (board_id),
-    last_updated  timestamp   not null default now()
+    user_id      uuid                 default random_uuid() primary key,
+    profile_id   varchar(64) not null references tbl_profile (oauth_id),
+    mood         varchar(10)          default 'NONE',
+    status       varchar(10)          default 'NONE',
+    title        varchar(32),
+    bio          varchar(256),
+    wall_id      uuid        not null not null references tbl_board (board_id),
+    last_updated timestamp   not null default now()
 );
 
 create table if not exists tbl_message

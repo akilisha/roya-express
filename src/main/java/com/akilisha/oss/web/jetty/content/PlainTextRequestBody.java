@@ -2,7 +2,6 @@ package com.akilisha.oss.web.jetty.content;
 
 import com.akilisha.oss.web.core.content.RequestBody;
 import com.akilisha.oss.web.core.content.TextOptions;
-import org.apache.hc.core5.http.HttpEntity;
 
 import java.io.*;
 

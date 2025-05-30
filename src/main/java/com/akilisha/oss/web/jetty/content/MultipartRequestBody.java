@@ -2,7 +2,6 @@ package com.akilisha.oss.web.jetty.content;
 
 import com.akilisha.oss.web.core.content.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.hc.core5.http.HttpEntity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,7 +23,7 @@ public class MultipartRequestBody<R> implements RequestBody<R> {
     @Override
     public R parse(Object bodyEntity, Class<R> resultType) {
         // Process the multipart content
-        try(InputStream content = (InputStream) bodyEntity) {
+        try (InputStream content = (InputStream) bodyEntity) {
             List<MultipartPart> multipartParts = MultipartParser.parse(content, MimeTypes.MULTIPART_FORM_DATA.getValue());
             for (MultipartPart multipartPart : multipartParts) {
                 Map<String, String> partHeaders = multipartPart.getHeaders();

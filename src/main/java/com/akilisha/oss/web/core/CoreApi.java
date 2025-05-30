@@ -2,7 +2,6 @@ package com.akilisha.oss.web.core;
 
 import com.akilisha.oss.web.core.content.*;
 import com.akilisha.oss.web.core.router.Router;
-import com.akilisha.oss.web.core.content.CookiesFilter;
 import com.akilisha.oss.web.shared.content.BaseRouterOptions;
 
 public interface CoreApi {

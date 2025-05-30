@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -35,7 +34,7 @@ import static org.mockito.Mockito.*;
 
 public class RequestBodyHandlerTest {
 
-    public static UrlEncodedFormEntity generateUrlEncodedFormEntity() throws UnsupportedEncodingException {
+    public static UrlEncodedFormEntity generateUrlEncodedFormEntity() {
         List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair("id", "1"));
         params.add(new BasicNameValuePair("title", "this is a test"));

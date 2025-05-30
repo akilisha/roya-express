@@ -2,22 +2,141 @@ package com.akilisha.oss.web.core.content;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 public interface DownloadOptions {
 
-    int maxAge();
+    default long maxAge() {
+        return 0;
+    }
 
-    String root();
+    default String root() {
+        return null;
+    }
 
-    Date lastModified();
+    default long lastModified() {
+        return new Date().getTime();
+    }
 
-    Map<String, String> headers();
+    default Map<String, String> headers() {
+        return Map.of();
+    }
 
-    DotFiles partitioned();
+    default DotFiles dotfiles() {
+        return DotFiles.ignore;
+    }
 
-    boolean acceptRanges();
+    default boolean acceptRange() {
+        return true;
+    }
 
-    boolean cacheControl();
+    default boolean cacheControl() {
+        return true;
+    }
 
-    boolean immutable();
+    default boolean immutable() {
+        return false;
+    }
+
+    class Factory {
+        long maxAge;
+        String root;
+        long lastModified;
+        String headers;
+        DotFiles dotfiles;
+        boolean acceptRanges;
+        boolean cacheControl;
+        boolean immutable;
+
+        private Factory() {
+        }
+
+        public static Factory newFactory() {
+            return new Factory();
+        }
+
+        public Factory maxAge(final long maxAge) {
+            this.maxAge = maxAge;
+            return this;
+        }
+
+        public Factory root(String root) {
+            this.root = root;
+            return this;
+        }
+
+        public Factory lastModified(long lastModified) {
+            this.lastModified = lastModified;
+            return this;
+        }
+
+        public Factory headers(String headers) {
+            this.headers = headers;
+            return this;
+        }
+
+        public Factory dotfiles(DotFiles dotfiles) {
+            this.dotfiles = dotfiles;
+            return this;
+        }
+
+        public Factory acceptRanges(boolean acceptRanges) {
+            this.acceptRanges = acceptRanges;
+            return this;
+        }
+
+        public Factory cacheControl(boolean cacheControl) {
+            this.cacheControl = cacheControl;
+            return this;
+        }
+
+        public Factory immediate(boolean immediate) {
+            this.immutable = immediate;
+            return this;
+        }
+
+        public DownloadOptions build() {
+            return new DownloadOptions() {
+                @Override
+                public long maxAge() {
+                    return Optional.of(maxAge).orElse(DownloadOptions.super.maxAge());
+                }
+
+                @Override
+                public String root() {
+                    return Optional.ofNullable(root).orElse(DownloadOptions.super.root());
+                }
+
+                @Override
+                public long lastModified() {
+                    return Optional.of(lastModified).orElse(DownloadOptions.super.lastModified());
+                }
+
+                @Override
+                public Map<String, String> headers() {
+                    return DownloadOptions.super.headers();
+                }
+
+                @Override
+                public DotFiles dotfiles() {
+                    return Optional.ofNullable(dotfiles).orElse(DownloadOptions.super.dotfiles());
+                }
+
+                @Override
+                public boolean acceptRange() {
+                    return Optional.of(acceptRanges).orElse(DownloadOptions.super.acceptRange());
+                }
+
+                @Override
+                public boolean cacheControl() {
+                    return Optional.of(cacheControl).orElse(DownloadOptions.super.cacheControl());
+                }
+
+                @Override
+                public boolean immutable() {
+                    return Optional.of(immutable).orElse(DownloadOptions.super.immutable());
+                }
+            };
+        }
+    }
 }

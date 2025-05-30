@@ -2,47 +2,9 @@ package com.akilisha.oss.web.core.content;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 public interface SendFileOptions {
-
-    static SendFileOptions create(Map<String, ? super Comparable<?>> init) {
-        return new SendFileOptions() {
-            @Override
-            public long maxAge() {
-                return (long) init.getOrDefault("maxAge", SendFileOptions.super.maxAge());
-            }
-
-            @Override
-            public String root() {
-                return (String) init.getOrDefault("root", SendFileOptions.super.root());
-            }
-
-            @Override
-            public Date lastModified() {
-                return (Date) init.getOrDefault("lastModified", SendFileOptions.super.lastModified());
-            }
-
-            @Override
-            public DotFiles type() {
-                return (DotFiles) init.getOrDefault("type", SendFileOptions.super.type());
-            }
-
-            @Override
-            public boolean acceptRange() {
-                return (boolean) init.getOrDefault("acceptRange", SendFileOptions.super.acceptRange());
-            }
-
-            @Override
-            public boolean cacheControl() {
-                return (boolean) init.getOrDefault("cacheControl", SendFileOptions.super.cacheControl());
-            }
-
-            @Override
-            public boolean immutable() {
-                return (boolean) init.getOrDefault("immutable", SendFileOptions.super.immutable());
-            }
-        };
-    }
 
     default long maxAge() {
         return 0;
@@ -52,15 +14,15 @@ public interface SendFileOptions {
         return null;
     }
 
-    default Date lastModified() {
-        return null;
+    default long lastModified() {
+        return new Date().getTime();
     }
 
     default Map<String, String> headers() {
         return Map.of();
     }
 
-    default DotFiles type() {
+    default DotFiles dotfiles() {
         return DotFiles.ignore;
     }
 
@@ -74,5 +36,107 @@ public interface SendFileOptions {
 
     default boolean immutable() {
         return false;
+    }
+
+    class Factory {
+        long maxAge;
+        String root;
+        long lastModified;
+        String headers;
+        DotFiles dotfiles;
+        boolean acceptRanges;
+        boolean cacheControl;
+        boolean immutable;
+
+        private Factory() {
+        }
+
+        public static Factory newFactory() {
+            return new Factory();
+        }
+
+        public Factory maxAge(final long maxAge) {
+            this.maxAge = maxAge;
+            return this;
+        }
+
+        public Factory root(String root) {
+            this.root = root;
+            return this;
+        }
+
+        public Factory lastModified(long lastModified) {
+            this.lastModified = lastModified;
+            return this;
+        }
+
+        public Factory headers(String headers) {
+            this.headers = headers;
+            return this;
+        }
+
+        public Factory dotfiles(DotFiles dotfiles) {
+            this.dotfiles = dotfiles;
+            return this;
+        }
+
+        public Factory acceptRanges(boolean acceptRanges) {
+            this.acceptRanges = acceptRanges;
+            return this;
+        }
+
+        public Factory cacheControl(boolean cacheControl) {
+            this.cacheControl = cacheControl;
+            return this;
+        }
+
+        public Factory immutable(boolean immutable) {
+            this.immutable = immutable;
+            return this;
+        }
+
+        public SendFileOptions build() {
+            return new SendFileOptions() {
+                @Override
+                public long maxAge() {
+                    return Optional.of(maxAge).orElse(SendFileOptions.super.maxAge());
+                }
+
+                @Override
+                public String root() {
+                    return Optional.ofNullable(root).orElse(SendFileOptions.super.root());
+                }
+
+                @Override
+                public long lastModified() {
+                    return Optional.of(lastModified).orElse(SendFileOptions.super.lastModified());
+                }
+
+                @Override
+                public Map<String, String> headers() {
+                    return SendFileOptions.super.headers();
+                }
+
+                @Override
+                public DotFiles dotfiles() {
+                    return Optional.ofNullable(dotfiles).orElse(SendFileOptions.super.dotfiles());
+                }
+
+                @Override
+                public boolean acceptRange() {
+                    return Optional.of(acceptRanges).orElse(SendFileOptions.super.acceptRange());
+                }
+
+                @Override
+                public boolean cacheControl() {
+                    return Optional.of(cacheControl).orElse(SendFileOptions.super.cacheControl());
+                }
+
+                @Override
+                public boolean immutable() {
+                    return Optional.of(immutable).orElse(SendFileOptions.super.immutable());
+                }
+            };
+        }
     }
 }
