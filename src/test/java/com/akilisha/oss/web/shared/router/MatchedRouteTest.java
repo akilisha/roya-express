@@ -1,4 +1,4 @@
-package com.akilisha.oss.web.express.router;
+package com.akilisha.oss.web.shared.router;
 
 import com.akilisha.oss.web.core.router.Route;
 import com.akilisha.oss.web.core.router.Router;
@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 class MatchedRouteTest {

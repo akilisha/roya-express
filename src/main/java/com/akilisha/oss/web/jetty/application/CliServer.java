@@ -7,8 +7,8 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import com.akilisha.oss.web.core.application.Application;
 import com.akilisha.oss.web.jetty.integration.FilterRouteResolver;
 import com.akilisha.oss.web.jetty.integration.ServletRouteHandler;
+import com.akilisha.oss.web.jetty.router.ContextRoutable;
 import com.akilisha.oss.web.shared.logging.CliAppender;
-import com.akilisha.oss.web.shared.router.ContextRoutable;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpFilter;
 import org.apache.commons.cli.*;
@@ -17,7 +17,6 @@ import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -121,7 +120,7 @@ public class CliServer {
         // Create a Server instance.
         this.server = new Server(threadPool);
 
-        // Static resources
+        // primary handlers
         FilterRouteResolver filterRouteResolver = new FilterRouteResolver(application, routable);
         ServletContextHandler servletContextHandler = configureRouteHandler(filterRouteResolver);
         // Use HandlersList so that handling is passed to the next handler until match is found
@@ -159,11 +158,6 @@ public class CliServer {
     public ServletContextHandler configureRouteHandler(HttpFilter resolveFilter) {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
-
-        ServletHolder resourceServlet = context.addServlet(DefaultServlet.class, "/");
-        resourceServlet.setInitParameter("resourceBase", "./dist");
-        resourceServlet.setInitParameter("welcomeFiles", "index.html");
-        resourceServlet.setAsyncSupported(true);
 
         ServletHolder servletHolder = context.addServlet(ServletRouteHandler.class, "/*");
         servletHolder.setInitOrder(0);

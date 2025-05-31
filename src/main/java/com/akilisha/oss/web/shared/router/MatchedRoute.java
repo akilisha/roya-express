@@ -7,6 +7,7 @@ import com.akilisha.oss.web.core.router.Route;
 import com.akilisha.oss.web.core.router.RouteInfo;
 import com.akilisha.oss.web.core.router.Router;
 
+import java.net.CookieStore;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ public class MatchedRoute implements RouteInfo {
     final Router router;
     Route[] requestRoutes;
     String regexPath;
+    CookieStore cookieStore;
 
     public MatchedRoute(String requestMethod, String originalPath, Router router, Route... requestRoutes) {
         this.requestMethod = requestMethod;
@@ -55,6 +57,16 @@ public class MatchedRoute implements RouteInfo {
     @Override
     public String regexPath() {
         return regexPath;
+    }
+
+    @Override
+    public CookieStore cookieStore() {
+        return this.cookieStore;
+    }
+
+    @Override
+    public void cookieStore(CookieStore cookieStore) {
+        this.cookieStore = cookieStore;
     }
 
     @Override

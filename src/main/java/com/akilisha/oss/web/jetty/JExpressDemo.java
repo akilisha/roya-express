@@ -2,12 +2,13 @@ package com.akilisha.oss.web.jetty;
 
 import com.akilisha.oss.web.jetty.application.Express;
 
-public class JexpressDemo {
+public class JExpressDemo {
 
     public static void main(String[] args) {
         var app = Express.express(args);
         var port = 3000;
 
+        app.use(app.assets("/", "./www"));
         app.get("/", (req, res, next) -> {
             res.send("Hello / World");
         });

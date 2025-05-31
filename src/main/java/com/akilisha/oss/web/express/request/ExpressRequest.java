@@ -1,7 +1,8 @@
 package com.akilisha.oss.web.express.request;
 
 import com.akilisha.oss.web.core.application.Application;
-import com.akilisha.oss.web.core.content.*;
+import com.akilisha.oss.web.core.content.MimeTypes;
+import com.akilisha.oss.web.core.content.RequestBody;
 import com.akilisha.oss.web.core.request.Request;
 import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.router.Route;
@@ -11,12 +12,10 @@ import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.ProtocolException;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
+import java.net.HttpCookie;
 import java.nio.charset.Charset;
-import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
-
-import static com.akilisha.oss.web.shared.datetime.Clock.fromNow;
 
 public class ExpressRequest implements Request {
 
@@ -67,34 +66,8 @@ public class ExpressRequest implements Request {
     }
 
     @Override
-    public Collection<RequestCookie> cookies() {
-        Header[] cookieHeaders = request.getHeaders("Cookie");
-        Collection<RequestCookie> cookies = new ArrayList<>();
-        if (cookieHeaders != null) {
-            for (Header header : cookieHeaders) {
-                String[] cookieStrings = header.getValue().split(";");
-                for (String cookieString : cookieStrings) {
-                    String[] parts = cookieString.trim().split("=", 2); // Limit split to 2 parts
-                    if (parts.length == 2) {
-                        RequestCookie cookie = RequestCookie.create(
-                                parts[0].trim(),
-                                parts[1].trim(),
-                                CookieOptions.Factory.newFactory()
-                                        .path("/")
-                                        .secure(false)
-                                        .signed(false)
-                                        .sameSite(false)
-                                        .httpOnly(false)
-                                        .domain("localhost")
-                                        .expires(fromNow(Duration.ofHours(1))).build()
-                        );
-                        cookies.add(cookie);
-                    }
-                }
-            }
-        }
-
-        return cookies;
+    public Collection<HttpCookie> cookies() {
+        return matchedRoute.cookieStore().getCookies();
     }
 
     @Override
@@ -178,7 +151,7 @@ public class ExpressRequest implements Request {
     }
 
     @Override
-    public Collection<RequestCookie> signedCookie() {
+    public Collection<HttpCookie> signedCookie() {
         return List.of();
     }
 
@@ -189,7 +162,7 @@ public class ExpressRequest implements Request {
 
     @Override
     public String[] subdomains() {
-        return "";
+        return new String[0];
     }
 
     @Override
@@ -199,28 +172,28 @@ public class ExpressRequest implements Request {
 
     @Override
     public boolean accepts(String... contentTypes) {
-
+        return false;
     }
 
     @Override
     public boolean acceptsCharsets(Charset... charsets) {
-
+        return false;
     }
 
     @Override
     public boolean acceptsEncodings(String... encodings) {
-
+        return false;
     }
 
     @Override
     public boolean acceptsLanguages(String... languages) {
-
+        return false;
     }
 
     @Override
-    public Object get(String header) {
+    public String get(String header) {
         try {
-            return request.getHeader(header);
+            return request.getHeader(header).getValue();
         } catch (ProtocolException e) {
             throw new RuntimeException(e);
         }
@@ -228,12 +201,17 @@ public class ExpressRequest implements Request {
 
     @Override
     public boolean is(String contentType) {
-        String type = this.get(contentType).toString();
+        String type = this.get(contentType);
         return Arrays.stream(MimeTypes.values()).anyMatch(en -> en.name().matches(type));
     }
 
     @Override
-    public Range range(int size, boolean combine) {
+    public void range(String resource) {
+
+    }
+
+    @Override
+    public Enumeration<String> cookie() {
         return null;
     }
 }

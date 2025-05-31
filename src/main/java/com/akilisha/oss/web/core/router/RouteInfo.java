@@ -1,5 +1,6 @@
 package com.akilisha.oss.web.core.router;
 
+import java.net.CookieStore;
 import java.util.Map;
 
 public interface RouteInfo extends Route {
@@ -19,4 +20,8 @@ public interface RouteInfo extends Route {
     Map<String, Object> pathParams();
 
     String regexPath();
+
+    CookieStore cookieStore();
+
+    void cookieStore(CookieStore cookieStore);
 }

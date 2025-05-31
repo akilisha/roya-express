@@ -3,7 +3,7 @@ package com.akilisha.oss.web.jetty.integration;
 import com.akilisha.oss.web.core.application.Application;
 import com.akilisha.oss.web.jetty.request.ExpressRequest;
 import com.akilisha.oss.web.jetty.response.ExpressResponse;
-import com.akilisha.oss.web.shared.router.ContextRoutable;
+import com.akilisha.oss.web.jetty.router.ContextRoutable;
 import com.akilisha.oss.web.shared.router.MatchedRoute;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

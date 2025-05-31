@@ -96,7 +96,7 @@ public class ExpressResponse extends HttpServletResponseWrapper implements Respo
                 }
                 file = new File(root, path);
             }
-            setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", filename));
+            attachment(filename);
             setHeader("Content-Type", "application/octet-stream");
             setHeader("Content-Transfer-Encoding", "binary");
             setHeader("Last-Modified", Long.toString(options.lastModified()));

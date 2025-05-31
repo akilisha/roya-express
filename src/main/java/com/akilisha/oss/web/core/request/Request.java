@@ -1,13 +1,14 @@
 package com.akilisha.oss.web.core.request;
 
 import com.akilisha.oss.web.core.application.Application;
-import com.akilisha.oss.web.core.content.Range;
-import com.akilisha.oss.web.core.content.RequestCookie;
 import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.router.Route;
 
+import java.io.IOException;
+import java.net.HttpCookie;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -19,7 +20,7 @@ public interface Request {
 
     <C> C body(Class<C> bodyType);
 
-    Collection<RequestCookie> cookies();
+    Collection<HttpCookie> cookies();
 
     boolean fresh();
 
@@ -53,7 +54,7 @@ public interface Request {
 
     boolean secure();
 
-    Collection<RequestCookie> signedCookie();
+    Collection<HttpCookie> signedCookie();
 
     boolean stale();
 
@@ -69,9 +70,11 @@ public interface Request {
 
     boolean acceptsLanguages(String... languages);
 
-    Object get(String header);
+    String get(String header);
 
     boolean is(String contentType);
 
-    Range range(int size, boolean combine);
+    void range(String resource) throws IOException;
+
+    Enumeration<String> cookie();
 }

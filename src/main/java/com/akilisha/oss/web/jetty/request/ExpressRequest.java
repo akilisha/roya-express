@@ -1,23 +1,25 @@
 package com.akilisha.oss.web.jetty.request;
 
 import com.akilisha.oss.web.core.application.Application;
-import com.akilisha.oss.web.core.content.*;
+import com.akilisha.oss.web.core.content.MimeTypes;
+import com.akilisha.oss.web.core.content.RequestBody;
 import com.akilisha.oss.web.core.request.Request;
 import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.router.Route;
 import com.akilisha.oss.web.shared.router.MatchedRoute;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpCookie;
 import java.nio.charset.Charset;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static com.akilisha.oss.web.shared.datetime.Clock.fromNow;
 
 public class ExpressRequest extends HttpServletRequestWrapper implements Request {
 
@@ -61,35 +63,8 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
     }
 
     @Override
-    public Collection<RequestCookie> cookies() {
-        Collection<RequestCookie> cookies = new ArrayList<>();
-        Enumeration<String> cookieHeaders = getHeaders("Cookie");
-        if (cookieHeaders != null) {
-            while (cookieHeaders.hasMoreElements()) {
-                String cookieHeader = cookieHeaders.nextElement();
-                String[] cookieStrings = getHeader(cookieHeader).split(";");
-                for (String cookieValue : cookieStrings) {
-                    String[] parts = cookieValue.trim().split("=", 2); // Limit split to 2 parts
-                    if (parts.length == 2) {
-                        RequestCookie cookie = RequestCookie.create(
-                                parts[0].trim(),
-                                parts[1].trim(),
-                                CookieOptions.Factory.newFactory()
-                                        .path("/")
-                                        .secure(false)
-                                        .signed(false)
-                                        .sameSite(false)
-                                        .httpOnly(false)
-                                        .domain("localhost")
-                                        .expires(fromNow(Duration.ofHours(1))).build()
-                        );
-                        cookies.add(cookie);
-                    }
-                }
-            }
-        }
-
-        return cookies;
+    public Collection<HttpCookie> cookies() {
+        return matchedRoute.cookieStore().getCookies();
     }
 
     @Override
@@ -205,8 +180,8 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
     }
 
     @Override
-    public Collection<RequestCookie> signedCookie() {
-        return cookies().stream().filter(RequestCookie::isSecure).collect(Collectors.toList());
+    public Collection<HttpCookie> signedCookie() {
+        return cookies().stream().filter(HttpCookie::getSecure).collect(Collectors.toList());
     }
 
     @Override
@@ -271,18 +246,88 @@ public class ExpressRequest extends HttpServletRequestWrapper implements Request
     }
 
     @Override
-    public Object get(String header) {
+    public String get(String header) {
         return getHeader(header);
     }
 
     @Override
     public boolean is(String contentType) {
-        String type = this.get(contentType).toString();
+        String type = this.get(contentType);
         return Arrays.stream(MimeTypes.values()).anyMatch(en -> en.name().matches(type));
     }
 
     @Override
-    public Range range(int size, boolean combine) {
-        throw new UnsupportedOperationException("feature not implemented");
+    public void range(String resource) throws IOException {
+        // Check if the file resource exists and is readable
+        File file = new File(resource);
+        if (!file.exists() || !file.isFile() || !file.canRead()) {
+            response.end(HttpServletResponse.SC_NOT_FOUND);
+        }
+
+        long fileSize = file.length();
+        // HTTP rangeHeader requests allow a client to request a specific portion (rangeHeader of bytes) of a resource from a server.
+        // This is particularly useful for things like streaming media, resumable downloads, and downloading large files in chunks.
+        String rangeHeader = getHeader("Range");
+        if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+            // Since the header is present, it indicates that the client is requesting a specific rangeHeader of the resource bytes.
+            Pattern pattern = Pattern.compile("bytes\\s*=\\s*(\\d+)\\s*-\\s*(\\d*)");
+            Matcher matcher = pattern.matcher(rangeHeader);
+            Map<String, String> rangeValues = new HashMap<>();
+            if (matcher.find()) {
+                rangeValues.put("start", matcher.group(2));
+                rangeValues.put("end", matcher.group(1));
+            }
+
+            //validate rangeHeader
+            long start = Long.parseLong(rangeValues.get("start"));
+            long end = rangeValues.get("end").isEmpty() ? fileSize : Long.parseLong(rangeValues.get("end"));
+
+            if (start < 0 || start >= fileSize || end < fileSize) {
+                response.set("Content-Range", "bytes */" + fileSize);
+                response.end(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+            }
+
+            // all is well now
+            response.status(HttpServletResponse.SC_PARTIAL_CONTENT);
+            response.set("Content-Range", "bytes " + start + "-" + end + "/" + fileSize);
+            response.set("Content-Length", String.valueOf(end - start + 1));
+            response.set("Accept-Ranges", "bytes");
+
+            // Stream the requested range
+            try (InputStream inputStream = new FileInputStream(file);
+                 OutputStream outputStream = ((HttpServletResponse) response).getOutputStream()) {
+
+                byte[] buffer = new byte[8192];
+                long skipped = inputStream.skip(start); // Skip to the start byte
+                long bytesRead = 0;
+                long bytesToRead = end - skipped + 1;
+
+                while (bytesRead < bytesToRead) {
+                    int read = inputStream.read(buffer, 0, (int) Math.min(buffer.length, bytesToRead - bytesRead));
+                    if (read == -1) break;
+                    outputStream.write(buffer, 0, read);
+                    bytesRead += read;
+                }
+            }
+        } else {
+            // No Range header - send the entire file
+            response.status(HttpServletResponse.SC_OK);
+            response.set("Content-Length", String.valueOf(fileSize));
+            response.set("Accept-Ranges", "bytes");
+
+            try (InputStream inputStream = new FileInputStream(file);
+                 OutputStream outputStream = ((HttpServletResponse) response).getOutputStream()) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, read);
+                }
+            }
+        }
+    }
+
+    @Override
+    public Enumeration<String> cookie() {
+        return getHeaders("Cookie");
     }
 }

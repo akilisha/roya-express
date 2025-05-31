@@ -1,10 +1,11 @@
-package com.akilisha.oss.web.express.router;
+package com.akilisha.oss.web.shared.router;
 
 import com.akilisha.oss.web.core.router.Route;
 import com.akilisha.oss.web.core.router.RouteInfo;
 import com.akilisha.oss.web.core.router.Router;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 

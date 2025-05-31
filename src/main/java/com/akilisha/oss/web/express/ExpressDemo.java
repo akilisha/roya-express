@@ -8,6 +8,7 @@ public class ExpressDemo {
         var app = Express.express();
         var port = 3000;
 
+        app.use(app.assets("/", "./www"));
         app.get("/", (req, res, next) -> {
             res.send("Hello World");
         });
@@ -40,7 +41,7 @@ public class ExpressDemo {
 
         // always invoked
         router.use((req, res, next) -> {
-            res.send("Hello World");
+            res.send("Hello /foo World");
         });
 
         // registering mount point for router

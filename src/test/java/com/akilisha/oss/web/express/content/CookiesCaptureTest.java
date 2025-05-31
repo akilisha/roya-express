@@ -1,13 +1,11 @@
 package com.akilisha.oss.web.express.content;
 
-import com.akilisha.oss.web.core.content.CookieOptions;
-import com.akilisha.oss.web.core.content.RequestCookie;
 import com.akilisha.oss.web.core.request.Request;
 import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.router.Next;
 import com.akilisha.oss.web.express.request.ExpressRequest;
 import com.akilisha.oss.web.express.response.ExpressResponse;
-import com.akilisha.oss.web.shared.router.ExpressRouter;
+import com.akilisha.oss.web.express.router.ExpressRouter;
 import com.akilisha.oss.web.shared.router.MatchedRoute;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
@@ -17,23 +15,26 @@ import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.jupiter.api.Test;
 
+import java.net.HttpCookie;
 import java.util.Collection;
+import java.util.List;
 
+import static com.akilisha.oss.web.core.content.CookieOptions.factory;
 import static com.akilisha.oss.web.express.application.Express.express;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class CookiesFilterTest {
+class CookiesCaptureTest {
 
     @Test
     void test_handle_static_resource_request() {
         var app = express();
 
-        app.use(app.cookies(CookieOptions.Factory.newFactory().build()));
+        app.use(factory().build());
 
         // TODO - figure out how to execute cookies middleware
         app.get("/", (req, res, next) -> {
-            Collection<RequestCookie> cookies = req.cookies();
+            Collection<HttpCookie> cookies = req.cookies();
             System.out.println(cookies);
             res.json(cookies);
         });

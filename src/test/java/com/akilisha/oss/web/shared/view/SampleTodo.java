@@ -1,4 +1,4 @@
-package com.akilisha.oss.web.express.view;
+package com.akilisha.oss.web.shared.view;
 
 import java.time.LocalDate;
 

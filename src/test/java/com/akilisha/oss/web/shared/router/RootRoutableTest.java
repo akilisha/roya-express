@@ -1,4 +1,4 @@
-package com.akilisha.oss.web.express.router;
+package com.akilisha.oss.web.shared.router;
 
 import org.junit.jupiter.api.Test;
 

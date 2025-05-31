@@ -44,7 +44,7 @@ public interface CoreApi {
 
     ResourceDir assets(String context, String root);
 
-    CookiesFilter cookies(CookieOptions options);
+    CookiesCapture cookies(CookieOptions options);
 
     default Router Router() {
         return this.Router(new BaseRouterOptions(true, true, true));

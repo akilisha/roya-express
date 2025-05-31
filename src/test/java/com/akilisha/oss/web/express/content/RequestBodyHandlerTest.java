@@ -7,7 +7,7 @@ import com.akilisha.oss.web.core.response.Response;
 import com.akilisha.oss.web.core.router.Next;
 import com.akilisha.oss.web.express.request.ExpressRequest;
 import com.akilisha.oss.web.express.response.ExpressResponse;
-import com.akilisha.oss.web.shared.router.ExpressRouter;
+import com.akilisha.oss.web.express.router.ExpressRouter;
 import com.akilisha.oss.web.shared.router.MatchedRoute;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
 import org.apache.hc.client5.http.entity.mime.FileBody;
@@ -62,7 +62,7 @@ public class RequestBodyHandlerTest {
         Request request = new ExpressRequest(app, classicHttpRequest, response, httpContext);
         Header header = mock(Header.class);
         when(header.getValue()).thenReturn("text/plain;charset=UTF-8");
-        when(request.get("Accept")).thenReturn(header);
+        when(classicHttpRequest.getHeader("Accept")).thenReturn(header);
         String json = "{\"id\": 1, \"title\": \"this is a test\", \"completed\": false}";
         HttpEntity entity = new StringEntity(json, ContentType.TEXT_PLAIN);
         when(classicHttpRequest.getEntity()).thenReturn(entity);
@@ -94,7 +94,7 @@ public class RequestBodyHandlerTest {
         Request request = new ExpressRequest(app, classicHttpRequest, response, httpContext);
         Header header = mock(Header.class);
         when(header.getValue()).thenReturn("application/x-www-form-urlencoded;charset=UTF-8");
-        when(request.get("Accept")).thenReturn(header);
+        when(classicHttpRequest.getHeader("Accept")).thenReturn(header);
         HttpEntity entity = generateUrlEncodedFormEntity();
         when(classicHttpRequest.getEntity()).thenReturn(entity);
         Next next = mock(Next.class);
@@ -125,7 +125,7 @@ public class RequestBodyHandlerTest {
         Request request = new ExpressRequest(app, classicHttpRequest, response, httpContext);
         Header header = mock(Header.class);
         when(header.getValue()).thenReturn("application/json;charset=UTF-8");
-        when(request.get("Accept")).thenReturn(header);
+        when(classicHttpRequest.getHeader("Accept")).thenReturn(header);
         String json = "{\"id\": 1, \"title\": \"this is a test\", \"completed\": false}";
         HttpEntity entity = new StringEntity(json, ContentType.APPLICATION_JSON);
         when(classicHttpRequest.getEntity()).thenReturn(entity);
@@ -157,7 +157,7 @@ public class RequestBodyHandlerTest {
         Request request = new ExpressRequest(app, classicHttpRequest, response, httpContext);
         Header header = mock(Header.class);
         when(header.getValue()).thenReturn("multipart/form-data;charset=UTF-8");
-        when(request.get("Accept")).thenReturn(header);
+        when(classicHttpRequest.getHeader("Accept")).thenReturn(header);
         String resourceName = "templates/content/multipart.txt";
         HttpEntity entity = generateMultipartRequest(new File(Objects.requireNonNull(getClass().getClassLoader().getResource(resourceName)).getFile()));
         when(classicHttpRequest.getEntity()).thenReturn(entity);
@@ -189,7 +189,7 @@ public class RequestBodyHandlerTest {
         Request request = new ExpressRequest(app, classicHttpRequest, response, httpContext);
         Header header = mock(Header.class);
         when(header.getValue()).thenReturn("application/octet-stream");
-        when(request.get("Accept")).thenReturn(header);
+        when(classicHttpRequest.getHeader("Accept")).thenReturn(header);
         File file = new File("uploads/multipart.txt");
         HttpEntity entity = new FileEntity(file, ContentType.APPLICATION_OCTET_STREAM);
         when(classicHttpRequest.getEntity()).thenReturn(entity);

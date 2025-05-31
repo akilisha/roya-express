@@ -9,6 +9,10 @@ import java.util.function.Function;
 
 public interface CookieOptions {
 
+    static Factory factory() {
+        return new Factory();
+    }
+
     default String domain() {
         return null;
     }
@@ -72,10 +76,6 @@ public interface CookieOptions {
         String comment;
 
         private Factory() {
-        }
-
-        public static Factory newFactory() {
-            return new Factory();
         }
 
         public Factory domain(final String domain) {

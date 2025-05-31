@@ -6,6 +6,10 @@ import java.util.Optional;
 
 public interface SendFileOptions {
 
+    static Factory factory() {
+        return new Factory();
+    }
+
     default long maxAge() {
         return 0;
     }
@@ -49,10 +53,6 @@ public interface SendFileOptions {
         boolean immutable;
 
         private Factory() {
-        }
-
-        public static Factory newFactory() {
-            return new Factory();
         }
 
         public Factory maxAge(final long maxAge) {

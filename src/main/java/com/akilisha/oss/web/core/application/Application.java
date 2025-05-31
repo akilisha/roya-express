@@ -56,10 +56,10 @@ public interface Application extends Router, CoreApi {
     <R> void use(RequestBody<R> bodyHandler);
 
     default void use(ResourceDir resourceDir) {
-        this.use("/", resourceDir);
+        use("/", resourceDir);
     }
 
-    void use(String path, ResourceDir resourceDir);
+    void use(String prefix, ResourceDir resourceDir);
 
     void use(CookieOptions options);
 }

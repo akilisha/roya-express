@@ -1,4 +1,4 @@
-package com.akilisha.oss.web.shared.router;
+package com.akilisha.oss.web.express.router;
 
 import com.akilisha.oss.web.core.request.Request;
 import com.akilisha.oss.web.core.response.Response;

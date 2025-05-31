@@ -8,9 +8,13 @@ import com.akilisha.oss.web.core.view.ViewEngine;
 import com.akilisha.oss.web.core.view.ViewRenderer;
 import com.akilisha.oss.web.express.content.*;
 import com.akilisha.oss.web.express.integration.ExpressRouteResolver;
+import com.akilisha.oss.web.express.router.ContextRoutable;
+import com.akilisha.oss.web.express.router.ExpressRouter;
+import com.akilisha.oss.web.express.router.RootRoutable;
 import com.akilisha.oss.web.shared.application.AppSettings;
 import com.akilisha.oss.web.shared.content.BaseRouterOptions;
-import com.akilisha.oss.web.shared.router.*;
+import com.akilisha.oss.web.shared.router.MatchedRoute;
+import com.akilisha.oss.web.shared.router.Middleware;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
 import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
@@ -22,6 +26,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import static com.akilisha.oss.web.core.content.ResourceDir.factory;
 
 public class Express extends ExpressRouter implements Application {
 
@@ -81,12 +87,12 @@ public class Express extends ExpressRouter implements Application {
 
     @Override
     public ResourceDir assets(String context, String root) {
-        return ResourceDir.create(Map.of("contextPath", context, "rootDirectory", root));
+        return factory().path(context).root(root).build();
     }
 
     @Override
-    public CookiesFilter cookies(CookieOptions options) {
-        return new CookiesFilter(options);
+    public CookiesCapture cookies(CookieOptions options) {
+        return new CookiesCapture(options);
     }
 
     @Override
@@ -244,14 +250,15 @@ public class Express extends ExpressRouter implements Application {
     }
 
     @Override
-    public void use(String path, ResourceDir resourceDir) {
-        this.contextRoutable.drill(new MatchedRoute(null, path, this,
-                new Middleware(path, new StaticResource(resourceDir))));
+    public void use(String prefix, ResourceDir resourceDir) {
+        String resolvedPrefix = String.format("%s/%s", prefix, resourceDir.contextPath()).replaceAll("//", "/");
+        this.contextRoutable.drill(new MatchedRoute(null, resourceDir.contextPath(), this,
+                new Middleware(resolvedPrefix, new StaticResource(resourceDir))));
     }
 
     @Override
     public void use(CookieOptions options) {
-        this.contextRoutable.drill(new MatchedRoute(null, "/", this,
-                new Middleware("/", new CookiesFilter(options))));
+        this.contextRoutable.drill(new MatchedRoute(null, options.path(), this,
+                new Middleware(options.path(), new CookiesCapture(options))));
     }
 }

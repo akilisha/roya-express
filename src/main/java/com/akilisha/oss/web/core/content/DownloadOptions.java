@@ -6,6 +6,10 @@ import java.util.Optional;
 
 public interface DownloadOptions {
 
+    static Factory factory() {
+        return new Factory();
+    }
+
     default long maxAge() {
         return 0;
     }
@@ -51,10 +55,6 @@ public interface DownloadOptions {
         private Factory() {
         }
 
-        public static Factory newFactory() {
-            return new Factory();
-        }
-
         public Factory maxAge(final long maxAge) {
             this.maxAge = maxAge;
             return this;
@@ -90,8 +90,8 @@ public interface DownloadOptions {
             return this;
         }
 
-        public Factory immediate(boolean immediate) {
-            this.immutable = immediate;
+        public Factory immutable(boolean immutable) {
+            this.immutable = immutable;
             return this;
         }
 
