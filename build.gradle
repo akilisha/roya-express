@@ -1,11 +1,14 @@
 plugins {
-    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
 }
 
 group = 'com.akilisha.oss'
-version = '1.0-SNAPSHOT'
+version = '0.0.1'
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -50,4 +53,66 @@ tasks.withType(Test).configureEach {
 
 tasks.withType(JavaExec).configureEach {
     jvmArgs += '--enable-preview'
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+publishing {
+    publications {
+        custom(MavenPublication) {
+            artifactId = 'roya-express'
+            from components.java
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'Roya-Express'
+                description = 'Express-ish - feels like express, moves like java'
+                url = 'https://gitlab.com/m41na/roya-express'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'jarredweb'
+                        name = 'Jarred Web'
+                        email = 'jarredweb@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://gitlab.com/m41na/roya-express.git'
+                    developerConnection = 'scm:git:ssh://gitlab.com/m41na/roya-express.git'
+                    url = 'https://gitlab.com/m41na/roya-express'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            def releasesRepoUrl = layout.buildDirectory.dir('repos/releases')
+            def snapshotsRepoUrl = layout.buildDirectory.dir('repos/snapshots')
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        }
+    }
 }

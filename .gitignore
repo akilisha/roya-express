@@ -1,10 +1,17 @@
 .gradle
 build/
-target/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 data/
+
+### maven artifacts for publishing
+pom-default.xml
+settings.xml
+target/
+
+### gnupg
+*.pgp
 
 ### IntelliJ IDEA ###
 .idea/*
