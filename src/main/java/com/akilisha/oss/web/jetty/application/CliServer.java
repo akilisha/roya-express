@@ -22,6 +22,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.jboss.weld.environment.servlet.Listener;
 import org.slf4j.LoggerFactory;
 
 import java.util.EnumSet;
@@ -30,9 +31,6 @@ public class CliServer {
     private Server server;
 
     public static void bootstrap(String[] args, Application router, ContextRoutable routable) throws Exception {
-//        Weld weld = new Weld();
-//        WeldContainer container = weld.initialize();
-
         Options options = new Options();
         options.addOption(new Option("h", "host", true, "host domain name or ip address"));
         options.addOption(new Option("p", "port", true, "port number"));
@@ -152,12 +150,15 @@ public class CliServer {
 
         // Start the server
         server.start();
-        System.out.printf("Server started on %s:%d\n", host, port);
+        server.join(); // Wait for the server to finish
     }
 
     public ServletContextHandler configureRouteHandler(HttpFilter resolveFilter) {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
+
+        // Add the Weld listener to the servlet context.
+        context.addEventListener(new Listener());
 
         ServletHolder servletHolder = context.addServlet(ServletRouteHandler.class, "/*");
         servletHolder.setInitOrder(0);
