@@ -1,6 +1,11 @@
 import {createContext, useState, useEffect} from "react";
 import {Alert} from "react-native";
 import {MessageModal} from "../components/ModalMessage";
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPA_PROJECT_URL
+const supabaseKey = process.env.EXPO_PUBLIC_SUPA_API_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Mock expo-crypto
 const Crypto = {
@@ -25,33 +30,40 @@ export const AuthProvider = ({ children }) => {
         const checkUser = async () => {
             setLoading(true);
             // In a real app, you'd check for a token or user session
-            await new Promise(resolve => setTimeout(resolve, 500)); // Corrected setTimeout
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
             // For demonstration, let's assume no user initially
             setLoading(false);
         };
         checkUser().then(() => null);
     }, []);
 
-    const login = async (username, password) => {
+    const login = async (email, password) => {
         setLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Corrected setTimeout
-        if (username === 'test' && password === 'password') {
-            setUser({ id: 'user123', username: 'test', email: 'test@example.com' });
+        if (email && password) {
+            let { data: {user}, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            })
+            setUser(user);
             setLoading(false);
             return true;
         } else {
-            Alert.alert('Login Failed', 'Invalid username or password.');
+            Alert.alert('Login Failed', 'Invalid email or password.');
             setLoading(false);
             return false;
         }
     };
 
-    const register = async (username, email, password) => {
+    const register = async (email, password) => {
         setLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Corrected setTimeout
+        let { data: {user}, error } = await supabase.auth.signUp({
+            email,
+            password,
+        });
         // In a real app, you'd hash the password and store user in a database
-        if (username && email && password) {
-            setUser({ id: Crypto.randomUUID(), username, email });
+        if (!error) {
+            setUser(user);
             Alert.alert('Registration Successful', 'You can now log in.');
             setLoading(false);
             return true;
@@ -84,9 +96,12 @@ export const AuthProvider = ({ children }) => {
         return success;
     };
 
-    const logout = () => {
-        setUser(null);
-        Alert.alert('Logged Out', 'You have been successfully logged out.');
+    const logout = async () => {
+        let { error } = await supabase.auth.signOut();
+        if(!error) {
+            setUser(null);
+            Alert.alert('Logged Out', 'You have been successfully logged out.');
+        }
     };
 
     const [modalVisible, setModalVisible] = useState(false);

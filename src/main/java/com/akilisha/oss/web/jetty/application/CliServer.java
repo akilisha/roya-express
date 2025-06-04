@@ -33,7 +33,7 @@ public class CliServer {
 
     public static void bootstrap(String[] args, Application router, ContextRoutable routable) throws Exception {
         Options options = new Options();
-        options.addOption(new Option("h", "host", true, "host domain name or ip address"));
+        options.addOption(new Option("h", "host", true, "host model name or ip address"));
         options.addOption(new Option("p", "port", true, "port number"));
         options.addOption(new Option("s", "secure", true, "secure port number"));
         options.addOption(new Option("k", "keystore", true, "keystore file path"));

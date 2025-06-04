@@ -79,7 +79,7 @@ import java.util.logging.Logger;
 @Named("authService") // Optional: gives it a name for injection if needed by name
 public class AuthService {
 
-    private static final Logger LOGGER = Logger.getLogger(AuthService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
     // --- Configuration for Okta OAuth provider ---
     // IMPORTANT: Replace {yourOktaDomain} with your actual Okta domain (e.g., dev-123456.okta.com)
@@ -137,7 +137,7 @@ public class AuthService {
             // For demonstration, return a dummy token
             return "dummy_access_token_for_" + authorizationCode;
         }
-        LOGGER.warning("OAuth callback failed: invalid code or state.");
+        LOGGER.warn("OAuth callback failed: invalid code or state.");
         return null;
     }
 
@@ -193,7 +193,7 @@ import java.util.logging.Logger;
 @ApplicationScoped
 public class GenerativeAIService {
 
-    private static final Logger LOGGER = Logger.getLogger(GenerativeAIService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenerativeAIService.class);
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
@@ -238,7 +238,7 @@ public class GenerativeAIService {
                 return "neutral";
             }
         } catch (Exception e) {
-            LOGGER.severe("Error analyzing sentiment: " + e.getMessage());
+            LOGGER.error("Error analyzing sentiment: " + e.getMessage());
             return "unknown"; // Default to unknown on error
         }
     }
@@ -271,7 +271,7 @@ public class GenerativeAIService {
                 return "unknown"; // Default to unknown
             }
         } catch (Exception e) {
-            LOGGER.severe("Error ranking political ideology: " + e.getMessage());
+            LOGGER.error("Error ranking political ideology: " + e.getMessage());
             return "unknown"; // Default to unknown on error
         }
     }
@@ -295,7 +295,7 @@ public class GenerativeAIService {
 
             return summary;
         } catch (Exception e) {
-            LOGGER.severe("Error summarizing content: " + e.getMessage());
+            LOGGER.error("Error summarizing content: " + e.getMessage());
             return "Error summarizing content.";
         }
     }
@@ -427,7 +427,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class WebScannerService {
 
-    private static final Logger LOGGER = Logger.getLogger(WebScannerService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebScannerService.class);
 
     @Inject // CDI will inject an instance of GenerativeAIService
     private GenerativeAIService generativeAIService;
@@ -460,10 +460,10 @@ public class WebScannerService {
             try {
                 // Wait a while for tasks to terminate
                 if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-                    LOGGER.warning("Scheduler did not terminate in time.");
+                    LOGGER.warn("Scheduler did not terminate in time.");
                 }
             } catch (InterruptedException e) {
-                LOGGER.severe("Scheduler shutdown interrupted: " + e.getMessage());
+                LOGGER.error("Scheduler shutdown interrupted: " + e.getMessage());
                 Thread.currentThread().interrupt(); // Restore the interrupted status
             }
         }
@@ -524,7 +524,7 @@ public class WebScannerService {
                 LOGGER.info("Processed URL: " + url + ", Sentiment: " + sentiment + ", Ideology: " + ideology);
 
             } catch (Exception e) {
-                LOGGER.warning("Failed to process URL " + url + ": " + e.getMessage());
+                LOGGER.warn("Failed to process URL " + url + ": " + e.getMessage());
             }
         }
 
@@ -726,7 +726,7 @@ import java.util.logging.Logger;
 @Path("/content") // Base path for this resource
 public class ContentResource {
 
-    private static final Logger LOGGER = Logger.getLogger(ContentResource.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContentResource.class);
 
     @Inject // CDI will inject an instance of WebScannerService
     private WebScannerService webScannerService;
@@ -822,7 +822,7 @@ import java.util.logging.Logger;
 @Provider // Makes this class a JAX-RS provider, so it's automatically discovered
 public class AuthFilter implements ContainerRequestFilter {
 
-    private static final Logger LOGGER = Logger.getLogger(AuthFilter.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthFilter.class);
 
     @Inject // CDI will inject an instance of AuthService
     private AuthService authService;
@@ -845,7 +845,7 @@ public class AuthFilter implements ContainerRequestFilter {
 
         // Check if the Authorization header is present and correctly formatted
         if (authorizationHeader == null || !authorizationHeader.startsWith(AUTHENTICATION_SCHEME + " ")) {
-            LOGGER.warning("Missing or invalid Authorization header.");
+            LOGGER.warn("Missing or invalid Authorization header.");
             abortWithUnauthorized(requestContext, "Authorization header must be provided in 'Bearer [token]' format.");
             return;
         }
@@ -856,14 +856,14 @@ public class AuthFilter implements ContainerRequestFilter {
         try {
             // Validate the token using the AuthService
             if (!authService.validateAccessToken(token)) {
-                LOGGER.warning("Invalid or expired access token.");
+                LOGGER.warn("Invalid or expired access token.");
                 abortWithUnauthorized(requestContext, "Invalid or expired access token.");
                 return;
             }
             LOGGER.info("Access token validated successfully.");
             // If the token is valid, the request can proceed
         } catch (Exception e) {
-            LOGGER.severe("Error during token validation: " + e.getMessage());
+            LOGGER.error("Error during token validation: {}", e.getMessage());
             abortWithUnauthorized(requestContext, "Authentication failed due to server error.");
         }
     }

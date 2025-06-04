@@ -4,16 +4,15 @@ import {AuthContext} from "../state/AuthProvider";
 import {AppHeader} from "../components/AppHeader";
 import {CustomInput} from "../components/CustomInput";
 import {CustomButton} from "../components/CustomButton";
-import {MessageModal} from "../components/ModalMessage";
 
 export const LoginScreen = ({ navigation }) => {
     const { login, loading, loginWithOAuth } = useContext(AuthContext);
-    const [username, setUsername] = useState('test');
-    const [password, setPassword] = useState('password');
+    const [email, setEmail] = useState('zes.ty@aol.com');
+    const [password, setPassword] = useState('Stay0ut1');
     // Removed modal states from here as they are now handled by AuthProvider
 
     const handleLogin = async () => {
-        await login(username, password);
+        await login(email, password);
     };
 
     const handleGoogleLogin = async () => {
@@ -30,7 +29,7 @@ export const LoginScreen = ({ navigation }) => {
             <View style={styles.screenContainer}>
                 <Text style={styles.title}>Welcome Back!</Text>
 
-                <CustomInput label="Username" value={username} onChangeText={setUsername} placeholder="Enter your username" />
+                <CustomInput label="Email address" value={email} onChangeText={setEmail} placeholder="Enter your email address" />
                 <CustomInput label="Password" value={password} onChangeText={setPassword} placeholder="Enter your password" secureTextEntry />
                 <CustomButton
                     title={loading ? "Logging In..." : "Login"}
@@ -57,7 +56,7 @@ export const LoginScreen = ({ navigation }) => {
                     style={styles.auth0Button}
                 />
 
-                <TouchableOpacity onClick={() => navigation.navigate('Register')}>
+                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
                     <Text style={styles.linkText}>Don't have an account? Register here.</Text>
                 </TouchableOpacity>
             </View>
@@ -89,5 +88,27 @@ const styles = {
         marginTop: 20,
         fontSize: 16,
         // fontFamily: 'Inter_500Medium',
-    }
+    },
+    oauthDivider: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#d1d5db', // Tailwind gray-300
+    },
+    dividerText: {
+        marginHorizontal: 10,
+        color: '#6b7280', // Tailwind gray-500
+        fontSize: 16,
+        // fontFamily: 'Inter_400Regular',
+    },
+    googleButton: {
+        backgroundColor: '#db4437', // Google Red
+    },
+    auth0Button: {
+        backgroundColor: '#eb5424', // Auth0 Orange
+    },
 }

@@ -14,7 +14,7 @@ export const RegisterScreen = ({ navigation }) => {
     // Removed modal states from here as they are now handled by AuthProvider
 
     const handleRegister = async () => {
-        const success = await register(username, email, password);
+        const success = await register(email, password);
         if (success) {
             navigation.navigate('Login'); // Navigate back to login after successful registration
         }
@@ -25,7 +25,6 @@ export const RegisterScreen = ({ navigation }) => {
             <AppHeader title="Register" showBack onBackPress={() => navigation.goBack()} />
             <View style={styles.screenContainer}>
                 <Text style={styles.title}>Create Your Account</Text>
-                <CustomInput label="Username" value={username} onChangeText={setUsername} placeholder="Choose a username" />
                 <CustomInput label="Email" value={email} onChangeText={setEmail} placeholder="Enter your email" keyboardType="email-address" />
                 <CustomInput label="Password" value={password} onChangeText={setPassword} placeholder="Choose a password" secureTextEntry />
                 <CustomButton

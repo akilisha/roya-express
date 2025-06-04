@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Backend Static Page</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1 { color: #0056b3; }
+        p { margin-bottom: 10px; }
+        code { background-color: #e2e2e2; padding: 2px 4px; border-radius: 3px; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Welcome to the Payment Backend!</h1>
+    <p>This is a static HTML page served by the embedded Jetty server.</p>
+    <p>You can test the following endpoints:</p>
+    <ul>
+        <li><code>/auth/oauth</code> (POST to initiate OAuth, GET for callback simulation)</li>
+        <li><code>/device</code> (POST/PUT/DELETE/GET for device management)</li>
+        <li><code>/command</code> (POST for generic JSON commands)</li>
+        <li><code>/payment-methods</code> (GET to retrieve available payment methods)</li>
+        <li><code>/qr-code?amount=X&description=Y&paymentOption=Z</code> (GET to generate QR code data)</li>
+        <li><code>/process-payment</code> (POST to simulate payment processing)</li>
+        <li><code>/sse</code> (GET for Server-Sent Events subscription)</li>
+    </ul>
+    <p>Check the server console for logs of interactions.</p>
+    <p>For SSE, open your browser's developer console and navigate to the Network tab, then filter by 'EventStream' or 'SSE' after visiting <code>/sse</code>.</p>
+</div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import {ActivityIndicator, SafeAreaView, View, Text} from "react-native";
+import {ActivityIndicator, SafeAreaView, View, Text, Alert} from "react-native";
 import {useContext, useState} from "react";
 import {AuthContext} from "../state/AuthProvider";
 import {RegisterScreen} from "../screens/RegisterScreen";
@@ -24,6 +24,7 @@ export const AppNavigator = () => {
     }
 
     const navigate = (screenName) => setCurrentScreen(screenName);
+
     const goBack = () => {
         if (currentScreen === 'Register') setCurrentScreen('Login');
         if (currentScreen === 'Payment') setCurrentScreen('Home');

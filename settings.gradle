@@ -1,1 +1,3 @@
 rootProject.name = 'roya-express'
+
+include 'nfc-pay-man'
