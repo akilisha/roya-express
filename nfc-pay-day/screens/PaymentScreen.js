@@ -46,7 +46,7 @@ export const PaymentScreen = ({ navigation }) => {
         setModalMessage('Simulating scan... (NFC or QR Code)');
         setModalVisible(true);
 
-        await new Promise(resolve => setTimeout( resolve, 3000)); // Simulate scan time
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         // Simulate data obtained from NFC or QR code scan
         const scannedAmount = '49.99';

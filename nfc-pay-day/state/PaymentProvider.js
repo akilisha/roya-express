@@ -1,5 +1,6 @@
 import {createContext, useState, useEffect, useCallback} from "react";
 import {Alert} from "react-native";
+import {encryptData, decryptData, mockDb} from "../service/SqliteService";
 
 // Mock expo-crypto
 const Crypto = {
@@ -17,19 +18,50 @@ export const PaymentProvider = ({ children }) => {
     });
     const [processingPayment, setProcessingPayment] = useState(false);
 
-    const addPayment = useCallback((amount, description) => {
-        const newPayment = {
-            id: Crypto.randomUUID(),
-            amount: parseFloat(amount).toFixed(2),
-            description,
-            date: new Date().toLocaleString(),
-        };
-        setPaymentHistory(prevHistory => [newPayment, ...prevHistory]);
+    // Initialize mock DB on component mount
+    useEffect(() => {
+        mockDb.init().then(r => null);
+    }, []);
+
+    const addPayment = useCallback(async (amount, description) => {
+        const newPaymentId = Crypto.randomUUID();
+        const encryptedAmount = encryptData(amount.toFixed(2));
+        const encryptedDescription = encryptData(description);
+        const date = new Date().toLocaleString();
+
+        // Simulate saving to SQLite
+        await mockDb.executeSql(
+            'INSERT INTO payments (id, encryptedAmount, encryptedDescription, date) VALUES (?, ?, ?, ?)',
+            [newPaymentId, encryptedAmount, encryptedDescription, date]
+        );
+
+        // Update local state (this would typically trigger a re-fetch from DB in a real app)
+        // For this mock, we just add it to the local state directly after "saving"
+        setPaymentHistory(prevHistory => [{
+            id: newPaymentId,
+            amount: parseFloat(amount).toFixed(2), // Stored unencrypted in local state for immediate display
+            description: description,
+            date: date,
+        }, ...prevHistory]);
+
         setSecuritySettings(prevSettings => ({
             ...prevSettings,
             dailyPaymentCount: prevSettings.dailyPaymentCount + parseFloat(amount),
         }));
     }, []);
+
+    const loadPaymentHistory = useCallback(async () => {
+        // Simulate loading from SQLite
+        const result = await mockDb.executeSql('SELECT * FROM payments');
+        const decryptedHistory = result.rows.map(row => ({
+            id: row.id,
+            amount: decryptData(row.encryptedAmount),
+            description: decryptData(row.encryptedDescription),
+            date: row.date,
+        }));
+        setPaymentHistory(decryptedHistory.reverse()); // Reverse to show newest first
+    }, []);
+
 
     const updateSecuritySettings = useCallback((newSettings) => {
         setSecuritySettings(prevSettings => ({ ...prevSettings, ...newSettings }));
@@ -56,10 +88,11 @@ export const PaymentProvider = ({ children }) => {
         resetDailyCap();
     }, []);
 
+
     // Updated function to simulate delegating payment to a provider
     const delegatePaymentToProvider = async (paymentToken, amount, description) => {
         setProcessingPayment(true);
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate payment gateway API call
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // --- Security Checks (Client-side for demo) ---
         if (amount > securitySettings.maxPaymentAmount) {
@@ -91,7 +124,7 @@ export const PaymentProvider = ({ children }) => {
 
         // For this simulation, we'll assume success if a token is provided.
         if (paymentToken) {
-            addPayment(amount, description);
+            await addPayment(amount, description); // Use the async addPayment
             Alert.alert('Payment Successful', `Successfully processed $${amount} for ${description} via Adyen/Stripe.`);
             setProcessingPayment(false);
             return true;
@@ -108,7 +141,8 @@ export const PaymentProvider = ({ children }) => {
             securitySettings,
             updateSecuritySettings,
             delegatePaymentToProvider,
-            processingPayment
+            processingPayment,
+            loadPaymentHistory // Expose load function
         }}>
             {children}
         </PaymentContext.Provider>

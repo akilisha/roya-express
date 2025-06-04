@@ -1,29 +1,35 @@
-import {SafeAreaView, ScrollView, View, Text} from "react-native";
-import {useContext} from "react";
+import {SafeAreaView, FlatList, View, Text} from "react-native";
+import {useContext, useEffect} from "react";
 import {PaymentContext} from "../state/PaymentProvider";
 import {AppHeader} from "../components/AppHeader";
 
 export const PaymentHistoryScreen = ({ navigation }) => {
-    const { paymentHistory } = useContext(PaymentContext);
+    const { paymentHistory, loadPaymentHistory } = useContext(PaymentContext);
+
+    useEffect(() => {
+        loadPaymentHistory(); // Load history when component mounts
+    }, [loadPaymentHistory]);
+
+    const renderPaymentItem = ({ item }) => (
+        <View style={styles.historyItem}>
+            <Text style={styles.historyDescription}>{item.description}</Text>
+            <Text style={styles.historyAmount}>${item.amount}</Text>
+            <Text style={styles.historyDate}>{item.date}</Text>
+        </View>
+    );
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <AppHeader title="Payment History" showBack onBackPress={() => navigation.goBack()} />
             <View style={styles.screenContainer}>
                 <Text style={styles.title}>Your Transactions</Text>
-                {paymentHistory.length === 0 ? (
-                    <Text style={styles.emptyHistory}>No payments recorded yet.</Text>
-                ) : (
-                    <ScrollView style={styles.historyList}>
-                        {paymentHistory.map(payment => (
-                            <View key={payment.id} style={styles.historyItem}>
-                                <Text style={styles.historyDescription}>{payment.description}</Text>
-                                <Text style={styles.historyAmount}>${payment.amount}</Text>
-                                <Text style={styles.historyDate}>{payment.date}</Text>
-                            </View>
-                        ))}
-                    </ScrollView>
-                )}
+                <FlatList
+                    data={paymentHistory}
+                    renderItem={renderPaymentItem}
+                    keyExtractor={item => item.id}
+                    ListEmptyComponent={<Text style={styles.emptyHistory}>No payments recorded yet.</Text>}
+                    contentContainerStyle={styles.historyList} // Apply padding/margin to content
+                />
             </View>
         </SafeAreaView>
     );
