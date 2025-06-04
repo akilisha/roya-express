@@ -8,6 +8,7 @@ import com.akilisha.oss.web.core.application.Application;
 import com.akilisha.oss.web.jetty.integration.FilterRouteResolver;
 import com.akilisha.oss.web.jetty.integration.ServletRouteHandler;
 import com.akilisha.oss.web.jetty.router.ContextRoutable;
+import com.akilisha.oss.web.jetty.session.AppSession;
 import com.akilisha.oss.web.shared.logging.CliAppender;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpFilter;
@@ -149,6 +150,10 @@ public class CliServer {
             ServerConnector secureConnector = createSecureConnector(server, host, securePort, keyStorePath, keyStoreSecret, http11, acceptors, selectors, h2c);
             server.addConnector(secureConnector);
         }
+
+        // Add session handling
+        AppSession.configureSessionIdManager(server);
+        AppSession.configureSessionHandler(server);
 
         // Start the server
         server.start();
