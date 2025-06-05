@@ -20,6 +20,14 @@ export const AdyenDropIn = ({ configuration, onComplete, onSubmit, onError }) =>
     };
 
     const handleSimulateSubmit = () => {
+        // Basic validation
+        if (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv || !cardDetails.holderName) {
+            if (savedMethods.length === 0 || !selectedMethod) {
+                onError({ name: 'ValidationError', message: 'Please enter card details or select a saved method.' });
+                return;
+            }
+        }
+
         const paymentData = {
             paymentMethod: {
                 type: selectedMethod || 'scheme', // 'scheme' for card, or selected method
@@ -31,6 +39,7 @@ export const AdyenDropIn = ({ configuration, onComplete, onSubmit, onError }) =>
             returnUrl: configuration.returnUrl,
             // In a real scenario, this 'data' object would come from Adyen's SDK after user input
             // and would be securely tokenized.
+            // For a real Adyen integration, `data` would contain encrypted card data or a token.
         };
         if (onSubmit) {
             // Simulate calling the onSubmit callback which typically sends data to your backend

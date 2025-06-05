@@ -13,7 +13,7 @@ import {CameraScreen} from "../screens/CameraScreen";
 import {PaymentResultScreen} from "../screens/PaymentResultScreen";
 import {AddPaymentMethodScreen} from "../screens/AddPaymentMethodScreen";
 import {CheckoutScreen} from "../screens/CheckoutScreen";
-import {AdyenSessionComponent} from "../payments/AdyenSessionComponent";
+// import {AdyenSessionComponent} from "../payments/AdyenSessionComponent";
 
 export const AppNavigator = () => {
     const { user, loading } = useContext(AuthContext);
@@ -88,7 +88,7 @@ export const AppNavigator = () => {
         case 'AddPaymentMethod':
             return <AddPaymentMethodScreen navigation={{ navigate, goBack }} />;
         case 'Checkout':
-            return <AdyenSessionComponent navigation={{ navigate, goBack }} route={currentScreen.params ? { params: currentScreen.params } : {}} />;
+            return <CheckoutScreen navigation={{ navigate, goBack }} route={currentScreen.params ? { params: currentScreen.params } : {}} />;
         case 'PaymentResult':
             return <PaymentResultScreen navigation={{ navigate, goBack }} route={currentScreen.params ? { params: currentScreen.params } : {}} />;
         case 'History':
