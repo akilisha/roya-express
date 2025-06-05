@@ -1,4 +1,4 @@
-import { SafeAreaView, ScrollView, Text} from "react-native";
+import {Alert, SafeAreaView, ScrollView, Text} from "react-native";
 import {useContext, useEffect, useState} from "react";
 import {PaymentContext} from "../state/PaymentProvider";
 import {AppHeader} from "../components/AppHeader";
@@ -103,15 +103,19 @@ export const PaymentScreen = ({ navigation }) => {
         // that *would* be tokenized by the payment provider's SDK.
         const paymentToken = `tok_${Crypto.randomUUID()}`; // Mock payment token
 
-        const success = await delegatePaymentToProvider(paymentToken, parseFloat(amount), description);
-        if (success) {
+        const success = await delegatePaymentToProvider(
+            { paymentMethod: { type: 'scheme', token: paymentToken }, amount: { value: parseFloat(amount) * 100, currency: 'USD' }, description: description }
+        );
+        if (success.success) {
             // Clear form on success
             setAmount('');
             setDescription('');
             setMockScannedCardDetails(null);
             setIsQrOrNfcScanned(false);
+            navigation.navigate('PaymentResult', { result: 'success', transactionId: success.pspReference });
+        } else {
+            navigation.navigate('PaymentResult', { result: 'failure', message: success.message });
         }
-        // Messages handled by PaymentContext
     };
 
     return (

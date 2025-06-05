@@ -1,4 +1,4 @@
-import {ActivityIndicator, SafeAreaView, View, Text, Alert} from "react-native";
+import {ActivityIndicator, SafeAreaView, View, Text} from "react-native";
 import {useContext, useState} from "react";
 import {AuthContext} from "../state/AuthProvider";
 import {RegisterScreen} from "../screens/RegisterScreen";
@@ -9,10 +9,14 @@ import {CustomButton} from "./CustomButton";
 import {PaymentScreen} from "../screens/PaymentScreen";
 import {PaymentHistoryScreen} from "../screens/PaymentHistoryScreen";
 import {SettingsScreen} from "../screens/SettingsScreen";
+import {CameraScreen} from "../screens/CameraScreen";
+import {PaymentResultScreen} from "../screens/PaymentResultScreen";
+import {AddPaymentMethodScreen} from "../screens/AddPaymentMethodScreen";
+import {CheckoutScreen} from "../screens/CheckoutScreen";
 
 export const AppNavigator = () => {
     const { user, loading } = useContext(AuthContext);
-    const [currentScreen, setCurrentScreen] = useState('Login'); // Default to Login
+    const [currentScreen, setCurrentScreen] = useState({name: 'Login', params: {}}); // Default to Login
 
     if (loading) {
         return (
@@ -23,17 +27,23 @@ export const AppNavigator = () => {
         );
     }
 
-    const navigate = (screenName) => setCurrentScreen(screenName);
+    const navigate = (screenName, params = {}) => setCurrentScreen(curr => ({...curr, name: screenName, params }));
 
     const goBack = () => {
-        if (currentScreen === 'Register') setCurrentScreen('Login');
-        if (currentScreen === 'Payment') setCurrentScreen('Home');
-        if (currentScreen === 'History') setCurrentScreen('Home');
-        if (currentScreen === 'Settings') setCurrentScreen('Home');
+        if (currentScreen.name === 'Register') { setCurrentScreen({ name: 'Login' }); }
+        else if (currentScreen === 'Camera') { setCurrentScreen('Payment'); }
+        else if (currentScreen.name === 'Payment' ||
+            currentScreen.name === 'AddPaymentMethod' ||
+            currentScreen.name === 'Checkout' ||
+            currentScreen.name === 'History' ||
+            currentScreen.name === 'Settings' ||
+            currentScreen.name === 'PaymentResult') {
+            setCurrentScreen({name: 'Home'});
+        }
     };
 
     if (!user) {
-        switch (currentScreen) {
+        switch (currentScreen.name) {
             case 'Register':
                 return <RegisterScreen navigation={{ navigate, goBack }} />;
             default:
@@ -58,7 +68,9 @@ export const AppNavigator = () => {
                         </Text>
                     </View>
 
-                    <CustomButton title="Make New Payment" onPress={() => navigate('Payment')} />
+                    <CustomButton title="Make New Payment (QR/NFC)" onPress={() => navigate('Payment')} />
+                    <CustomButton title="Add Payment Method (Adyen)" onPress={() => navigate('AddPaymentMethod')} />
+                    <CustomButton title="Make Payment (Adyen Checkout)" onPress={() => navigate('Checkout', { amount: 2500, description: 'Online Purchase' })} />
                     <CustomButton title="View Payment History" onPress={() => navigate('History')} />
                     <CustomButton title="Security Settings" onPress={() => navigate('Settings')} />
                     <CustomButton title="Logout" onPress={logout} style={styles.logoutButton} textStyle={styles.logoutButtonText} />
@@ -67,9 +79,17 @@ export const AppNavigator = () => {
         );
     };
 
-    switch (currentScreen) {
+    switch (currentScreen.name) {
+        case 'Camera':
+            return <CameraScreen navigation={{ navigate, goBack }} />;
         case 'Payment':
             return <PaymentScreen navigation={{ navigate, goBack }} />;
+        case 'AddPaymentMethod':
+            return <AddPaymentMethodScreen navigation={{ navigate, goBack }} />;
+        case 'Checkout':
+            return <CheckoutScreen navigation={{ navigate, goBack }} route={currentScreen.params ? { params: currentScreen.params } : {}} />;
+        case 'PaymentResult':
+            return <PaymentResultScreen navigation={{ navigate, goBack }} route={currentScreen.params ? { params: currentScreen.params } : {}} />;
         case 'History':
             return <PaymentHistoryScreen navigation={{ navigate, goBack }} />;
         case 'Settings':

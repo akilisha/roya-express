@@ -35,7 +35,8 @@ export const AuthProvider = ({ children }) => {
             // For demonstration, let's assume no user initially
             setLoading(false);
         };
-        checkUser().then(() => null);
+        //set user value to skip authentication (for testing)
+        checkUser().then(() => setUser({username: "Jimbob"}));
     }, []);
 
     const login = async (email, password) => {

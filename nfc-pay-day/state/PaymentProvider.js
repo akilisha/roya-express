@@ -17,6 +17,7 @@ export const PaymentProvider = ({ children }) => {
         dailyPaymentCount: 0,
     });
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [savedPaymentMethods, setSavedPaymentMethods] = useState([]); // Mock saved payment methods
 
     // Initialize mock DB on component mount
     useEffect(() => {
@@ -89,60 +90,79 @@ export const PaymentProvider = ({ children }) => {
     }, []);
 
 
-    // Updated function to simulate delegating payment to a provider
-    const delegatePaymentToProvider = async (paymentToken, amount, description) => {
+    // --- Adyen Simulation Functions ---
+    const saveAdyenPaymentMethod = useCallback(async (paymentMethodData) => {
         setProcessingPayment(true);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call to save method
+
+        // In a real scenario, paymentMethodData would be a token from Adyen SDK.
+        // You'd send this to your backend to save the payment method for a shopper.
+        console.log('Simulating saving payment method:', paymentMethodData);
+
+        const success = Math.random() > 0.2; // 80% chance of success
+        if (success) {
+            const newSavedMethod = {
+                id: Crypto.randomUUID(),
+                name: paymentMethodData.type === 'scheme' ? `Card ending in ${paymentMethodData.number.slice(-4)}` : paymentMethodData.type,
+                type: paymentMethodData.type,
+                lastFour: paymentMethodData.number ? paymentMethodData.number.slice(-4) : '****',
+            };
+            setSavedPaymentMethods(prev => [...prev, newSavedMethod]);
+            Alert.alert('Success', 'Payment method saved successfully.');
+        } else {
+            Alert.alert('Error', 'Failed to save payment method.');
+        }
+        setProcessingPayment(false);
+        return success;
+    }, []);
+
+    const initiateAdyenPayment = useCallback(async (paymentData) => {
+        setProcessingPayment(true);
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate payment gateway API call
 
         // --- Security Checks (Client-side for demo) ---
+        const amount = paymentData.amount.value / 100;
         if (amount > securitySettings.maxPaymentAmount) {
             Alert.alert('Payment Failed', `Payment amount exceeds maximum allowed: $${securitySettings.maxPaymentAmount}`);
             setProcessingPayment(false);
-            return false;
+            return { success: false, resultCode: 'Refused', message: 'Amount too high' };
         }
         if (securitySettings.dailyPaymentCount + amount > securitySettings.dailyPaymentCap) {
             Alert.alert('Payment Failed', `Daily payment cap of $${securitySettings.dailyPaymentCap} exceeded.`);
             setProcessingPayment(false);
-            return false;
+            return { success: false, resultCode: 'Refused', message: 'Daily cap exceeded' };
         }
         // --- End Security Checks ---
 
-        // Simulate sending token to Adyen/Stripe backend
-        console.log(`Simulating payment delegation to Adyen/Stripe with token: ${paymentToken}`);
-        console.log(`Amount: $${amount}, Description: ${description}`);
+        // In a real scenario, paymentData would be a tokenized object from Adyen's SDK.
+        // You'd send this to your backend, which then calls Adyen's /payments API.
+        console.log(`Simulating Adyen payment processing for amount ${amount} and method:`, paymentData.paymentMethod);
 
-        // In a real scenario, you'd make a fetch call to your backend here,
-        // which would then call the Adyen/Stripe API with the token.
-        // Example:
-        // const response = await fetch('/api/process-payment', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ paymentToken, amount, description })
-        // });
-        // const result = await response.json();
-        // if (result.success) { ... } else { ... }
+        const success = Math.random() > 0.1; // 90% chance of success
 
-        // For this simulation, we'll assume success if a token is provided.
-        if (paymentToken) {
-            await addPayment(amount, description); // Use the async addPayment
-            Alert.alert('Payment Successful', `Successfully processed $${amount} for ${description} via Adyen/Stripe.`);
+        if (success) {
+            await addPayment(amount, paymentData.description || 'Adyen Payment');
+            Alert.alert('Payment Successful', `Successfully processed $${amount} via Adyen.`);
             setProcessingPayment(false);
-            return true;
+            return { success: true, resultCode: 'Authorised', pspReference: Crypto.randomUUID() };
         } else {
-            Alert.alert('Payment Failed', 'Payment token missing or invalid.');
+            Alert.alert('Payment Failed', 'Adyen payment simulation failed.');
             setProcessingPayment(false);
-            return false;
+            return { success: false, resultCode: 'Refused', message: 'Simulated Adyen failure' };
         }
-    };
+    }, [addPayment, securitySettings]);
 
     return (
         <PaymentContext.Provider value={{
             paymentHistory,
             securitySettings,
             updateSecuritySettings,
-            delegatePaymentToProvider,
+            delegatePaymentToProvider: initiateAdyenPayment, // Renamed and adapted for Adyen flow
             processingPayment,
-            loadPaymentHistory // Expose load function
+            loadPaymentHistory,
+            savedPaymentMethods,
+            saveAdyenPaymentMethod,
+            initiateAdyenPayment, // Exposed for CheckoutScreen
         }}>
             {children}
         </PaymentContext.Provider>

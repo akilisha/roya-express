@@ -18,6 +18,9 @@ dependencies {
     implementation "com.google.code.gson:gson:2.13.1"
     implementation "org.jboss.weld.se:weld-se-core:6.0.3.Final"
 
+    // adyen
+    implementation "com.adyen:adyen-java-api-library:21.3.0"
+
     // logging
     implementation "org.slf4j:slf4j-api:2.0.17"
     implementation "ch.qos.logback:logback-classic:1.5.18";
