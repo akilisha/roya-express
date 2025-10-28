@@ -5,7 +5,7 @@
 Roya brings Express.js's beloved API to modern Java, with built-in AI superpowers and cloud-cost optimization.
 
 ```java
-import static com.roya.Roya.*;
+import static com.akilisha.oss.roya.Roya.*;
 
 void main() {
     var app = create();

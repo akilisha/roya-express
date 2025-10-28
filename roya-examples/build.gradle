@@ -1,0 +1,31 @@
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation project(":roya-api")
+    implementation project(":roya-core")
+}
+
+application {
+    mainClass = 'com.akilisha.oss.roya.examples.HelloWorld'
+}
+
+// Enable FFM features for Java 23
+tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+            '--enable-preview'
+    ]
+}
+
+tasks.withType(Test) {
+    jvmArgs += [
+            '--enable-preview'
+    ]
+}
+
+tasks.named('run') {
+    jvmArgs += [
+            '--enable-preview'
+    ]
+}

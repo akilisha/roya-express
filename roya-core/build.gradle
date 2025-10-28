@@ -1,0 +1,35 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // API dependency
+    api project(":roya-api")
+
+    // Helidon Níma - Virtual thread-native HTTP server
+    implementation 'io.helidon.webserver:helidon-webserver:4.0.3'
+
+    // JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.10'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.4.14'
+
+    // Testing
+    testImplementation 'org.assertj:assertj-core:3.25.1'
+    testImplementation 'org.mockito:mockito-core:5.8.0'
+}
+
+// Enable FFM features for Java 23
+tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+            '--enable-preview'
+    ]
+}
+
+tasks.withType(Test) {
+    jvmArgs += [
+            '--enable-preview'
+    ]
+}

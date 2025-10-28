@@ -1,0 +1,16 @@
+dependencies {
+    // API module has no external dependencies - just pure interfaces and records
+}
+
+// Enable FFM features for Java 23
+tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+            '--enable-preview'
+    ]
+}
+
+tasks.withType(Test) {
+    jvmArgs += [
+            '--enable-preview'
+    ]
+}
