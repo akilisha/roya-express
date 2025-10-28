@@ -1,7 +1,0 @@
-com.akilisha.oss.payman.handler.OAuthHandler
-com.akilisha.oss.payman.handler.DeviceHandler
-com.akilisha.oss.payman.handler.CommandHandler
-com.akilisha.oss.payman.handler.PaymentMethodHandler
-com.akilisha.oss.payman.handler.QrCodeHandler
-com.akilisha.oss.payman.handler.PaymentProcessingHandler
-com.akilisha.oss.payman.handler.SseHandler
