@@ -1,1 +1,10 @@
-rootProject.name = 'roya-express'
+rootProject.name = 'roya-framework'
+
+// Future subprojects (will be added as we build)
+// include 'roya-core'
+// include 'roya-plugins-database'
+// include 'roya-plugins-ai'
+// include 'roya-plugins-observability'
+// include 'roya-plugins-security'
+// include 'roya-cli'
+// include 'roya-examples'

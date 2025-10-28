@@ -1,30 +1,69 @@
-allprojects {
-    group = 'com.akilisha.oss'
-    version = '1.0.0-SNAPSHOT'
+plugins {
+    id 'java'
+    id 'application'
+}
 
-    repositories {
-        mavenCentral()
+group = 'com.akilisha.oss'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
-// Maven Publishing Configuration
-subprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven-publish'
-    apply plugin: 'signing'
+repositories {
+    mavenCentral()
+}
 
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(23)
-        }
-    }
+dependencies {
+    // Core dependencies
 
-    dependencies {
-        testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    }
+    // Helidon Níma - HTTP server with virtual thread support
+    implementation platform('io.helidon:helidon-dependencies:4.0.3')
+    implementation 'io.helidon.webserver:helidon-webserver'
 
-    tasks.named('test') {
-        useJUnitPlatform()
+    // JSON processing (Jackson)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.16.1'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.10'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.4.14'
+
+    // Testing
+    testImplementation platform('org.junit:junit-bom:5.10.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'org.mockito:mockito-core:5.8.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.8.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = false
     }
+}
+
+application {
+    mainClass = 'com.akilisha.oss.roya.examples.HelloWorld'
+}
+
+// Enable preview features for modern Java (if needed)
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.withType(Test) {
+    jvmArgs += ['--enable-preview']
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += ['--enable-preview']
 }
