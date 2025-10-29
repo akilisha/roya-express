@@ -831,9 +831,10 @@ Ready to begin Phase 5: Database Plugin (first concrete plugin)
 - ⏳ Integration tests
 
 ### Next Plugins (Phase 5 continuation)
-- [ ] Auth Plugin (JWT, sessions) - Starting now
-- [ ] Metrics Plugin (Prometheus, /metrics)
-- [ ] Cache Plugin (Redis client)
+- [x] Auth Plugin (JWT, sessions, OAuth) - ✅ COMPLETE
+- [ ] Metrics Plugin (Prometheus, /metrics endpoint)
+- [ ] Cache Plugin (Redis client, request-scoped cache)
+- [ ] Email Plugin (SMTP integration, templates, transactional emails)
 
 ---
 
