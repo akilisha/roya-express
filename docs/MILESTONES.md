@@ -838,6 +838,289 @@ Ready to begin Phase 5: Database Plugin (first concrete plugin)
 
 ---
 
+## Phase 6: AI Integration - 🚧 IN PROGRESS
+
+**Roadmap Reference**: Phase 6  
+**Started**: January 29, 2025  
+**Status**: IN PROGRESS (Foundation & Design)
+
+### Goals & Philosophy
+
+**Core Goal**: AI as a first-class service - just like Database or Email.
+
+This phase makes AI/LLM integration a natural part of the Roya framework. No bolted-on complexity - AI should feel like using any other service:
+```java
+AI ai = req.get(AI.class);  // Same pattern as Database, Email
+String answer = ai.ask("You are helpful", question);
+```
+
+**Key Principles**:
+1. **Type safety by default**: Structured outputs via Java records, not JSON strings
+2. **Provider-agnostic**: Start with OpenAI, designed for Anthropic, Cohere, local models
+3. **Cost-aware**: Token counting and cost tracking built-in
+4. **Performance-conscious**: Leverage Cache plugin, virtual threads, streaming
+5. **Simple API**: Minimal surface area - `ask()`, `extract()`, `stream()`, `rag()`
+
+### Design Decisions
+
+**Decision 1: Structured Outputs Implementation**
+
+**Chosen Approach**: JSON mode + Jackson deserialization (MVP)
+
+**Rationale**:
+- ✅ Works across all providers (not just OpenAI)
+- ✅ Simple implementation (request JSON, deserialize to record)
+- ✅ No complex schema generation needed
+- ✅ Type-safe with Java records
+
+**Future Enhancement** (documented in BACKLOG.md):
+- Function calling (OpenAI-specific) for more reliable complex schemas
+- Automatic JSON Schema generation from records
+- Provider-aware: Use function calling for OpenAI, JSON mode for others
+
+**Impact**: Developers get typed responses immediately with minimal complexity. Function calling can be added later as optimization.
+
+---
+
+**Decision 2: Cost Tracking Granularity**
+
+**MVP Approach**: Per-request tracking only
+
+**Rationale**:
+- ✅ Simple to implement (track with each LLM call)
+- ✅ Provides immediate cost visibility
+- ✅ Integrates with Metrics plugin for dashboards
+- ✅ Foundation for future budget features
+
+**Future Enhancements** (documented in BACKLOG.md):
+- Per-user budget tracking (daily/weekly/monthly limits)
+- Per-organization budget tracking
+- Budget alerts (configurable thresholds)
+- Rate limiting based on budget remaining
+- Budget reset schedules
+- Integration with Auth plugin for user identification
+
+**Impact**: Cost awareness from day one, budget controls come as enhancement. Prevents cost explosions while keeping MVP simple.
+
+---
+
+**Decision 3: Caching Strategy**
+
+**MVP Approach**: Exact match caching via Cache plugin
+
+**Strategy**:
+1. **Phase 6.1**: Exact prompt match caching (simple, works immediately)
+2. **Phase 6.2**: Semantic similarity caching (embedding-based)
+3. **Future**: Full vector similarity (when VectorStore plugin is ready)
+
+**Rationale**:
+- ✅ Leverages existing Cache plugin (no new infrastructure)
+- ✅ Provides immediate cost savings (90%+ for repeated prompts)
+- ✅ Semantic caching adds complexity - defer to Phase 6.2
+- ✅ Migration path: exact → semantic → vector-based
+
+**Impact**: Immediate cost savings with simple implementation. Can upgrade to semantic caching incrementally.
+
+---
+
+**Decision 4: Provider Abstraction**
+
+**Chosen Pattern**: Same thin wrapper pattern as Email plugin
+
+```
+LLMProvider → AIServiceImpl → AI interface
+OpenAIClient, AnthropicClient (thin wrappers)
+```
+
+**Rationale**:
+- ✅ Consistency with other plugins (Email, Database)
+- ✅ Easy to add new providers (just implement LLMProvider)
+- ✅ Provider-specific features accessible via `provider()` method
+- ✅ Delegates complex logic to provider SDKs
+
+**Impact**: New providers can be added following established pattern. Developers see unified API regardless of provider.
+
+---
+
+**Decision 5: API Surface Area**
+
+**Chosen Design**: Minimal API - `ask()`, `extract()`, `stream()`, `rag()`
+
+**Why These Four Methods?**
+- `ask()`: Core chat completion (covers 80% of use cases)
+- `extract()`: Structured outputs (killer feature - type safety)
+- `stream()`: For long responses (user experience)
+- `rag()`: Advanced but API exists (Phase 7 implementation)
+
+**Rationale**:
+- ✅ Simple to learn (four methods)
+- ✅ Covers all major use cases
+- ✅ Extensible via options pattern (`AIOptions`)
+- ✅ Future-proof: `rag()` API exists even if impl is Phase 7
+
+**Impact**: Developers don't need to learn complex APIs. Four methods cover everything.
+
+---
+
+**Decision 6: Records as Schemas**
+
+**Chosen Approach**: Java records = AI schemas (no JSON Schema definitions)
+
+**Rationale**:
+- ✅ Natural Java pattern (records are perfect for this)
+- ✅ Compile-time type safety
+- ✅ No code generation needed
+- ✅ No separate schema definitions
+
+**Implementation**:
+```java
+record ProductInfo(String name, BigDecimal price) {}
+
+// One line - returns ProductInfo, not String
+ProductInfo product = ai.extract(ProductInfo.class, description);
+```
+
+**Impact**: Revolutionary developer experience. Type-safe AI extraction with zero boilerplate.
+
+---
+
+**Decision 7: RAG API Design**
+
+**Chosen Approach**: RAG API in Phase 6, full implementation in Phase 7
+
+**Rationale**:
+- ✅ API exists early (stable interface)
+- ✅ Can provide basic implementation (simple retrieval)
+- ✅ Full vector-based RAG comes in Phase 7
+- ✅ Allows incremental development
+
+**Implementation Strategy**:
+- Phase 6: Basic RAG (simple text search + AI generation)
+- Phase 7: Full RAG (vector embeddings + semantic search)
+
+**Impact**: Developers can use RAG API immediately, get full power in Phase 7.
+
+---
+
+### Architecture
+
+**Three-Layer Design**:
+
+```
+┌─────────────────────────────────────┐
+│  AI Interface (public API)          │  ← What developers use
+│  - ask(), extract(), stream(), rag() │
+└─────────────────────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────────┐
+│  AI Service Implementation          │  ← Orchestration layer
+│  - Token counting                   │
+│  - Caching (Cache plugin)           │
+│  - Cost tracking                    │
+│  - Provider abstraction             │
+└─────────────────────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────────┐
+│  Provider Clients (thin wrappers)   │  ← Delegate to SDKs
+│  - OpenAIClient                      │
+│  - AnthropicClient (future)         │
+│  - CohereClient (future)            │
+└─────────────────────────────────────┘
+```
+
+**Key Insight**: Separation of concerns
+- `AI` interface = developer-facing API (simple, type-safe)
+- `AIServiceImpl` = orchestration (caching, counting, tracking)
+- `OpenAIClient` = thin SDK wrapper (delegate to provider)
+
+### Implementation Priorities
+
+**Phase 6.1 (MVP)**:
+1. ✅ `AIPlugin` registration (in progress)
+2. ✅ `AI` interface (in progress)
+3. ⏳ `OpenAIClient` (thin wrapper)
+4. ⏳ `ask()` implementation
+5. ⏳ Token counting
+6. ⏳ Basic caching (exact match)
+
+**Phase 6.2 (Polish)**:
+7. ⏳ `extract()` with JSON mode
+8. ⏳ Streaming support
+9. ⏳ Semantic caching (similarity matching)
+10. ⏳ Cost tracking + metrics integration
+11. ⏳ Error handling + retries
+
+**Phase 6.3 (Extend)**:
+12. ⏳ Multiple providers (Anthropic, Cohere)
+13. ⏳ Fine-tuning APIs
+14. ⏳ Vision APIs
+15. ⏳ Provider-specific optimizations
+
+### Challenges & Risks
+
+**Risk 1: Over-engineering**
+- **Mitigation**: Start with `ask()` only, add features incrementally
+- **Status**: Controlled - MVP focuses on core features
+
+**Risk 2: Cost explosion**
+- **Mitigation**: Budget alerts from day one, caching enabled by default
+- **Status**: Addressed - cost tracking in MVP
+
+**Risk 3: API drift (provider changes)**
+- **Mitigation**: Thin wrappers hide provider differences
+- **Status**: Mitigated - abstraction layer protects us
+
+**Risk 4: Type safety complexity**
+- **Mitigation**: Use JSON mode + Jackson (simple, reliable)
+- **Status**: Addressed - records + Jackson = simple and powerful
+
+### What We're Building
+
+**The Vision**:
+```java
+// This should "just work" - no magic, no complexity
+app.post("/extract", (req, res, next) -> {
+    AI ai = req.get(AI.class);
+    
+    // Type-safe extraction - one line
+    ProductInfo product = ai.extract(
+        ProductInfo.class,
+        req.body().description()
+    );
+    
+    // Use it - it's a real ProductInfo record
+    Database db = req.get(Database.class);
+    db.insert("products", product);  // Type-safe SQL too!
+    
+    res.json(product);
+});
+```
+
+This unifies:
+- ✅ Request handling (Express-compatible)
+- ✅ AI extraction (type-safe)
+- ✅ Database operations (type-safe SQL)
+
+All type-safe, all first-class, all simple.
+
+### Success Criteria (In Progress)
+- ⏳ `ai().ask(prompt)` returns completions
+- ⏳ `ai().extract(Record.class, prompt)` returns typed data
+- ⏳ Streaming responses work (`ai().stream()`)
+- ⏳ Token usage tracked per request
+- ⏳ Caching reduces duplicate calls by 90%+
+
+### Next Steps
+- Complete OpenAI client implementation
+- Add token counting and cost tracking
+- Integrate with Cache plugin
+- Create AIDemo example application
+- Write comprehensive tests
+
+---
+
 ## Phase 5: Auth Plugin - ✅ COMPLETE
 
 **Roadmap Reference**: Phase 5 (continuation)  

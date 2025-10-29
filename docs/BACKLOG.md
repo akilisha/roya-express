@@ -415,6 +415,68 @@ Postmark is excellent for transactional emails. Follow the same thin wrapper pat
 
 ---
 
+## AI Plugin Enhancements
+
+### Function Calling for Structured Outputs
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 8 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Add function calling support (OpenAI-style) for structured outputs, in addition to JSON mode. Function calling is more reliable for complex schemas and provider-specific optimizations.
+
+**Motivation**:
+While JSON mode works well, function calling provides more reliable structured outputs, especially for nested/complex record structures. It's also provider-specific optimization (OpenAI supports this natively).
+
+**Acceptance Criteria**:
+- Function calling implementation alongside JSON mode
+- Automatic function schema generation from Java records
+- Provider-aware: Use function calling for OpenAI, JSON mode for others
+- Fallback to JSON mode if function calling fails
+- Performance comparison: function calling vs JSON mode
+
+**Dependencies**:
+- OpenAI function calling API
+- Ability to generate JSON Schema from Java records
+
+**Notes**:
+This is an enhancement on top of MVP JSON mode implementation. JSON mode is simpler and works across providers, function calling is provider-specific but more reliable.
+
+---
+
+### Per-User and Per-Organization Budget Tracking
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 16 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+Add budget tracking at user and organization levels, not just per-request. Enable budget alerts and rate limiting based on AI usage costs.
+
+**Motivation**:
+Per-request tracking is MVP, but production systems need budget controls at user/org levels to prevent cost explosions.
+
+**Acceptance Criteria**:
+- Per-user budget tracking (daily/weekly/monthly limits)
+- Per-organization budget tracking
+- Budget alerts (configurable thresholds)
+- Rate limiting based on budget remaining
+- Budget reset schedules (daily/weekly/monthly)
+- Integration with Auth plugin for user identification
+
+**Dependencies**:
+- Auth plugin (user identification)
+- Database plugin (budget storage)
+- Metrics plugin (budget metrics)
+
+**Notes**:
+MVP has per-request tracking. This enhancement adds budget management layer. Consider storage in Database plugin, metrics in Metrics plugin.
+
+---
+
 ## Investigation Items
 
 ### True FFM Direct Mapping for Cache Plugin
