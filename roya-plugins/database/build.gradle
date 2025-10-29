@@ -1,3 +1,42 @@
 plugins {
     id 'java-library'
 }
+
+dependencies {
+    // Core dependencies
+    implementation project(':roya-api')
+    
+    // JOOQ for type-safe SQL DSL
+    implementation 'org.jooq:jooq:3.18.7'
+    implementation 'org.jooq:jooq-meta:3.18.7'
+    implementation 'org.jooq:jooq-codegen:3.18.7'
+    
+    // HikariCP for connection pooling
+    implementation 'com.zaxxer:HikariCP:5.0.1'
+    
+    // PostgreSQL driver
+    implementation 'org.postgresql:postgresql:42.7.1'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+}
+
+// TODO: JOOQ code generation - use manual generation or JOOQ plugin
+// For now, we'll generate manually with:
+// java -cp "path/to/jooq-3.18.7.jar:path/to/jooq-codegen-3.18.7.jar:path/to/postgresql-42.7.1.jar" org.jooq.codegen.GenerationTool jooq-config.xml
+
+// Enable preview features (for ScopedValue)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    
+    sourceSets.main.java.srcDirs += 'build/generated/jooq'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+        '--enable-preview',
+        '--source', '21'
+    ]
+}

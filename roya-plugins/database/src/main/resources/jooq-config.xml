@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <jdbc>
+        <driver>org.postgresql.Driver</driver>
+        <url>jdbc:postgresql://localhost:5432/roya</url>
+        <user>postgres</user>
+        <password>postgres</password>
+    </jdbc>
+    <generator>
+        <database>
+            <name>org.jooq.meta.postgres.PostgresDatabase</name>
+            <inputSchema>public</inputSchema>
+            <includes>.*</includes>
+        </database>
+        <target>
+            <packageName>com.akilisha.oss.roya.plugins.database.jooq</packageName>
+            <directory>../../build/generated/jooq</directory>
+        </target>
+        <generate>
+            <records>true</records>
+            <fluentSetters>true</fluentSetters>
+            <pojos>true</pojos>
+            <javaTimeTypes>true</javaTimeTypes>
+        </generate>
+    </generator>
+</configuration>
+

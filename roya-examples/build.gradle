@@ -5,6 +5,10 @@ plugins {
 dependencies {
     implementation project(":roya-api")
     implementation project(":roya-core")
+    implementation project(":roya-plugins:database")
+    
+    // JOOQ for examples using database
+    implementation 'org.jooq:jooq:3.18.7'
 }
 
 application {
