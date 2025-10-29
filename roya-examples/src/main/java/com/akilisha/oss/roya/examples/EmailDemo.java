@@ -168,7 +168,11 @@ public class EmailDemo {
             }
         });
 
-        emailPlugin.start();
+        try {
+            emailPlugin.start();
+        } catch (Exception e) {
+            System.err.println("Warning: Failed to start EmailPlugin: " + e.getMessage());
+        }
         app.listen(3000, () -> {
             System.out.println("✓ Email Demo running on http://localhost:3000\n");
             System.out.println("📝 Quick Test:");
