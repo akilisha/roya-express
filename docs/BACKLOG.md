@@ -477,6 +477,209 @@ MVP has per-request tracking. This enhancement adds budget management layer. Con
 
 ---
 
+## Infrastructure & DevOps Enhancements
+
+### Health Check Endpoints
+**Category**: Feature  
+**Priority**: P1-High  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Phase 6 or 7  
+**Status**: New
+
+**Description**:
+Add health check endpoints leveraging Helidon's native health check capabilities. Essential for Kubernetes liveness and readiness probes, deployment frameworks, and monitoring.
+
+**Motivation**:
+Modern deployment frameworks (Kubernetes, Docker Swarm, etc.) require health check endpoints to ensure services are running and ready. Helidon has native support for this - we should expose it.
+
+**Acceptance Criteria**:
+- `/health` endpoint (basic health check)
+- `/health/live` endpoint (liveness probe)
+- `/health/ready` endpoint (readiness probe)
+- Optional: `/health/started` endpoint (startup probe)
+- Integration with plugin system (plugins can register health checks)
+- Configured via system properties or config file
+
+**Dependencies**:
+- Helidon health check module (likely already available)
+- Plugin registration for custom health checks
+
+**Notes**:
+Helidon has `io.helidon.health` module. We should integrate this and expose standard endpoints. Plugins can register custom health checks (e.g., Database plugin checks DB connection, Cache plugin checks cache availability).
+
+---
+
+### Object Storage Service Plugin
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 12 hours  
+**Proposed For**: Phase 7  
+**Status**: New
+
+**Description**:
+Object storage plugin for storing infrequently accessed and unstructured data. Uses MinIO (S3-compatible) via Docker container. Provides `ObjectStorage` service interface similar to `Database` and `Email`.
+
+**Motivation**:
+Many applications need to store files, images, documents, backups, etc. MinIO provides S3-compatible object storage that works great with Docker. This should feel like using Database or Email - just another service.
+
+**Proposed API**:
+```java
+ObjectStorage storage = req.get(ObjectStorage.class);
+
+// Upload
+String objectId = storage.put("bucket-name", "path/to/file", fileBytes);
+storage.put("bucket-name", "path/to/file", inputStream);
+
+// Download
+Optional<byte[]> data = storage.get("bucket-name", "path/to/file");
+storage.get("bucket-name", "path/to/file", outputStream);
+
+// Metadata
+Optional<ObjectMetadata> meta = storage.metadata("bucket-name", "path/to/file");
+
+// List
+List<ObjectInfo> objects = storage.list("bucket-name", "prefix/");
+
+// Delete
+storage.delete("bucket-name", "path/to/file");
+```
+
+**Acceptance Criteria**:
+- `ObjectStorage` interface (consistent with Database/Email pattern)
+- MinIO client integration (aws-java-sdk-s3 or MinIO Java SDK)
+- Docker Compose setup for local development
+- Bucket management (create, delete, list)
+- File operations (put, get, delete, list, metadata)
+- Streaming support for large files
+- Optional: Presigned URLs for temporary access
+- Configuration via system properties (endpoint, access key, secret key)
+
+**Dependencies**:
+- MinIO Docker container (for local development)
+- MinIO Java SDK or AWS S3 SDK
+- Optional: Docker Compose integration
+
+**Notes**:
+MinIO is S3-compatible and perfect for local development. Production deployments can use MinIO, AWS S3, or any S3-compatible storage. Follow same thin wrapper pattern as Email plugin.
+
+---
+
+### Configuration Variables and Secrets Service
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 16 hours  
+**Proposed For**: Phase 7  
+**Status**: New
+
+**Description**:
+Configuration and secrets management service similar to Kubernetes ConfigMap and Secrets. Provides centralized, secure storage for application configuration and sensitive data.
+
+**Motivation**:
+Modern applications need centralized configuration and secrets management. Kubernetes has ConfigMap and Secrets, but for local development and non-k8s deployments, we need an alternative. HashiCorp Vault is industry standard for secrets management.
+
+**Proposed Solution**:
+- **Secrets**: HashiCorp Vault (via Docker container)
+- **Config**: Could use Vault's KV store, or a simple file-based approach for development
+- **API**: `Config` and `Secrets` services
+
+**Proposed API**:
+```java
+// Config (non-sensitive)
+Config config = req.get(Config.class);
+String dbHost = config.get("database.host", "localhost");
+Integer port = config.getInt("server.port", 3000);
+
+// Secrets (sensitive)
+Secrets secrets = req.get(Secrets.class);
+String apiKey = secrets.get("sendgrid.apiKey"); // Throws if not found
+Optional<String> token = secrets.getOptional("stripe.token");
+```
+
+**Alternative Approaches**:
+1. **Vault only**: Use Vault for both config and secrets (KV v2 for config, secret mounts for secrets)
+2. **Vault + Consul**: Vault for secrets, Consul for config
+3. **Simple fallback**: Vault for production, file-based for development
+
+**Recommendation**: Vault only (simpler, industry standard, supports both config and secrets)
+
+**Acceptance Criteria**:
+- `Config` service interface (get, getInt, getBoolean, etc.)
+- `Secrets` service interface (get, getOptional, etc.)
+- Vault integration (HashiCorp Vault Java client)
+- Docker Compose setup for local Vault instance
+- Environment variable fallback (for development)
+- Vault authentication (token, app role, etc.)
+- Support for Vault KV v2 engine
+- Configuration via system properties (vault endpoint, auth method, etc.)
+- Graceful degradation (fallback to env vars or files if Vault unavailable)
+
+**Dependencies**:
+- HashiCorp Vault Docker container
+- Vault Java client library
+- Optional: Spring Cloud Vault (if compatible) or native Vault client
+
+**Notes**:
+Vault is the industry standard, but may be overkill for simple apps. Consider a "simple" mode for development that reads from environment variables or files. For production, Vault provides audit trails, secret rotation, etc.
+
+---
+
+## API Documentation
+
+### OpenAPI/Swagger Integration
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 8-12 hours  
+**Proposed For**: Phase 6 or 7  
+**Status**: Investigation
+
+**Description**:
+Automatic API documentation generation using OpenAPI/Swagger. Leverage Helidon's native OpenAPI capabilities to generate documentation from route definitions.
+
+**Motivation**:
+API documentation is essential for developers. Manual documentation is error-prone and gets out of sync. Automatic generation from code is ideal.
+
+**Investigation Questions**:
+1. Does Helidon have built-in OpenAPI support?
+2. Can we generate OpenAPI from Roya route definitions?
+3. Should we use annotations (like JAX-RS) or infer from handlers?
+4. Can we integrate with Swagger UI for interactive docs?
+
+**Proposed Approach**:
+- **Option A**: Leverage Helidon's OpenAPI module (if available)
+  - Generate OpenAPI spec from route definitions
+  - Serve `/openapi.json` endpoint
+  - Optional: Integrate Swagger UI at `/swagger-ui`
+  
+- **Option B**: Manual OpenAPI spec
+  - Hand-crafted OpenAPI YAML/JSON
+  - Keep in sync with routes manually
+  - Less ideal but simpler to implement
+
+- **Option C**: Annotations-based
+  - Add annotations to route handlers
+  - Generate OpenAPI from annotations
+  - Similar to Spring Boot or JAX-RS approach
+
+**Recommendation**: Option A if Helidon supports it, otherwise Option C (annotations). We should investigate Helidon's OpenAPI capabilities first.
+
+**Acceptance Criteria**:
+- OpenAPI spec generation (JSON/YAML)
+- `/openapi.json` or `/openapi.yaml` endpoint
+- Optional: Swagger UI integration at `/swagger-ui`
+- Support for route parameters, request bodies, responses
+- Documentation of middleware/handlers
+- Optional: Example values and descriptions
+
+**Dependencies**:
+- Helidon OpenAPI module (if available)
+- Or: OpenAPI generator library
+- Optional: Swagger UI for interactive documentation
+
+**Notes**:
+This requires investigation into Helidon's capabilities. If Helidon has native support, we should leverage it. Otherwise, we may need to build our own route introspection system.
+
+---
+
 ## Investigation Items
 
 ### True FFM Direct Mapping for Cache Plugin

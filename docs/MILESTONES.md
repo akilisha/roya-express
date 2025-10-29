@@ -1113,11 +1113,43 @@ All type-safe, all first-class, all simple.
 - ⏳ Caching reduces duplicate calls by 90%+
 
 ### Next Steps
-- Complete OpenAI client implementation
-- Add token counting and cost tracking
-- Integrate with Cache plugin
-- Create AIDemo example application
-- Write comprehensive tests
+- Complete OpenAI client implementation ✅
+- Add token counting and cost tracking ✅
+- Integrate with Cache plugin ✅
+- Create AIDemo example application ⏳
+- Write comprehensive tests ⏳
+
+---
+
+## Future Plugins & Enhancements
+
+### Health Check Endpoints
+**Status**: Documented in BACKLOG.md  
+**Priority**: P1-High  
+**Timeline**: Phase 6 or 7
+
+Leverage Helidon's native health check capabilities for Kubernetes probes. Essential for production deployments.
+
+### Object Storage Plugin
+**Status**: Documented in BACKLOG.md  
+**Priority**: P2-Medium  
+**Timeline**: Phase 7
+
+MinIO/S3-compatible object storage service plugin. Follows same pattern as Database and Email plugins.
+
+### Configuration & Secrets Service
+**Status**: Documented in BACKLOG.md  
+**Priority**: P2-Medium  
+**Timeline**: Phase 7
+
+HashiCorp Vault integration for centralized config and secrets management. Similar to Kubernetes ConfigMap and Secrets.
+
+### OpenAPI Documentation
+**Status**: Investigation phase (BACKLOG.md)  
+**Priority**: P2-Medium  
+**Timeline**: Phase 6 or 7
+
+Automatic API documentation generation. Investigate Helidon's native OpenAPI capabilities.
 
 ---
 
