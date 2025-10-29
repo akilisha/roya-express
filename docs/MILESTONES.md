@@ -804,150 +804,36 @@ Ready to begin Phase 5: Database Plugin (first concrete plugin)
 
 ---
 
-## Phase 5: Database Plugin Foundation - 🚧 IN PROGRESS
+## Phase 5: Database Plugin - ✅ MVP COMPLETE
 
 **Roadmap Reference**: Phase 5  
 **Started**: January 2025  
-**Completed**: IN PROGRESS  
+**Completed**: January 2025  
 **Team**: Core team
 
 ### What We Accomplished
 
 #### Plugin Infrastructure
-- ✅ **Database Plugin Created** - Complete plugin module (`roya-plugins/database`)
-- ✅ **Docker Compose Setup** - Auto-migration on startup via `/docker-entrypoint-initdb.d/`
-- ✅ **Database Schema** - Users table with sample data
-- ✅ **Connection Pooling** - HikariCP integrated and configured
-- ✅ **JOOQ Wrapper** - Thin accessor to JOOQ DSLContext
+- ✅ Database Plugin module (`roya-plugins/database`)
+- ✅ HikariCP connection pooling
+- ✅ JOOQ wrapper (DSLContext + transactions)
+- ✅ Flyway migrations (migrate())
+- ✅ JOOQ code generation entrypoint (generateModel())
+- ✅ Docker auto-migration
 
-#### Technical Implementation
-- ✅ `Database.java` - Interface exposing JOOQ DSLContext
-- ✅ `DatabaseServiceImpl.java` - JOOQ + HikariCP implementation
-- ✅ `DatabasePlugin.java` - Plugin lifecycle management
-- ✅ `ConnectionPoolStats.java` - Connection pool monitoring
-- ✅ Auto-migration script that runs on container startup
+#### Demos & Docs
+- ✅ CRUD + admin demo endpoints (migrate, generate-model)
+- ✅ Usage documentation (`DATABASE_USAGE.md`)
 
-#### Demo & Examples
-- ✅ `UserDemo.java` - Complete CRUD REST API
-- ✅ JOOQ manual mode queries (working without code generation)
-- ✅ Database service registration via plugin
-- ✅ Connection pool stats endpoint (`/health`)
+### Deferred / Future Enhancements
+- ⏳ Gradle-integrated JOOQ code generation
+- ⏳ Multiple database instances / named configs
+- ⏳ Integration tests
 
-### What's NOT Implemented (Deferred)
-
-#### DatabaseAware Interface
-- ⏳ Interface contract design (see `DATABASE_AWARE_DESIGN.md`)
-- ⏳ RequestImpl implements DatabaseAware
-- ⏳ DatabaseAware methods:
-  - ⏳ `migrate()` - Execute migrations from standard path
-  - ⏳ `generateModel()` - Generate JOOQ classes
-  - ⏳ `withContext()` - Execute with DSLContext
-  - ⏳ `withTransaction()` - Execute with transaction semantics
-
-#### Other Deferred Items
-- ⏳ **Flyway migration support** - Deferred, using simple SQL scripts for now
-- ⏳ **JOOQ code generation** - Manual mode works, codegen pending
-- ⏳ **Body parsing** - POST/PUT need JSON parsing (BodyParser middleware)
-- ⏳ **Multiple database instances** - Not yet implemented
-- ⏳ **Comprehensive tests** - Basic structure only
-
-### Challenges Encountered
-
-**Challenge 1**: Plugin doesn't provide framework contract
-- **Description**: Database plugin is infrastructure but doesn't offer standardized functionality
-- **Resolution**: Proposed DatabaseAware interface design to create framework contract
-- **Impact**: Current implementation is useful but not integrated with RequestImpl
-
-**Challenge 2**: Docker migration setup
-- **Description**: Manual migration scripts are cumbersome
-- **Resolution**: Used Postgres auto-initialization with volume mounting
-- **Impact**: `docker-compose up` now auto-creates schema
-
-**Challenge 3**: JOOQ code generation complexity
-- **Description**: Gradle integration for JOOQ codegen is complex
-- **Resolution**: Using manual JOOQ queries for now; codegen deferred
-- **Impact**: Working queries but no generated classes yet
-
-### Design Decisions
-
-**Decision 1**: Use Docker auto-initialization
-- **What**: Postgres runs SQL from `/docker-entrypoint-initdb.d/` on first startup
-- **Why**: Zero-step database setup - just `docker-compose up`
-- **Impact**: Developers get database immediately without manual steps
-
-**Decision 2**: Defer DatabaseAware interface
-- **What**: Build plugin infrastructure first, then add framework contract
-- **Why**: Need to understand usage patterns before designing interface
-- **Impact**: Current implementation works but not fully integrated
-
-**Decision 3**: Use manual JOOQ queries
-- **What**: No code generation, use `field()` and `table()` functions
-- **Why**: Faster to implement, works immediately
-- **Impact**: Working queries but lose type-safety benefits
-
-### Metrics (Current)
-- **Database plugin files**: 4 (Database, DatabaseServiceImpl, DatabasePlugin, ConnectionPoolStats)
-- **Docker setup**: 1 file (init-database.sql)
-- **Examples**: 3 (UserDemo, DatabaseDemo, DatabaseDemoSimplified)
-- **Lines of code**: ~800 (plugin infrastructure + demos)
-- **Build status**: ✅ SUCCESS
-- **Docker status**: ✅ Auto-migration working
-
-### What Works Right Now ✅
-```java
-// Register database
-app.services().singleton(Database.class, () -> new DatabaseServiceImpl(...));
-
-// Use in handlers
-app.get("/users", (req, res, next) -> {
-    Database db = req.get(Database.class);
-    
-    // Manual JOOQ query
-    var users = db.dsl()
-        .selectFrom(table("users"))
-        .orderBy(field("id"))
-        .fetch(result -> {
-            var r = (Record) result;
-            return new User(...);
-        });
-    
-    res.json(users);
-});
-```
-
-**Verified Working:**
-```bash
-# Start database (auto-creates schema)
-docker-compose up -d
-
-# Schema automatically created with sample data
-docker exec roya-postgres psql -U postgres -d roya -c "SELECT * FROM users"
-
-# Run demo
-./gradlew :roya-examples:run --args="UserDemo"
-
-# Test
-curl http://localhost:3000/users
-```
-
-### Lessons Learned
-- **Docker auto-init is powerful**: `/docker-entrypoint-initdb.d/` removes setup friction
-- **Plugin infrastructure needs framework contract**: DatabaseAware interface proposed
-- **Manual JOOQ queries work fine**: Code generation is nice-to-have, not required
-- **Separation of concerns**: Framework defines contract, plugin provides implementation
-
-### Next Steps
-- [ ] Design and implement DatabaseAware interface
-- [ ] RequestImpl implements DatabaseAware (delegates to plugin)
-- [ ] Add migrate(), generateModel(), withContext(), withTransaction()
-- [ ] Add body parsing middleware for POST/PUT
-- [ ] Implement JOOQ code generation OR enhance manual query support
-- [ ] Add comprehensive tests
-
-**Phase 5 is IN PROGRESS!** 🚧
-
-### Design Document
-See `docs/DATABASE_AWARE_DESIGN.md` for detailed interface design and implementation plans.
+### Next Plugins (Phase 5 continuation)
+- [ ] Auth Plugin (JWT, sessions)
+- [ ] Metrics Plugin (Prometheus, /metrics)
+- [ ] Cache Plugin (Redis client)
 
 ---
 
