@@ -1,0 +1,56 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // Core dependencies
+    implementation project(':roya-api')
+    
+    // Database plugin (for accessing database)
+    implementation project(':roya-plugins:database')
+    
+    // JOOQ for database queries (also used directly in AuthServiceImpl)
+    implementation 'org.jooq:jooq:3.18.7'
+    
+    // JWT library (Java JWT)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    
+    // BCrypt for password hashing
+    implementation 'org.mindrot:jbcrypt:0.4'
+    
+    // OAuth 2.0 library (ScribeJava)
+    implementation 'com.github.scribejava:scribejava-apis:8.3.3'
+    implementation 'com.github.scribejava:scribejava-core:8.3.3'
+    
+    // Jackson for JSON handling
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    
+    // Test dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+}
+
+// Enable preview features (for ScopedValue)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+        '--enable-preview',
+        '--source', '21'
+    ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs += ['--enable-preview']
+}

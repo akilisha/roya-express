@@ -831,9 +831,83 @@ Ready to begin Phase 5: Database Plugin (first concrete plugin)
 - ⏳ Integration tests
 
 ### Next Plugins (Phase 5 continuation)
-- [ ] Auth Plugin (JWT, sessions)
+- [ ] Auth Plugin (JWT, sessions) - Starting now
 - [ ] Metrics Plugin (Prometheus, /metrics)
 - [ ] Cache Plugin (Redis client)
+
+---
+
+## Phase 5: Auth Plugin - ✅ COMPLETE
+
+**Roadmap Reference**: Phase 5 (continuation)  
+**Started**: January 2025  
+**Completed**: January 2025  
+**Team**: Core team
+
+### Objectives
+- [x] Email/password authentication ✅
+- [x] JWT token generation and verification ✅
+- [x] Session-based auth (integrated with Session middleware) ✅
+- [x] Password reset flow ✅
+- [x] Postgres-backed user management (GoTrue-inspired) ✅
+- [x] auth.required() middleware helper ✅
+- [x] OAuth providers (Google, GitHub) ✅
+
+### What We Accomplished
+
+#### Core Authentication
+- ✅ **Auth Interface** - Complete authentication API
+  - Email/password registration and login
+  - JWT token generation, verification, refresh
+  - User management (get, update, delete)
+  - Password change and reset flows
+  - `auth.required()` and `auth.optional()` middleware helpers
+
+#### OAuth 2.0 Support
+- ✅ **OAuth Provider Abstraction** - Clean interface for adding providers
+- ✅ **Google OAuth Provider** - Full implementation with ScribeJava
+- ✅ **GitHub OAuth Provider** - Full implementation with user info fetching
+- ✅ **OAuth Service** - Provider registration, state management, callback handling
+- ✅ **OAuth Routes** - Automatic route registration (`/auth/{provider}`, `/auth/{provider}/callback`)
+- ✅ **Account Linking** - OAuth accounts automatically link to existing email accounts
+
+#### Database Schema
+- ✅ **Auth Schema** - `auth_users`, `auth_sessions`, `auth_refresh_tokens`, `auth_password_resets`
+- ✅ **OAuth Schema** - `provider`, `provider_id`, `provider_metadata` columns
+- ✅ **Flyway Migrations** - V1 (auth schema) + V2 (OAuth columns)
+
+#### Testing & Demos
+- ✅ **Unit Tests** - OAuth provider registration, state generation, URL generation
+- ✅ **Integration Demo** - Complete OAuthDemo with live OAuth flow
+- ✅ **AuthDemo** - Comprehensive authentication demo (email/password, JWT, sessions)
+
+### Design Decisions
+- **GoTrue-inspired**: Postgres-backed auth with self-contained schema
+- **Both JWT and Sessions**: Support both token-based and session-based auth
+- **auth.required() middleware**: Framework-provided route protection helper
+- **JSONB user_data**: Flexible user metadata storage
+- **ScribeJava for OAuth**: Industry-standard OAuth 2.0 library (50+ providers)
+- **Environment-based Configuration**: OAuth providers registered via env vars
+- **Session-based State Management**: CSRF protection via session-stored state tokens
+
+### Metrics
+- **OAuth Providers**: 2 (Google, GitHub) - easily extensible
+- **Unit Tests**: 8+ tests covering OAuth functionality
+- **Integration Demo**: Complete live OAuth flow demonstration
+- **Database Migrations**: 2 (auth schema + OAuth columns)
+- **Lines of Code**: ~1,500 (OAuth implementation + tests + demos)
+
+### Challenges Encountered
+- **ScribeJava API Changes**: ExecutionException handling required
+- **Package Visibility**: OAuth service needs access to AuthServiceImpl.generateToken()
+- **Application Interface**: OAuth routes registered via `app.route()` instead of direct `get()`
+- **State Management**: In-memory state store (production should use Redis)
+
+### Lessons Learned
+- **OAuth is simpler than expected**: Standard OAuth 2.0 flow makes implementation straightforward
+- **ScribeJava is powerful**: Handles all OAuth complexity, just need provider configs
+- **Account linking is important**: Users expect OAuth to work with existing email accounts
+- **Session middleware required**: OAuth state management needs session support
 
 ---
 

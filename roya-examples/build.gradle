@@ -6,9 +6,14 @@ dependencies {
     implementation project(":roya-api")
     implementation project(":roya-core")
     implementation project(":roya-plugins:database")
+    implementation project(":roya-plugins:auth")
     
     // JOOQ for examples using database
     implementation 'org.jooq:jooq:3.18.7'
+    
+    // OAuth dependencies (for examples)
+    implementation 'com.github.scribejava:scribejava-apis:8.3.3'
+    implementation 'com.github.scribejava:scribejava-core:8.3.3'
 }
 
 application {
