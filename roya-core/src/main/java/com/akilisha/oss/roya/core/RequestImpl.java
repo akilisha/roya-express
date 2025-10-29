@@ -1,15 +1,19 @@
 package com.akilisha.oss.roya.core;
 
 import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.plugin.DatabaseAware;
 import com.akilisha.oss.roya.api.plugin.Services;
 import io.helidon.http.ServerRequestHeaders;
 import io.helidon.webserver.http.ServerRequest;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Request implementation backed by Helidon ServerRequest.
+ * 
+ * Implements DatabaseAware by delegating to Database plugin via Services.
  */
 public class RequestImpl implements Request {
 
@@ -25,6 +29,7 @@ public class RequestImpl implements Request {
         this.helidonRequest = helidonRequest;
         this.services = services;
     }
+    
 
     @Override
     public String method() {

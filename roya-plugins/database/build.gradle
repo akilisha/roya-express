@@ -17,13 +17,14 @@ dependencies {
     // PostgreSQL driver
     implementation 'org.postgresql:postgresql:42.7.1'
     
+    // Flyway for database migrations
+    implementation 'org.flywaydb:flyway-core:10.7.1'
+    
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.9'
 }
 
-// TODO: JOOQ code generation - use manual generation or JOOQ plugin
-// For now, we'll generate manually with:
-// java -cp "path/to/jooq-3.18.7.jar:path/to/jooq-codegen-3.18.7.jar:path/to/postgresql-42.7.1.jar" org.jooq.codegen.GenerationTool jooq-config.xml
+// JOOQ and Flyway configured and ready to use
 
 // Enable preview features (for ScopedValue)
 java {

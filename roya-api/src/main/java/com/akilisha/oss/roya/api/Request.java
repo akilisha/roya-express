@@ -6,6 +6,9 @@ import java.util.Optional;
 
 /**
  * HTTP Request - Express-compatible API.
+ * 
+ * Request does NOT extend DatabaseAware to keep framework lightweight.
+ * Use explicit database access: req.get(Database.class)
  */
 public interface Request {
     // HTTP Basics

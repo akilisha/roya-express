@@ -51,7 +51,7 @@ public class UserDemo {
                 .selectFrom(table("users"))
                 .orderBy(field("id"))
                 .fetch(result -> {
-                    var r = (Record) result;
+                    var r = (org.jooq.Record) result;
                     return new User(
                         r.get("id", Integer.class),
                         r.get("name", String.class),
@@ -72,7 +72,7 @@ public class UserDemo {
                 .selectFrom(table("users"))
                 .where(field("id").eq(id))
                 .fetchOne(result -> {
-                    var r = (Record) result;
+                    var r = (org.jooq.Record) result;
                     return new User(
                         r.get("id", Integer.class),
                         r.get("name", String.class),

@@ -59,5 +59,21 @@ public interface Database {
      * @return Connection pool stats
      */
     ConnectionPoolStats getStats();
+
+    /**
+     * Run database migrations from a standard location.
+     * Implementations may use SQL files or a migration tool.
+     *
+     * @return number of migrations applied
+     */
+    int migrate();
+
+    /**
+     * Generate model/entity classes (e.g., JOOQ code generation).
+     * Should be run before application start so generated classes are on the classpath.
+     *
+     * @return number of generated classes or 0 if not applicable
+     */
+    int generateModel();
 }
 
