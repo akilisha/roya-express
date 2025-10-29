@@ -331,6 +331,34 @@ Could be community-contributed.
 
 ## Investigation Items
 
+### True FFM Direct Mapping for Cache Plugin
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 24 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+True FFM Direct Mapping - Currently using `MemorySegment.ofBuffer(MappedByteBuffer)`, which still has MappedByteBuffer's 2GB limit per segment. True FFM direct mapping (without 2GB limit) would require a different API or multiple segments.
+
+**Motivation**:
+Allow cache files to exceed 2GB per segment, leveraging FFM's full capabilities without the MappedByteBuffer limitation.
+
+**Acceptance Criteria**:
+- Cache files can exceed 2GB per segment
+- Use true FFM direct file mapping API (when available) or multi-segment approach
+- Maintain backward compatibility with existing cache files
+- Performance benchmarks show no degradation
+
+**Dependencies**:
+- FFM direct file mapping API (may require newer Java version)
+- Or implementation of multi-segment file mapping
+
+**Notes**:
+Current implementation wraps MappedByteBuffer, which has hard 2GB limit. True FFM MemorySegment doesn't have this limitation but requires different mapping approach.
+
+---
+
 ### FFM-Based HTTP Parser
 **Category**: Investigation  
 **Priority**: P2-Medium  
