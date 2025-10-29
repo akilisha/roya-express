@@ -362,7 +362,24 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
   - Unit tests ✅
   - Integration demo ✅
 - [ ] Metrics Plugin (Prometheus, /metrics endpoint)
-- [ ] Cache Plugin (Redis client, request-scoped cache)
+  - Micrometer integration
+  - Automatic HTTP metrics collection
+  - Custom metrics API
+  - Prometheus endpoint at /metrics
+- [ ] Cache Plugin (FFM-based native cache, Kafka-style)
+  - FFM memory-mapped files (zero-copy, efficient)
+  - Offset-based indexing (Kafka-inspired)
+  - Configurable eviction strategies (LRU, LFU, TTL, SIZE, ADAPTIVE)
+  - Minimal memory footprint (OS page cache)
+  - No external dependencies (pure Java, honors Java advances)
+- [ ] Email Plugin (Provider-agnostic, thin SDK wrappers)
+  - SendGrid, MailerSend, Brevo, Resend, Postmark providers
+  - Thin wrappers around provider SDKs (delegate email plumbing)
+  - Unified API regardless of provider
+  - SMTP fallback (Jakarta Mail)
+  - Handlebars template engine
+  - Async email sending
+  - Provider-specific feature exposure (analytics, tags, webhooks)
 
 ---
 
