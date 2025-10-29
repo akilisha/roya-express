@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.email;
 
 import com.akilisha.oss.roya.api.plugin.*;
+import com.akilisha.oss.roya.plugins.email.providers.MailerSendProvider;
 import com.akilisha.oss.roya.plugins.email.providers.SendGridProvider;
 import com.akilisha.oss.roya.plugins.email.providers.SmtpProvider;
 import com.akilisha.oss.roya.plugins.email.template.HandlebarsTemplateEngine;
@@ -47,6 +48,13 @@ public class EmailPlugin implements RoyaPlugin {
                         throw new IllegalArgumentException("email.sendgrid.apiKey is required when using SendGrid provider");
                     }
                     emailProvider = new SendGridProvider(apiKey);
+                }
+                case "mailersend" -> {
+                    String apiKey = System.getProperty("email.mailersend.apiKey");
+                    if (apiKey == null || apiKey.isBlank()) {
+                        throw new IllegalArgumentException("email.mailersend.apiKey is required when using MailerSend provider");
+                    }
+                    emailProvider = new MailerSendProvider(apiKey);
                 }
                 case "smtp" -> {
                     String smtpHost = System.getProperty("email.smtp.host", "localhost");

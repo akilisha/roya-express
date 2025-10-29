@@ -329,6 +329,92 @@ Could be community-contributed.
 
 ---
 
+## Email Plugin Enhancements
+
+### Brevo (Sendinblue) Provider for Email Plugin
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+Add Brevo (formerly Sendinblue) email provider to the Email plugin, following the same thin wrapper pattern as SendGrid and MailerSend.
+
+**Motivation**:
+Brevo is a popular email service provider with a Java SDK. Adding it increases provider choice and demonstrates the extensibility of the Email plugin architecture.
+
+**Acceptance Criteria**:
+- BrevoProvider implementation (thin wrapper around Brevo SDK)
+- System property configuration: `email.provider=brevo`, `email.brevo.apiKey`
+- Integration with EmailPlugin provider selection
+- Test with Brevo SDK: `com.brevo:sib-api-v3-sdk:7.0.0`
+- Feature support check (analytics, tags, webhooks)
+
+**Dependencies**:
+- Brevo Java SDK: `com.brevo:sib-api-v3-sdk`
+
+**Notes**:
+Follow the same pattern as SendGridProvider and MailerSendProvider - thin wrapper, delegate to SDK, expose via provider() method.
+
+---
+
+### Resend Provider for Email Plugin
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+Add Resend email provider to the Email plugin, following the same thin wrapper pattern.
+
+**Motivation**:
+Resend is a modern email API for developers. Adding it provides another provider option with excellent developer experience.
+
+**Acceptance Criteria**:
+- ResendProvider implementation (thin wrapper around Resend SDK)
+- System property configuration: `email.provider=resend`, `email.resend.apiKey`
+- Integration with EmailPlugin provider selection
+- Test with Resend SDK (check latest version)
+- Feature support check (analytics, webhooks)
+
+**Dependencies**:
+- Resend Java SDK (check latest version on Maven Central)
+
+**Notes**:
+Follow the same pattern as other providers. Resend has excellent API design and developer experience.
+
+---
+
+### Postmark Provider for Email Plugin
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+Add Postmark email provider to the Email plugin, following the same thin wrapper pattern.
+
+**Motivation**:
+Postmark specializes in transactional emails with excellent deliverability. Adding it provides a focused transactional email option.
+
+**Acceptance Criteria**:
+- PostmarkProvider implementation (thin wrapper around Postmark SDK)
+- System property configuration: `email.provider=postmark`, `email.postmark.apiKey`
+- Integration with EmailPlugin provider selection
+- Test with Postmark SDK: `com.postmarkapp:postmark-client:1.10.0`
+- Feature support check (analytics, webhooks, templates)
+
+**Dependencies**:
+- Postmark Java SDK: `com.postmarkapp:postmark-client`
+
+**Notes**:
+Postmark is excellent for transactional emails. Follow the same thin wrapper pattern as other providers.
+
+---
+
 ## Investigation Items
 
 ### True FFM Direct Mapping for Cache Plugin

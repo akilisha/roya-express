@@ -96,12 +96,18 @@ public class EmailServiceImpl implements Email {
         if (providerType.isInstance(provider)) {
             return providerType.cast(provider);
         }
-        // Special case for SendGrid
+        // Special cases for provider-specific SDK access
         if (provider instanceof com.akilisha.oss.roya.plugins.email.providers.SendGridProvider) {
             if (providerType == com.sendgrid.SendGrid.class) {
                 return providerType.cast(((com.akilisha.oss.roya.plugins.email.providers.SendGridProvider) provider).getSendGrid());
             }
         }
+        // TODO: Uncomment when MailerSend SDK is available
+        // if (provider instanceof MailerSendProvider) {
+        //     if (providerType == com.mailersend.sdk.MailerSend.class) {
+        //         return providerType.cast(((MailerSendProvider) provider).getMailerSend());
+        //     }
+        // }
         return null;
     }
 }

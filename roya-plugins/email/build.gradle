@@ -10,6 +10,10 @@ dependencies {
     // SendGrid
     implementation 'com.sendgrid:sendgrid-java:4.10.2'
     
+    // MailerSend
+    // TODO: Add MailerSend SDK when available:
+    // implementation 'com.mailersend:mailersend-java:2.1.0'
+    
     // Jakarta Mail for SMTP fallback
     implementation 'jakarta.mail:jakarta.mail-api:2.1.2'
     implementation 'org.eclipse.angus:angus-mail:2.0.2'
