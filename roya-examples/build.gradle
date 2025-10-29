@@ -10,6 +10,7 @@ dependencies {
     implementation project(":roya-plugins:metrics")
     implementation project(":roya-plugins:cache")
     implementation project(":roya-plugins:email")
+    implementation project(":roya-plugins:ai")
     
     // JOOQ for examples using database
     implementation 'org.jooq:jooq:3.18.7'

@@ -1,0 +1,53 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // Core dependencies
+    implementation project(':roya-api')
+    
+    // Cache plugin (optional - for AI response caching)
+    implementation project(':roya-plugins:cache')
+    
+    // AI Provider SDKs
+    // OpenAI Java SDK (unofficial but popular)
+    implementation 'com.theokanning.openai-gpt3-java:service:0.18.2'
+    
+    // JSON for structured outputs
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    
+    // Token counting (tiktoken4j for accurate token counting)
+    implementation 'com.knuddels:jtokkit:1.0.0'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    
+    // HTTP client for OpenAI API calls
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    
+    // Test dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+    testImplementation 'org.assertj:assertj-core:3.25.1'
+}
+
+// Enable preview features (for ScopedValue)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+        '--enable-preview',
+        '--source', '21'
+    ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs += ['--enable-preview']
+}
+
