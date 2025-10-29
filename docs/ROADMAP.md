@@ -435,7 +435,9 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 
 ## Phase 7: Vector Store & RAG
 
-**Timeline**: Weeks 19-21 (April-May 2025)
+**Timeline**: Weeks 19-21 (April-May 2025)  
+**Status**: 🚧 Design Complete - Ready for Implementation  
+**Design Doc**: See `PHASE7_DESIGN.md` for full architecture
 
 ### Objectives
 - [ ] Create vector store abstraction
@@ -452,16 +454,33 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - ✅ Multiple vector store backends work
 - ✅ Embedding happens automatically
 
+### Architecture
+
+**Three-Layer Design:**
+1. **RAG API** (`ai().rag()`) - Developer-facing
+2. **RAG Pipeline** - Orchestration (embed → search → context → LLM)
+3. **Vector Store Plugin** - Storage layer (Qdrant, embedded)
+
 ### Deliverables
-- `plugin/vector/VectorStorePlugin.java`
-- `plugin/vector/VectorStore.java` - Interface
-- `plugin/vector/QdrantClient.java` - Qdrant integration
-- `plugin/vector/EmbeddedVectorStore.java` - In-memory option
-- `plugin/ai/RAGService.java` - RAG implementation
-- `plugin/ai/Embeddings.java` - Embedding generation
+
+**Phase 7.1 (Week 19) - Foundation:**
+- ✅ VectorStore interface
+- ✅ EmbeddingService (OpenAI)
+- ✅ EmbeddedVectorBackend (dev/testing)
+
+**Phase 7.2 (Week 20) - Production:**
+- ⏳ QdrantVectorBackend
+- ⏳ Document chunking
+- ⏳ Full RAG pipeline
+
+**Phase 7.3 (Week 21) - Polish:**
+- ⏳ Reranking support
+- ⏳ Performance optimization
+- ⏳ Integration examples
 
 ### Tasks
-- [ ] Design vector store interface
+- [x] Design vector store interface ✅
+- [x] Design RAG pipeline ✅
 - [ ] Implement Qdrant client
 - [ ] Implement embedded vector store (for dev)
 - [ ] Add embedding generation (OpenAI)
@@ -469,6 +488,15 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - [ ] Build RAG pipeline (retrieve + generate)
 - [ ] Add reranking support
 - [ ] Test RAG accuracy
+
+### Key Design Decisions
+- **Embeddings**: OpenAI (MVP), designed for multiple providers
+- **Backend**: Qdrant (production) + Embedded (dev)
+- **Chunking**: Sentence-aware with configurable overlap
+- **Pipeline**: Modular (can swap components)
+- **Metadata**: Flexible Map<String, Object>
+
+See `PHASE7_DESIGN.md` for complete architecture.
 
 ---
 

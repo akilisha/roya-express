@@ -27,6 +27,17 @@ application {
     mainClass = 'com.akilisha.oss.roya.examples.HelloWorld'
 }
 
+// Allow running different examples
+tasks.register('runAIShowcase', JavaExec) {
+    group = 'application'
+    description = 'Run AI Showcase demo'
+    mainClass = 'com.akilisha.oss.roya.examples.AIShowcase'
+    classpath = sourceSets.main.runtimeClasspath
+    if (System.getProperty('ai.openai.apiKey') != null) {
+        systemProperty('ai.openai.apiKey', System.getProperty('ai.openai.apiKey'))
+    }
+}
+
 // Enable FFM features for Java 23
 tasks.withType(JavaCompile) {
     options.compilerArgs += [
