@@ -1,0 +1,48 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // Core dependencies
+    implementation project(':roya-api')
+    
+    // Email provider SDKs (optional - only include what's needed)
+    // SendGrid
+    implementation 'com.sendgrid:sendgrid-java:4.10.2'
+    
+    // Jakarta Mail for SMTP fallback
+    implementation 'jakarta.mail:jakarta.mail-api:2.1.2'
+    implementation 'org.eclipse.angus:angus-mail:2.0.2'
+    
+    // Handlebars for templates
+    implementation 'com.github.jknack:handlebars:4.3.1'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    
+    // Test dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+    testImplementation 'org.assertj:assertj-core:3.25.1'
+}
+
+// Enable preview features (for ScopedValue)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+        '--enable-preview',
+        '--source', '21'
+    ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs += ['--enable-preview']
+}
+
