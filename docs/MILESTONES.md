@@ -284,6 +284,9 @@ curl http://localhost:3001/
 - **User feedback is gold**: The get() API unification was a great suggestion
 - **Iterate on API early**: Easier to fix interface issues before implementations proliferate
 - **Virtual threads "just work"**: No special configuration needed, Helidon handles it
+- **Records as schemas are powerful**: JSON mode + Jackson + records == type safety with minimal friction
+- **Exact-match caching is a huge win**: Immediate 90%+ cost savings; semantic caching can come later
+- **Expose metadata**: Token and cost metadata are invaluable for transparency and tuning
 
 ### Success Criteria - ALL MET ✅
 - ✅ HTTP server starts successfully
@@ -482,8 +485,11 @@ GET /nonexistent              # ✅ Calls next(), proper 404
 
 **Phase 2 Core Features are COMPLETE!** 🎉
 
-### Next Steps → Phase 3
-Ready to begin Phase 3: Essential Middleware
+### Next Steps → Phase 7
+Begin implementation of Vector Store & RAG per `PHASE7_DESIGN.md`:
+- Build `VectorStore` interface and embedded backend
+- Add embedding generation (OpenAI)
+- Implement RAG pipeline and wire `ai().rag()` end-to-end
 
 ---
 
@@ -838,11 +844,12 @@ Ready to begin Phase 5: Database Plugin (first concrete plugin)
 
 ---
 
-## Phase 6: AI Integration - 🚧 IN PROGRESS
+## Phase 6: AI Integration - ✅ COMPLETE
 
 **Roadmap Reference**: Phase 6  
 **Started**: January 29, 2025  
-**Status**: IN PROGRESS (Foundation & Design)
+**Completed**: January 29, 2025  
+**Status**: COMPLETE (Foundation + Implementation)
 
 ### Goals & Philosophy
 
@@ -1116,8 +1123,15 @@ All type-safe, all first-class, all simple.
 - ✅ Complete OpenAI client implementation
 - ✅ Token counting and cost tracking (jtokkit integration)
 - ✅ Cache plugin integration (automatic response caching)
-- ✅ AIDemo example application created
+- ✅ AIDemo and AIShowcase example applications created
 - ✅ Comprehensive test suite (28 tests, 100% passing)
+
+### Post-MVP Enhancements Delivered
+- ✅ `AIResponse<T>`: metadata wrapper (model, tokens, cost, cached)
+- ✅ `askWithMetadata()` and `extractWithMetadata()` APIs
+- ✅ Expanded `AIOptions` (temperature, topP, topK, typicalP, penalties, stop, seed, logprobs, echo, additionalOptions)
+- ✅ Presets: `forExtraction()`, `forCreative()`, `forCode()`
+- ✅ SHOWCASE.md: Added "Why this works" and "How this works" sections
 
 ### Test Coverage
 - **Unit Tests**: 25 tests (AIServiceImpl, LLMResponse, AIOptions)

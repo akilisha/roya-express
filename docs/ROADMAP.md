@@ -413,6 +413,12 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - ✅ Integration with Cache plugin for response caching
 - ✅ Comprehensive test suite (28 tests, 100% passing)
 
+### Enhancements (Post-MVP)
+- ✅ `AIResponse<T>` metadata wrapper (model, tokens, cost, cached)
+- ✅ `askWithMetadata()` and `extractWithMetadata()` APIs
+- ✅ Expanded `AIOptions` with advanced parameters (topK, penalties, stop, seed, logprobs, etc.)
+- ✅ Presets: `forExtraction()`, `forCreative()`, `forCode()`
+
 ### Tasks
 - [x] Implement OpenAI HTTP client ✅
 - [x] Add chat completion support ✅
@@ -440,12 +446,12 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 **Design Doc**: See `PHASE7_DESIGN.md` for full architecture
 
 ### Objectives
-- [ ] Create vector store abstraction
-- [ ] Implement embedding generation
-- [ ] Support multiple vector backends (Qdrant, Pinecone, embedded)
-- [ ] Implement semantic search
-- [ ] Create RAG pipeline
-- [ ] Support document indexing
+- [ ] Create vector store abstraction (interface + SPI)
+- [ ] Implement embedding generation (OpenAI embeddings)
+- [ ] Support multiple vector backends (Qdrant prod, Embedded dev)
+- [ ] Implement semantic search (topK, minScore, rerank optional)
+- [ ] Create RAG pipeline (retrieve + assemble + generate)
+- [ ] Support document indexing (chunker, metadata)
 
 ### Success Criteria
 - ✅ Documents can be indexed automatically
