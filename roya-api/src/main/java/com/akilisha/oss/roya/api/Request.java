@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.api;
 
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -19,6 +20,14 @@ public interface Request {
 
     // Path Parameters (from route: /users/:id)
     Params params();
+    
+    /**
+     * Internal method for routers to populate path parameters.
+     * Called automatically when a route matches.
+     * 
+     * @param paramMap Map of parameter names to values
+     */
+    void setParams(Map<String, String> paramMap);
 
     // Query Parameters (?page=1&limit=10)
     Query query();

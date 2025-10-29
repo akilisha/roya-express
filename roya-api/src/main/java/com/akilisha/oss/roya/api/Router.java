@@ -47,6 +47,17 @@ public interface Router extends Handler {
      * @return this (for chaining)
      */
     Router use(String path, Handler handler);
+    
+    /**
+     * Mount a nested router at a specific path.
+     *
+     * Express: app.use('/api', router)
+     *
+     * @param path Mount path
+     * @param router Router to mount
+     * @return this (for chaining)
+     */
+    Router use(String path, Router router);
 
     /**
      * Handle GET requests.

@@ -34,8 +34,44 @@ public class RouterImpl implements Router {
 
     @Override
     public Router use(String path, Handler handler) {
-        // Middleware with path prefix
+        // Middleware with path prefix - match if path starts with prefix
         routes.add(createRoute(null, path, handler));
+        return this;
+    }
+    
+    /**
+     * Mount a router at a specific path (nested routing).
+     * 
+     * Express: app.use('/api', router)
+     * 
+     * @param mountPath Path to mount this router at
+     * @param router Router to mount
+     * @return this
+     */
+    public Router use(String mountPath, Router router) {
+        // Create a wrapper handler that strips mount path before routing
+        Handler wrapper = (req, res, next) -> {
+            String originalPath = req.path();
+            
+            // Strip mount path from request path for nested router
+            if (originalPath.startsWith(mountPath)) {
+                String remainingPath = originalPath.substring(mountPath.length());
+                if (remainingPath.isEmpty()) {
+                    remainingPath = "/";
+                }
+                
+                // Create a path-adjusted request that exposes only the remaining path
+                Request adjustedRequest = new PathAdjustedRequest(req, remainingPath);
+                
+                // Delegate to nested router with adjusted path
+                router.handle(adjustedRequest, res, next);
+            } else {
+                // Path doesn't match mount point, skip this router
+                next.handle(req, res);
+            }
+        };
+        
+        routes.add(createRoute(null, mountPath, wrapper));
         return this;
     }
 
@@ -97,32 +133,37 @@ public class RouterImpl implements Router {
         String method = req.method();
         String path = req.path();
 
+        // Track whether any route matched
+        boolean routeMatched = false;
+
         // Try to match routes in order
         for (Route route : routes) {
             RouteMatch match = route.match(method, path);
 
             if (match != null) {
+                routeMatched = true;
+                
                 // Found a match! Set path parameters
                 if (!match.params().isEmpty()) {
-                    ((com.akilisha.oss.roya.core.RequestImpl) req).setParams(
-                        match.params()
-                    );
+                    req.setParams(match.params());
                 }
 
                 // Execute the route's handler
                 route.handler().handle(req, res, next);
 
-                // If handler called next() (didn't send response), continue to next route
-                // Otherwise stop here
+                // If handler sent response, stop here
+                // Otherwise continue to next route in the loop
                 if (res.isFinished()) {
                     return;
                 }
             }
         }
 
-        // No route matched - call next() to continue middleware chain
-        // This allows 404 handling in outer middleware
-        next.handle(req, res);
+        // Only call outer next() if NO routes matched (Express.js behavior)
+        // This allows outer middleware to handle 404s
+        if (!routeMatched) {
+            next.handle(req, res);
+        }
     }
 
     /**
@@ -144,6 +185,10 @@ public class RouterImpl implements Router {
                     return java.util.Map.of();
                 }
             };
+        } else if (method == null) {
+            // Middleware (method is null) = prefix matching
+            // Example: "/api" matches "/api", "/api/users", etc.
+            matcher = new PrefixPathMatcher(path);
         } else if (isStaticPath(path)) {
             // Optimization: use fast string matcher for static paths
             matcher = new StaticPathMatcher(path);

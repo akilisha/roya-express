@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya;
 
 import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.api.pipeline.MiddlewarePipeline;
 import com.akilisha.oss.roya.core.*;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
@@ -20,6 +21,7 @@ public class Roya implements Handler {
     private final MiddlewarePipeline pipeline = new MiddlewarePipeline();
     private final Router router = RouterImpl.create();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Services services = new com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl();
     private WebServer server;
 
     private Roya() {
@@ -55,6 +57,15 @@ public class Roya implements Handler {
      */
     public static Roya create() {
         return new Roya();
+    }
+
+    /**
+     * Access the Services registry for plugin registration.
+     *
+     * @return The Services registry instance
+     */
+    public Services services() {
+        return services;
     }
 
     // ========== Middleware ==========
@@ -218,7 +229,7 @@ public class Roya implements Handler {
             .routing(router ->
                 router.any((req, res) -> {
                     // Wrap Helidon request/response in our API
-                    Request royaReq = new RequestImpl(req);
+                    Request royaReq = new RequestImpl(req, services);
                     Response royaRes = new ResponseImpl(res, objectMapper);
 
                     try {

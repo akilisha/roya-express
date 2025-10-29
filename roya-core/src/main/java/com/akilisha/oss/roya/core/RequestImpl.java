@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.core;
 
 import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.plugin.Services;
 import io.helidon.http.ServerRequestHeaders;
 import io.helidon.webserver.http.ServerRequest;
 import java.io.InputStream;
@@ -13,14 +14,16 @@ import java.util.Map;
 public class RequestImpl implements Request {
 
     private final ServerRequest helidonRequest;
+    private final Services services;
     private final Map<String, Object> attributes = new HashMap<>();
     private Params params;
     private Query query;
     private Headers headers;
     private Cookies cookies;
 
-    public RequestImpl(ServerRequest helidonRequest) {
+    public RequestImpl(ServerRequest helidonRequest, Services services) {
         this.helidonRequest = helidonRequest;
+        this.services = services;
     }
 
     @Override
@@ -71,6 +74,7 @@ public class RequestImpl implements Request {
         return params;
     }
 
+    @Override
     public void setParams(Map<String, String> paramMap) {
         this.params = new ParamsImpl(paramMap);
     }
@@ -128,18 +132,12 @@ public class RequestImpl implements Request {
 
     @Override
     public <T> T get(Class<T> serviceClass) {
-        // TODO: Implement service registry lookup
-        throw new UnsupportedOperationException(
-            "Service registry not yet implemented"
-        );
+        return services.get(serviceClass);
     }
 
     @Override
     public <T> T get(ServiceKey<T> key) {
-        // TODO: Implement named service lookup
-        throw new UnsupportedOperationException(
-            "Service registry not yet implemented"
-        );
+        return services.getNamed(key);
     }
 
     @Override

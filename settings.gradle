@@ -1,4 +1,4 @@
-rootProject.name = 'roya-framework'
+rootProject.name = 'roya-express'
 
 include 'roya-api'
 include 'roya-core'

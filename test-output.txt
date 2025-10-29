@@ -1,0 +1,157 @@
+Initialized native services in: D:\Users\kamikazi\.gradle\native
+Initialized jansi services in: D:\Users\kamikazi\.gradle\native
+Found daemon DaemonInfo{pid=39764, address=[24a3d527-ed0a-4a03-9a58-72423e078736 port:64481, addresses:[/127.0.0.1]], state=Idle, lastBusy=1761694135654, context=DefaultDaemonContext[uid=51e7f706-13e8-4fd6-9eb8-dd9f71557d4f,javaHome=D:\Users\kamikazi\.cursor\extensions\redhat.java-1.46.0-win32-x64\jre\21.0.8-win32-x86_64,javaVersion=21,javaVendor=Eclipse Adoptium,daemonRegistryDir=D:\Users\kamikazi\.gradle\daemon,pid=39764,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=D:\Users\kamikazi\.jdks\corretto-21.0.7 (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=384m, -XX:+HeapDumpOnOutOfMemoryError, -Xms256m, -Xmx512m, -Dfile.encoding=UTF-8, -Duser.country=US, -Duser.language=en, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=51e7f706-13e8-4fd6-9eb8-dd9f71557d4f,javaHome=D:\Users\kamikazi\.cursor\extensions\redhat.java-1.46.0-win32-x64\jre\21.0.8-win32-x86_64,javaVersion=21,javaVendor=Eclipse Adoptium,daemonRegistryDir=D:\Users\kamikazi\.gradle\daemon,pid=39764,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 46912). The daemon log file: D:\Users\kamikazi\.gradle\daemon\8.14\daemon-46912.out.log
+Starting 66th build in daemon [uptime: 3 hrs 4 mins 22.743 secs, performance: 100%, GC rate: 0.00/s, heap usage: 0% of 512 MiB, non-heap usage: 28% of 384 MiB]
+Using 16 worker leases.
+Now considering [D:\Projects\java\roya-express] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Settings evaluated using settings file 'D:\Projects\java\roya-express\settings.gradle'.
+Projects loaded. Root project using build file 'D:\Projects\java\roya-express\build.gradle'.
+Included projects: [root project 'roya-express', project ':roya-api', project ':roya-core', project ':roya-examples', project ':roya-plugins', project ':roya-plugins:database']
+
+> Configure project :
+Evaluating root project 'roya-express' using build file 'D:\Projects\java\roya-express\build.gradle'.
+
+> Configure project :roya-api
+Evaluating project ':roya-api' using build file 'D:\Projects\java\roya-express\roya-api\build.gradle'.
+
+> Configure project :roya-core
+Evaluating project ':roya-core' using build file 'D:\Projects\java\roya-express\roya-core\build.gradle'.
+Resolved plugin [id: 'java-library']
+
+> Configure project :roya-examples
+Evaluating project ':roya-examples' using build file 'D:\Projects\java\roya-express\roya-examples\build.gradle'.
+Resolved plugin [id: 'application']
+
+> Configure project :roya-plugins
+Evaluating project ':roya-plugins' using build file 'D:\Projects\java\roya-express\roya-plugins\build.gradle'.
+
+> Configure project :roya-plugins:database
+Evaluating project ':roya-plugins:database' using build file 'D:\Projects\java\roya-express\roya-plugins\database\build.gradle'.
+Resolved plugin [id: 'java-library']
+All projects evaluated.
+Task path ':roya-core:test' matched project ':roya-core'
+Task name matched 'test'
+Selected primary task 'test' from project :roya-core
+Tasks to be executed: [task ':roya-api:compileJava', task ':roya-api:processResources', task ':roya-api:classes', task ':roya-api:jar', task ':roya-core:compileJava', task ':roya-core:processResources', task ':roya-core:classes', task ':roya-core:compileTestJava', task ':roya-core:processTestResources', task ':roya-core:testClasses', task ':roya-core:test']
+Tasks that were excluded: []
+Resolve mutations for :roya-api:compileJava (Thread[#4860,Execution worker,5,main]) started.
+:roya-api:compileJava (Thread[#4860,Execution worker,5,main]) started.
+
+> Task :roya-api:compileJava UP-TO-DATE
+Caching disabled for task ':roya-api:compileJava' because:
+  Build cache is disabled
+Skipping task ':roya-api:compileJava' as it is up-to-date.
+Resolve mutations for :roya-api:processResources (Thread[#4860,Execution worker,5,main]) started.
+:roya-api:processResources (Thread[#4860,Execution worker,5,main]) started.
+
+> Task :roya-api:processResources NO-SOURCE
+Skipping task ':roya-api:processResources' as it has no source files and no previous output files.
+Resolve mutations for :roya-api:classes (Thread[#4860,Execution worker,5,main]) started.
+:roya-api:classes (Thread[#4862,Execution worker Thread 3,5,main]) started.
+
+> Task :roya-api:classes UP-TO-DATE
+Skipping task ':roya-api:classes' as it has no actions.
+Resolve mutations for :roya-api:jar (Thread[#4872,Execution worker Thread 13,5,main]) started.
+:roya-api:jar (Thread[#4872,Execution worker Thread 13,5,main]) started.
+
+> Task :roya-api:jar UP-TO-DATE
+Caching disabled for task ':roya-api:jar' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':roya-api:jar' as it is up-to-date.
+work action resolve roya-api-1.0.0-SNAPSHOT.jar (project :roya-api) (Thread[#4872,Execution worker Thread 13,5,main]) started.
+Resolve mutations for :roya-core:compileJava (Thread[#4867,Execution worker Thread 8,5,main]) started.
+:roya-core:compileJava (Thread[#4867,Execution worker Thread 8,5,main]) started.
+
+> Task :roya-core:compileJava UP-TO-DATE
+Caching disabled for task ':roya-core:compileJava' because:
+  Build cache is disabled
+Skipping task ':roya-core:compileJava' as it is up-to-date.
+Resolve mutations for :roya-core:processResources (Thread[#4867,Execution worker Thread 8,5,main]) started.
+:roya-core:processResources (Thread[#4867,Execution worker Thread 8,5,main]) started.
+
+> Task :roya-core:processResources NO-SOURCE
+Skipping task ':roya-core:processResources' as it has no source files and no previous output files.
+Resolve mutations for :roya-core:classes (Thread[#4867,Execution worker Thread 8,5,main]) started.
+:roya-core:classes (Thread[#4874,Execution worker Thread 15,5,main]) started.
+
+> Task :roya-core:classes UP-TO-DATE
+Skipping task ':roya-core:classes' as it has no actions.
+Resolve mutations for :roya-core:compileTestJava (Thread[#4870,Execution worker Thread 11,5,main]) started.
+:roya-core:compileTestJava (Thread[#4870,Execution worker Thread 11,5,main]) started.
+
+> Task :roya-core:compileTestJava UP-TO-DATE
+Caching disabled for task ':roya-core:compileTestJava' because:
+  Build cache is disabled
+Skipping task ':roya-core:compileTestJava' as it is up-to-date.
+Resolve mutations for :roya-core:processTestResources (Thread[#4870,Execution worker Thread 11,5,main]) started.
+:roya-core:processTestResources (Thread[#4870,Execution worker Thread 11,5,main]) started.
+
+> Task :roya-core:processTestResources NO-SOURCE
+Skipping task ':roya-core:processTestResources' as it has no source files and no previous output files.
+Resolve mutations for :roya-core:testClasses (Thread[#4870,Execution worker Thread 11,5,main]) started.
+:roya-core:testClasses (Thread[#4870,Execution worker Thread 11,5,main]) started.
+
+> Task :roya-core:testClasses UP-TO-DATE
+Skipping task ':roya-core:testClasses' as it has no actions.
+Resolve mutations for :roya-core:test (Thread[#4864,Execution worker Thread 5,5,main]) started.
+:roya-core:test (Thread[#4864,Execution worker Thread 5,5,main]) started.
+Gradle Test Executor 54 started executing tests.
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+
+> Task :roya-core:test
+Caching disabled for task ':roya-core:test' because:
+  Build cache is disabled
+Task ':roya-core:test' is not up-to-date because:
+  Task has failed previously.
+Starting process 'Gradle Test Executor 54'. Working directory: D:\Projects\java\roya-express\roya-core Command: D:\Users\kamikazi\.jdks\corretto-21.0.7\bin\java.exe -Dorg.gradle.internal.worker.tmpdir=D:\Projects\java\roya-express\roya-core\build\tmp\test\work --enable-preview @D:\Users\kamikazi\.gradle\.tmp\gradle-worker-classpath15938730703699315047txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 54'
+Successfully started process 'Gradle Test Executor 54'
+
+RouterImpl > should extract path parameters STANDARD_ERROR
+    WARNING: A Java agent has been loaded dynamically (D:\Users\kamikazi\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.14.10\90ed94ac044ea8953b224304c762316e91fd6b31\byte-buddy-agent-1.14.10.jar)
+    WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+    WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+    WARNING: Dynamic loading of agents will be disallowed by default in a future release
+
+Gradle Test Executor 54 finished executing tests.
+
+> Task :roya-core:test FAILED
+
+RouterImpl > should extract path parameters FAILED
+    org.mockito.exceptions.verification.NeverWantedButInvoked: 
+    next.handle(
+        Mock for Request, hashCode: 1334528976,
+        Mock for Response, hashCode: 22874185
+    );
+    Never wanted here:
+    -> at com.akilisha.oss.roya.core.routing.RouterImplTest.shouldExtractPathParameters(RouterImplTest.java:132)
+    But invoked here:
+    -> at com.akilisha.oss.roya.core.routing.RouterImpl.handle(RouterImpl.java:159) with arguments: [Mock for Request, hashCode: 1334528976, Mock for Response, hashCode: 22874185]
+
+        at app//com.akilisha.oss.roya.core.routing.RouterImplTest.shouldExtractPathParameters(RouterImplTest.java:132)
+1 test completed, 1 failed
+Finished generating test XML results (0.002 secs) into: D:\Projects\java\roya-express\roya-core\build\test-results\test
+Generating HTML test report...
+Finished generating test html results (0.004 secs) into: D:\Projects\java\roya-express\roya-core\build\reports\tests\test
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':roya-core:test'.
+> There were failing tests. See the report at: file:///D:/Projects/java/roya-express/roya-core/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 4s
+5 actionable tasks: 1 executed, 4 up-to-date
+Watched directory hierarchies: [D:\Projects\java\roya-express]

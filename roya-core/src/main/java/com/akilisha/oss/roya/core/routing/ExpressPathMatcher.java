@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
  * - Optional: "/ab?cd" → matches "acd" or "abcd"
  * - Wildcard: "/files/*" → matches anything after /files/
  * - Regex constraints: "/users/:id(\\d+)" → id must be digits
- * - Named groups: "/users/(?<id>\\d+)" → named capture
+ * - One-or-more: "/ab+cd" → matches "abcd", "abbbcd", etc.
+ * - Zero-or-more: "/ab*cd" → matches "acd", "abcd", "abbbcd", etc.
  *
  * Implementation converts Express syntax to Java regex patterns.
  */
@@ -67,9 +68,9 @@ public class ExpressPathMatcher implements PathMatcher {
     /**
      * Convert Express path pattern to Java regex Pattern.
      *
-     * Express syntax:
-     * - /users/:id → /users/([^/]+)  (capture any segment)
-     * - /users/:id(\\d+) → /users/(\\d+)  (capture with constraint)
+     * This is a stateful parser that properly handles:
+     * - /users/:id → /users/(?<id>[^/]+)  (capture any segment)
+     * - /users/:id(\\d+) → /users/(?<id>\\d+)  (capture with constraint)
      * - /ab?cd → /ab?cd  (optional character)
      * - /ab+cd → /ab+cd  (one or more)
      * - /ab*cd → /ab*cd  (zero or more)
@@ -80,10 +81,12 @@ public class ExpressPathMatcher implements PathMatcher {
      */
     private Pattern compilePattern(String path) {
         StringBuilder regex = new StringBuilder("^");
-
         int i = 0;
+
         while (i < path.length()) {
             char c = path.charAt(i);
+            boolean hasNext = i + 1 < path.length();
+            char next = hasNext ? path.charAt(i + 1) : 0;
 
             if (c == ':') {
                 // Parameter: :id or :id(regex)
@@ -118,13 +121,41 @@ public class ExpressPathMatcher implements PathMatcher {
                     // Default: capture any segment (non-slash)
                     regex.append("(?<").append(name).append(">[^/]+)");
                 }
-            } else if (c == '*') {
-                // Wildcard: match anything
+            } else if (c == '*' && i == path.length() - 1 && path.length() > 1 && path.charAt(i - 1) == '/') {
+                // Wildcard at very end after slash: /files/*
+                // The slash is already in the regex, just append .* for anything after
                 regex.append(".*");
                 i++;
-            } else if (c == '?' || c == '+') {
-                // Optional or one-or-more (apply to previous char)
-                regex.append(c);
+            } else if (c == '*' && regex.length() > 1 && regex.charAt(regex.length() - 1) != '/' && i > 0) {
+                // Quantifier: zero or more of previous character (in middle of text)
+                // Look back to see previous char and make it repeatable
+                char prev = regex.charAt(regex.length() - 1);
+                if (prev != '*' && prev != '+' && prev != '?') {
+                    regex.setCharAt(regex.length() - 1, '(');
+                    regex.append(prev).append("*)");
+                } else {
+                    regex.append("*");
+                }
+                i++;
+            } else if (c == '+' && regex.length() > 1) {
+                // Quantifier: one or more of previous
+                char prev = regex.charAt(regex.length() - 1);
+                if (prev != '*' && prev != '+' && prev != '?') {
+                    regex.setCharAt(regex.length() - 1, '(');
+                    regex.append(prev).append("+)");
+                } else {
+                    regex.append("+");
+                }
+                i++;
+            } else if (c == '?' && regex.length() > 1) {
+                // Quantifier: zero or one of previous  
+                char prev = regex.charAt(regex.length() - 1);
+                if (prev != '*' && prev != '+' && prev != '?') {
+                    regex.setCharAt(regex.length() - 1, '(');
+                    regex.append(prev).append(")?");
+                } else {
+                    regex.append("?");
+                }
                 i++;
             } else if (isRegexSpecial(c)) {
                 // Escape regex special characters
@@ -138,7 +169,6 @@ public class ExpressPathMatcher implements PathMatcher {
         }
 
         regex.append("$");
-
         return Pattern.compile(regex.toString());
     }
 
