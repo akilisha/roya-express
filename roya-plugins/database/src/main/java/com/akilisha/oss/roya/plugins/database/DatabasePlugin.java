@@ -34,10 +34,10 @@ public class DatabasePlugin implements RoyaPlugin {
 
     private Database createDatabase(Services services) {
         // TODO: Read configuration from Properties or config file
-        String jdbcUrl = System.getProperty("database.url", "jdbc:postgresql://localhost:5432/roya");
+        String jdbcUrl = System.getProperty("database.url", "jdbc:postgresql://localhost:5432/postgres");
         String username = System.getProperty("database.username", "postgres");
         String password = System.getProperty("database.password", "postgres");
-        
+
         return new DatabaseServiceImpl(jdbcUrl, username, password);
     }
 
