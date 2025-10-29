@@ -142,6 +142,10 @@ app.get("/users/:id", (req, res, next) -> {
 
 #### FFM Implementation Strategy
 
+**Key Point**: We're using FFM's `MemorySegment`, NOT `MappedByteBuffer`.
+- ✅ **FFM MemorySegment**: Can handle terabytes (limited only by OS/architecture)
+- ❌ **MappedByteBuffer**: Limited to 2GB in Java (NOT what we're using)
+
 ```java
 // Cache Service Interface
 public interface Cache {
@@ -176,7 +180,7 @@ public record CacheStats(
 
 // FFM-Based Cache Implementation
 public class FFMCacheBackend implements CacheBackend {
-    private final MemorySegment cacheFile;      // Memory-mapped file
+    private final MemorySegment cacheFile;      // FFM memory-mapped file (NOT MappedByteBuffer!)
     private final MemorySegment indexFile;      // Offset index (key -> offset)
     private final EvictionStrategy eviction;    // LRU, LFU, TTL, SIZE
     private final Serializer serializer;
@@ -187,9 +191,10 @@ public class FFMCacheBackend implements CacheBackend {
     // - Active segment: Current write head (like Kafka log)
     
     public FFMCacheBackend(String cacheDir, EvictionConfig config) {
-        // Create memory-mapped files using FFM
-        this.cacheFile = mapFile(cacheDir + "/cache.data", config.maxSizeBytes());
-        this.indexFile = mapFile(cacheDir + "/index.data", config.indexSizeBytes());
+        // Create memory-mapped files using FFM MemorySegment
+        // FFM can handle files much larger than 2GB (terabytes on 64-bit systems)
+        this.cacheFile = mapFileUsingFFM(cacheDir + "/cache.data", config.maxSizeBytes());
+        this.indexFile = mapFileUsingFFM(cacheDir + "/index.data", config.indexSizeBytes());
         this.eviction = EvictionStrategy.create(config);
         this.serializer = new JsonSerializer(); // Or MessagePack for efficiency
     }
@@ -340,7 +345,7 @@ CACHE_INDEX_SIZE=134217728            # 128MB index file
 
 **Trade-offs**:
 - ⚠️ **Volatile by default**: Like Redis, data lost on restart (can add persistence)
-- ⚠️ **Memory-mapped limits**: OS limits apply (file size limits)
+- ⚠️ **OS limits**: File size limited by OS/architecture (but no 2GB limit like MappedByteBuffer - FFM can handle terabytes)
 - ⚠️ **Single-node**: Not distributed (use for single-instance or per-instance cache)
 
 #### Eviction Strategy Details
