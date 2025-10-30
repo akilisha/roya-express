@@ -9,6 +9,8 @@ dependencies {
     // Helidon Níma - Virtual thread-native HTTP server
     implementation 'io.helidon.webserver:helidon-webserver:4.0.3'
     implementation 'io.helidon.webserver:helidon-webserver-cors:4.0.3'
+    api 'io.helidon.webserver:helidon-webserver-websocket:4.0.3'
+    implementation 'io.helidon.webserver:helidon-webserver-sse:4.0.3'
     // Helidon Config
     implementation 'io.helidon.config:helidon-config:4.0.3'
 
@@ -21,6 +23,10 @@ dependencies {
 
     // Helidon Tracing (Zipkin or OTEL backend selectable via config)
     implementation 'io.helidon.tracing:helidon-tracing:4.0.3'
+
+    // Helidon SE features
+    implementation 'io.helidon.fault-tolerance:helidon-fault-tolerance:4.0.3'
+    implementation 'io.helidon.scheduling:helidon-scheduling:4.0.3'
 
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.10'

@@ -7,6 +7,7 @@ import com.akilisha.oss.roya.core.*;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.webserver.WebServer;
+import io.helidon.webserver.websocket.WebSocketRouting;
 import io.helidon.webserver.cors.CorsSupport;
 // Health/Tracing registration can be enabled via Helidon observe modules; left out here to avoid tight coupling
 
@@ -25,6 +26,7 @@ public class Roya implements Handler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Services services = new com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl();
     private WebServer server;
+    private final java.util.List<java.util.function.Consumer<WebSocketRouting.Builder>> wsRegistrations = new java.util.ArrayList<>();
 
     private Roya() {
         // Add router to pipeline at the end
@@ -110,6 +112,17 @@ public class Roya implements Handler {
      */
     public Roya use(ErrorHandler errorHandler) {
         pipeline.useErrorHandler(errorHandler);
+        return this;
+    }
+
+    // ========== WebSocket ==========
+
+    /**
+     * Register a WebSocket endpoint using Helidon WebSocket routing.
+     * This must be called before listen().
+     */
+    public Roya ws(String path, io.helidon.webserver.websocket.WsListener listener) {
+        wsRegistrations.add(builder -> builder.endpoint(path, listener));
         return this;
     }
 
@@ -228,7 +241,13 @@ public class Roya implements Handler {
         // Create and start Helidon web server
         server = WebServer.builder()
             .port(port)
-            .routing(router ->
+            .routing(router -> {
+                // Register WebSockets if any
+                if (!wsRegistrations.isEmpty()) {
+                    WebSocketRouting.Builder wsBuilder = WebSocketRouting.builder();
+                    wsRegistrations.forEach(c -> c.accept(wsBuilder));
+                    router.register(wsBuilder.build());
+                }
                 router
                     .register(CorsSupport.create())
                     .any((req, res) -> {
@@ -254,8 +273,8 @@ public class Roya implements Handler {
                                 );
                         }
                     }
-                })
-            )
+                });
+            })
             .build()
             .start();
 

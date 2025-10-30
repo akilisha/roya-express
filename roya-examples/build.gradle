@@ -14,6 +14,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
     implementation project(":roya-plugins:ai")
     implementation project(":roya-plugins:object-storage")
+    implementation 'io.helidon.webserver:helidon-webserver-websocket:4.0.3'
     
     // JOOQ for examples using database
     implementation 'org.jooq:jooq:3.18.7'
