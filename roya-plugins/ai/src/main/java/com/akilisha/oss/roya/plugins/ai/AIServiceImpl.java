@@ -29,6 +29,12 @@ public class AIServiceImpl implements AI {
     private final com.akilisha.oss.roya.plugins.cache.Cache cache;  // Optional - may be null
     private final ObjectMapper objectMapper;
     private final boolean cachingEnabled;
+    private static final OkHttpClient QDRANT_HTTP = new OkHttpClient.Builder()
+        .callTimeout(java.time.Duration.ofSeconds(10))
+        .connectTimeout(java.time.Duration.ofSeconds(5))
+        .readTimeout(java.time.Duration.ofSeconds(10))
+        .writeTimeout(java.time.Duration.ofSeconds(10))
+        .build();
 
     public AIServiceImpl(LLMProvider provider, com.akilisha.oss.roya.plugins.cache.Cache cache) {
         this.provider = provider;
@@ -109,6 +115,10 @@ public class AIServiceImpl implements AI {
                     java.util.List<VectorDoc> docs = new java.util.ArrayList<>();
                     java.nio.file.Files.walk(directory)
                         .filter(p -> java.nio.file.Files.isRegularFile(p))
+                        .filter(p -> {
+                            String s = p.toString().toLowerCase();
+                            return s.endsWith(".md") || s.endsWith(".markdown") || s.endsWith(".txt");
+                        })
                         .forEach(p -> {
                             try {
                                 String content = java.nio.file.Files.readString(p);
@@ -156,20 +166,28 @@ public class AIServiceImpl implements AI {
                             }
                         }
                     }
-                    // Upsert points
+                    // Upsert points (batch embeddings for throughput)
                     java.util.List<java.util.Map<String, Object>> points = new java.util.ArrayList<>();
-                    for (VectorDoc d : documents) {
-                        float[] vec = embedWithOpenAI(openAiKey, d.content());
-                        java.util.List<Double> vector = new java.util.ArrayList<>(vec.length);
-                        for (float v : vec) vector.add((double) v);
-                        java.util.Map<String, Object> payload = new java.util.HashMap<>();
-                        payload.put("content", d.content());
-                        payload.put("metadata", d.metadata());
-                        java.util.Map<String, Object> point = new java.util.HashMap<>();
-                        point.put("id", d.id());
-                        point.put("vector", vector);
-                        point.put("payload", payload);
-                        points.add(point);
+                    final int batchSize = 64;
+                    for (int start = 0; start < documents.size(); start += batchSize) {
+                        int end = Math.min(start + batchSize, documents.size());
+                        var batch = documents.subList(start, end);
+                        var texts = batch.stream().map(VectorDoc::content).toList();
+                        var vectors = embedBatchWithOpenAI(openAiKey, texts);
+                        for (int i = 0; i < batch.size(); i++) {
+                            VectorDoc d = batch.get(i);
+                            float[] vec = vectors.get(i);
+                            java.util.List<Double> vector = new java.util.ArrayList<>(vec.length);
+                            for (float v : vec) vector.add((double) v);
+                            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+                            payload.put("content", d.content());
+                            payload.put("metadata", d.metadata());
+                            java.util.Map<String, Object> point = new java.util.HashMap<>();
+                            point.put("id", d.id());
+                            point.put("vector", vector);
+                            point.put("payload", payload);
+                            points.add(point);
+                        }
                     }
                     java.util.Map<String, Object> body = new java.util.HashMap<>();
                     body.put("points", points);
@@ -406,7 +424,7 @@ public class AIServiceImpl implements AI {
     }
 
     private java.util.List<java.util.Map<String, Object>> qdrantSearch(String baseUrl, String apiKey, String collection, float[] vector, int topK) throws Exception {
-        OkHttpClient http = new OkHttpClient();
+        OkHttpClient http = QDRANT_HTTP;
         java.util.List<Double> vec = new java.util.ArrayList<>(vector.length);
         for (float v : vector) vec.add((double) v);
         java.util.Map<String, Object> body = new java.util.HashMap<>();
@@ -418,15 +436,43 @@ public class AIServiceImpl implements AI {
             .post(RequestBody.create(json, MediaType.parse("application/json")))
             .addHeader("Content-Type", "application/json");
         if (apiKey != null && !apiKey.isBlank()) rb.addHeader("api-key", apiKey);
-        try (Response res = http.newCall(rb.build()).execute()) {
-            if (!res.isSuccessful()) throw new RuntimeException("Qdrant search failed: " + res.code());
-            String out = res.body().string();
-            @SuppressWarnings("unchecked")
-            java.util.Map<String, Object> parsed = new ObjectMapper().readValue(out, java.util.Map.class);
-            @SuppressWarnings("unchecked")
-            java.util.List<java.util.Map<String, Object>> result = (java.util.List<java.util.Map<String, Object>>) parsed.getOrDefault("result", java.util.List.of());
-            return result;
+        int attempts = 0;
+        Exception last = null;
+        while (attempts < 3) {
+            attempts++;
+            try (Response res = http.newCall(rb.build()).execute()) {
+                if (!res.isSuccessful()) throw new RuntimeException("Qdrant search failed: " + res.code());
+                String out = res.body().string();
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> parsed = new ObjectMapper().readValue(out, java.util.Map.class);
+                @SuppressWarnings("unchecked")
+                java.util.List<java.util.Map<String, Object>> result = (java.util.List<java.util.Map<String, Object>>) parsed.getOrDefault("result", java.util.List.of());
+                return result;
+            } catch (Exception e) {
+                last = e;
+                try { Thread.sleep(250L * attempts); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+            }
         }
+        throw new RuntimeException("Qdrant search failed after retries: " + (last != null ? last.getMessage() : "unknown"), last);
+    }
+
+    private java.util.List<float[]> embedBatchWithOpenAI(String apiKey, java.util.List<String> texts) {
+        OpenAiService svc = new OpenAiService(apiKey);
+        String model = System.getProperty("vector.openai.model",
+            System.getenv().getOrDefault("VECTOR_OPENAI_MODEL", "text-embedding-3-small"));
+        EmbeddingRequest req = EmbeddingRequest.builder()
+            .model(model)
+            .input(texts)
+            .build();
+        var res = svc.createEmbeddings(req);
+        java.util.List<float[]> out = new java.util.ArrayList<>(res.getData().size());
+        for (var d : res.getData()) {
+            java.util.List<Double> vals = d.getEmbedding();
+            float[] vec = new float[vals.size()];
+            for (int i = 0; i < vals.size(); i++) vec[i] = vals.get(i).floatValue();
+            out.add(vec);
+        }
+        return out;
     }
 
     @Override
