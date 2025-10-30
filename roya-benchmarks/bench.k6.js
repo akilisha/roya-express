@@ -8,7 +8,7 @@ export let options = {
 
 export default function () {
   http.get('http://localhost:3101/owners'); // Roya
-  http.get('http://localhost:8080/owners'); // Spring
+  http.get('http://localhost:8070/owners'); // Spring
   sleep(1);
 }
 
