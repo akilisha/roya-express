@@ -148,7 +148,7 @@ void main() {
     
     // Simple chat
     app.post("/chat", (req, res, next) -> {
-        var answer = ai().ask("You are a helpful assistant", req.body().message());
+        var answer = ai.llm().ask("You are a helpful assistant", req.body().message());
         res.json(Map.of("answer", answer));
     });
     
@@ -156,14 +156,14 @@ void main() {
     record Product(String name, BigDecimal price, List<String> features) {}
     
     app.post("/extract", (req, res, next) -> {
-        var product = ai().extract(Product.class, req.body().description());
+        var product = ai.llm().extract(Product.class, req.body().description());
         res.json(product);  // Guaranteed valid Product
     });
     
     // RAG (Retrieval-Augmented Generation)
     app.post("/ask", (req, res, next) -> {
-        var answer = ai().rag(req.body().question());
-        res.json(Map.of("answer", answer));
+        var rag = ai.ragApi().ask(req.body().question());
+        res.json(Map.of("answer", rag.answer()));
     });
     
     app.listen(3000);

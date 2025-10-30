@@ -1,7 +1,6 @@
 package com.akilisha.oss.roya.core;
 
 import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.api.plugin.DatabaseAware;
 import com.akilisha.oss.roya.api.plugin.Services;
 import io.helidon.http.ServerRequestHeaders;
 import io.helidon.webserver.http.ServerRequest;

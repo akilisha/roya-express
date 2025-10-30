@@ -3,9 +3,9 @@ dependencies {
 }
 
 // Enable FFM features for Java 23
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += [
-            '--enable-preview'
+            '--enable-preview',
     ]
 }
 

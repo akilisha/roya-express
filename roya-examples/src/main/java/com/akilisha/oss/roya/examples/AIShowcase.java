@@ -10,11 +10,14 @@ import com.akilisha.oss.roya.core.middleware.Morgan;
 import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.AIOptions;
 import com.akilisha.oss.roya.plugins.ai.AIPlugin;
+import com.akilisha.oss.roya.plugins.ai.AIResponse;
 import com.akilisha.oss.roya.plugins.cache.CachePlugin;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
 
 /**
  * AI Plugin Showcase - Demonstrates the revolutionary developer experience.
@@ -61,6 +64,7 @@ public class AIShowcase {
 
     public static void main(String[] args) {
         var app = Roya.create();
+        var objectMapper = new ObjectMapper(); // For serializing records with nulls
 
         // Setup
         app.use(Morgan.combined());
@@ -101,69 +105,94 @@ public class AIShowcase {
         app.post("/demo/chat", (Request req, Response res, Next next) -> {
             AI ai = req.get(AI.class);
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = (Map<String, Object>) req.get("body");
-            String question = (String) body.get("question");
+            Map<String, Object> body = readJsonBody(req);
+            String question = body != null ? (String) body.get("question") : null;
 
-            String answer = ai.ask(
+            // Use metadata version to get token usage and cost!
+            AIResponse<String> response = ai.askWithMetadata(
                 "You are a helpful assistant. Be concise.",
                 question
             );
 
+            @SuppressWarnings("unchecked")
+            Map<String, Object> metadata = objectMapper.convertValue(response, Map.class);
+
             res.json(Map.of(
                 "question", question,
-                "answer", answer,
-                "note", "Cached on second call (cost savings!)"
+                "answer", response.data(),
+                "metadata", metadata,
+                "note", response.cached() 
+                    ? "✅ Served from cache (FREE!)" 
+                    : "💰 Fresh API call (cost tracked)"
             ));
         });
 
         // ========== DEMO 2: Type-Safe Extraction (THE KILLER FEATURE) ==========
         app.post("/demo/extract/product", (Request req, Response res, Next next) -> {
-            AI ai = req.get(AI.class);
+            try {
+                AI ai = req.get(AI.class);
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = (Map<String, Object>) req.get("body");
-            String description = (String) body.get("description");
+                Map<String, Object> body = readJsonBody(req);
+                String description = body != null ? (String) body.get("description") : null;
+                if (description == null || description.isBlank()) {
+                    res.status(400).json(Map.of("error", "description is required"));
+                    return;
+                }
 
-            // ONE LINE - Type-safe extraction!
-            // This returns a REAL ProductInfo record, not a String or JSON
-            ProductInfo product = ai.extract(ProductInfo.class, 
-                "Extract product information from: " + description
-            );
+                // ONE LINE - Type-safe extraction with metadata!
+                // This returns a REAL ProductInfo record + token/cost info
+                AIResponse<ProductInfo> response = ai.extractWithMetadata(
+                    ProductInfo.class,
+                    "Extract product information from: " + description
+                );
 
-            res.json(Map.of(
-                "description", description,
-                "extracted", Map.of(
-                    "name", product.name(),
-                    "price", product.price(),
-                    "category", product.category(),
-                    "tags", product.tags()
-                ),
-                "type", product.getClass().getSimpleName(),
-                "note", "This is a real Java object - type-safe, IDE-autocomplete works!"
-            ));
+                // Serialize record using Jackson (handles nulls gracefully)
+                @SuppressWarnings("unchecked")
+                Map<String, Object> extracted = objectMapper.convertValue(response.data(), Map.class);
+                
+                @SuppressWarnings("unchecked")
+                Map<String, Object> metadata = objectMapper.convertValue(response, Map.class);
+                
+                res.json(Map.of(
+                    "description", description,
+                    "extracted", extracted,
+                    "metadata", metadata,
+                    "type", response.data().getClass().getSimpleName(),
+                    "note", response.cached() 
+                        ? "✅ Cached response (FREE!) - Type-safe Java object" 
+                        : "💰 Fresh extraction - Type-safe Java object with cost tracking"
+                ));
+            } catch (Exception e) {
+                System.err.println("/demo/extract/product failed: " + e.getMessage());
+                e.printStackTrace();
+                res.status(500).json(Map.of(
+                    "error", e.getClass().getSimpleName(),
+                    "message", e.getMessage()
+                ));
+            }
         });
 
         // ========== DEMO 3: User Profile Extraction ==========
         app.post("/demo/extract/profile", (Request req, Response res, Next next) -> {
             AI ai = req.get(AI.class);
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = (Map<String, Object>) req.get("body");
-            String text = (String) body.get("text");
+            Map<String, Object> body = readJsonBody(req);
+            String text = body != null ? (String) body.get("text") : null;
+            if (text == null || text.isBlank()) {
+                res.status(400).json(Map.of("error", "text is required"));
+                return;
+            }
 
             // Extract user profile - ONE LINE, TYPE-SAFE
             UserProfile profile = ai.extract(UserProfile.class, text);
 
+            // Serialize record using Jackson (handles nulls gracefully)
+            @SuppressWarnings("unchecked")
+            Map<String, Object> profileMap = objectMapper.convertValue(profile, Map.class);
+
             res.json(Map.of(
                 "input", text,
-                "profile", Map.of(
-                    "name", profile.name(),
-                    "email", profile.email(),
-                    "age", profile.age(),
-                    "bio", profile.bio(),
-                    "interests", profile.interests()
-                ),
+                "profile", profileMap,
                 "magic", "Zero boilerplate. Zero JSON parsing. Just works."
             ));
         });
@@ -172,20 +201,25 @@ public class AIShowcase {
         app.post("/demo/sentiment", (Request req, Response res, Next next) -> {
             AI ai = req.get(AI.class);
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = (Map<String, Object>) req.get("body");
-            String review = (String) body.get("review");
+            Map<String, Object> body = readJsonBody(req);
+            String review = body != null ? (String) body.get("review") : null;
+            if (review == null || review.isBlank()) {
+                res.status(400).json(Map.of("error", "review is required"));
+                return;
+            }
 
             // Analyze sentiment - returns typed record
             SentimentAnalysis sentiment = ai.extract(SentimentAnalysis.class,
                 "Analyze the sentiment of this review: " + review
             );
 
+            // Serialize record using Jackson (handles nulls gracefully)
+            @SuppressWarnings("unchecked")
+            Map<String, Object> sentimentMap = objectMapper.convertValue(sentiment, Map.class);
+
             res.json(Map.of(
                 "review", review,
-                "sentiment", sentiment.sentiment(),
-                "confidence", sentiment.confidence(),
-                "summary", sentiment.summary()
+                "sentiment", sentimentMap
             ));
         });
 
@@ -193,20 +227,24 @@ public class AIShowcase {
         app.post("/demo/code-review", (Request req, Response res, Next next) -> {
             AI ai = req.get(AI.class);
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = (Map<String, Object>) req.get("body");
-            String code = (String) body.get("code");
+            Map<String, Object> body = readJsonBody(req);
+            String code = body != null ? (String) body.get("code") : null;
+            if (code == null || code.isBlank()) {
+                res.status(400).json(Map.of("error", "code is required"));
+                return;
+            }
 
             CodeReview review = ai.extract(CodeReview.class,
                 "Review this code and provide feedback: " + code
             );
 
+            // Serialize record using Jackson (handles nulls gracefully)
+            @SuppressWarnings("unchecked")
+            Map<String, Object> reviewMap = objectMapper.convertValue(review, Map.class);
+
             res.json(Map.of(
                 "code", code.substring(0, Math.min(100, code.length())) + "...",
-                "review", review.review(),
-                "score", review.score(),
-                "issues", review.issues(),
-                "suggestions", review.suggestions()
+                "review", reviewMap
             ));
         });
 
@@ -214,9 +252,12 @@ public class AIShowcase {
         app.post("/demo/custom-model", (Request req, Response res, Next next) -> {
             AI ai = req.get(AI.class);
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = (Map<String, Object>) req.get("body");
-            String question = (String) body.get("question");
+            Map<String, Object> body = readJsonBody(req);
+            String question = body != null ? (String) body.get("question") : null;
+            if (question == null || question.isBlank()) {
+                res.status(400).json(Map.of("error", "question is required"));
+                return;
+            }
             
             // Use GPT-4 with custom temperature
             AIOptions options = AIOptions.builder()
@@ -250,8 +291,12 @@ public class AIShowcase {
             // Database db = req.get(Database.class);
             // db.insert("products", product);  // Type-safe SQL too!
 
+            // Serialize record using Jackson (handles nulls gracefully)
+            @SuppressWarnings("unchecked")
+            Map<String, Object> productMap = objectMapper.convertValue(product, Map.class);
+
             res.json(Map.of(
-                "product", product,
+                "product", productMap,
                 "message", "Extracted and ready to store (type-safe all the way!)",
                 "note", "This demonstrates AI + Database working together seamlessly"
             ));
@@ -301,8 +346,8 @@ public class AIShowcase {
         });
 
         // Start server
-        app.listen(3000, () -> {
-            System.out.println("\n🚀 AI Showcase running on http://localhost:3000\n");
+        app.listen(3001, () -> {
+            System.out.println("\n🚀 AI Showcase running on http://localhost:3001\n");
             System.out.println("📝 Try these:");
             System.out.println("\n1. Type-safe extraction:");
             System.out.println("   POST /demo/extract/product");
@@ -316,6 +361,21 @@ public class AIShowcase {
             System.out.println("🎬 SHOWCASE READY! 🍿");
             System.out.println("=".repeat(70) + "\n");
         });
+    }
+
+    private static Map<String, Object> readJsonBody(Request req) {
+        try {
+            String text = req.bodyText();
+            if (text == null || text.isBlank()) {
+                return new HashMap<>();
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = mapper.readValue(text, Map.class);
+            return map;
+        } catch (Exception e) {
+            return new HashMap<>();
+        }
     }
 }
 

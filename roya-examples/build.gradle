@@ -10,7 +10,10 @@ dependencies {
     implementation project(":roya-plugins:metrics")
     implementation project(":roya-plugins:cache")
     implementation project(":roya-plugins:email")
+    // JSON parsing for examples (request body parsing in demos)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
     implementation project(":roya-plugins:ai")
+    implementation project(":roya-plugins:vector")
     
     // JOOQ for examples using database
     implementation 'org.jooq:jooq:3.18.7'
@@ -33,8 +36,27 @@ tasks.register('runAIShowcase', JavaExec) {
     description = 'Run AI Showcase demo'
     mainClass = 'com.akilisha.oss.roya.examples.AIShowcase'
     classpath = sourceSets.main.runtimeClasspath
-    if (System.getProperty('ai.openai.apiKey') != null) {
-        systemProperty('ai.openai.apiKey', System.getProperty('ai.openai.apiKey'))
+    jvmArgs = ['--enable-preview']
+    
+    // Pass environment variables to the Java process
+    // Check if env vars exist and pass them
+    String apiKey = System.getenv('AI_OPENAI_API_KEY')
+    if (apiKey == null || apiKey.isEmpty()) {
+        apiKey = System.getenv('OPENAI_API_KEY')
+    }
+    
+    if (apiKey != null && !apiKey.isEmpty()) {
+        // Pass as environment variable (preferred)
+        environment 'AI_OPENAI_API_KEY', apiKey
+        environment 'OPENAI_API_KEY', apiKey
+        // Also pass as system property as backup
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+    
+    // Also allow system property from command line
+    if (project.hasProperty('ai.openai.apiKey')) {
+        systemProperty('ai.openai.apiKey', project.findProperty('ai.openai.apiKey'))
+        environment 'AI_OPENAI_API_KEY', project.findProperty('ai.openai.apiKey')
     }
 }
 

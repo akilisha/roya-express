@@ -31,6 +31,35 @@ import java.util.function.Consumer;
  */
 public interface AI {
     /**
+     * High-level LLM access: chat, structured extraction, and streaming.
+     * Thin helpers over provider primitives; suitable for most app code.
+     */
+    LLM llm();
+
+    /**
+     * Embedding operations: single and batch text to vector.
+     * Backed by the configured embedding model (e.g., OpenAI).
+     */
+    Embeddings embeddings();
+
+    /**
+     * Vector indexing helpers (Qdrant-only). Provides convenient APIs to
+     * index paths and documents. If Qdrant is unreachable, these operations fail.
+     */
+    Vectors vectors();
+
+    /**
+     * Retrieval-Augmented Generation API. Performs retrieval against Qdrant
+     * and composes an answer with citations using the configured LLM.
+     */
+    RAGApi ragApi();
+
+    /**
+     * Agents API. Create an agent with tools and a system prompt, then run it.
+     * Power-users can still access provider primitives via {@link #provider(Class)}.
+     */
+    Agents agents();
+    /**
      * Ask the AI a question (chat completion).
      *
      * @param systemPrompt System prompt (role/context for AI)
@@ -117,5 +146,118 @@ public interface AI {
      * @return Provider instance or null if not available
      */
     <T> T provider(Class<T> providerType);
+
+    /**
+     * Ask with metadata (tokens, cost, caching info).
+     *
+     * Use this when you need visibility into the AI call's details.
+     *
+     * @param systemPrompt System prompt
+     * @param userMessage User message
+     * @return AI response with metadata
+     */
+    default AIResponse<String> askWithMetadata(String systemPrompt, String userMessage) {
+        return askWithMetadata(systemPrompt, userMessage, AIOptions.defaults());
+    }
+
+    /**
+     * Ask with metadata and options.
+     *
+     * @param systemPrompt System prompt
+     * @param userMessage User message
+     * @param options AI options
+     * @return AI response with metadata
+     */
+    AIResponse<String> askWithMetadata(String systemPrompt, String userMessage, AIOptions options);
+
+    /**
+     * Extract with metadata (tokens, cost, caching info).
+     *
+     * Use this when you need visibility into the extraction call's details.
+     *
+     * @param type Target record type
+     * @param prompt Prompt describing what to extract
+     * @return AI response with typed data and metadata
+     */
+    default <T> AIResponse<T> extractWithMetadata(Class<T> type, String prompt) {
+        return extractWithMetadata(type, prompt, AIOptions.defaults());
+    }
+
+    /**
+     * Extract with metadata and options.
+     *
+     * @param type Target record type
+     * @param prompt Prompt describing what to extract
+     * @param options AI options
+     * @return AI response with typed data and metadata
+     */
+    <T> AIResponse<T> extractWithMetadata(Class<T> type, String prompt, AIOptions options);
+
+    /** Sub-APIs */
+    /**
+     * LLM helpers for common operations: ask, extract, stream.
+     */
+    interface LLM {
+        /** Chat completion. */
+        String ask(String systemPrompt, String userMessage);
+        /** Chat completion with options (model, temperature, etc.). */
+        String ask(String systemPrompt, String userMessage, AIOptions options);
+        /** Type-safe extraction into a Java record. */
+        <T> T extract(Class<T> type, String prompt);
+        /** Type-safe extraction with options. */
+        <T> T extract(Class<T> type, String prompt, AIOptions options);
+        /** Token-streaming response. */
+        void stream(String systemPrompt, String userMessage, java.util.function.Consumer<String> onToken);
+        /** Token-streaming with options. */
+        void stream(String systemPrompt, String userMessage, AIOptions options, java.util.function.Consumer<String> onToken);
+    }
+
+    /** Embedding operations for text inputs. */
+    interface Embeddings {
+        /** Embed a single text into a float vector. */
+        float[] embed(String text);
+        /** Embed a batch of texts into float vectors. */
+        java.util.List<float[]> embed(java.util.List<String> texts);
+    }
+
+    /** Vector indexing helpers (Qdrant-only). */
+    interface Vectors {
+        /** Recursively index a directory of files using chunking. */
+        void indexPath(String collection, java.nio.file.Path directory, ChunkingOptions options);
+        /** Index a supplied list of documents. */
+        void index(String collection, java.util.List<VectorDoc> documents);
+    }
+
+    /** Retrieval-Augmented Generation. */
+    interface RAGApi {
+        /** Answer a question using retrieval + generation. */
+        RAGResponse ask(String question);
+        /** Answer a question using retrieval + generation with options. */
+        RAGResponse ask(String question, RAGOptions options);
+    }
+
+    /** Agents with tools and a simple run-loop. */
+    interface Agents {
+        /** Create an agent by configuring model/tools/system prompt. */
+        Agent create(java.util.function.Consumer<AgentBuilder> config);
+    }
+
+    /** Helper types for vectors/agents */
+    /** Vector document payload for indexing. */
+    record VectorDoc(String id, String content, java.util.Map<String, Object> metadata) {}
+    /** Chunking configuration for indexing. */
+    record ChunkingOptions(int size, int overlap) {
+        public static ChunkingOptions fixed(int size, int overlap) { return new ChunkingOptions(size, overlap); }
+    }
+    /** Minimal agent contract. */
+    interface Agent { AgentResult run(String input); }
+    /** Builder for Agent configuration. */
+    interface AgentBuilder {
+        AgentBuilder model(Object chatLanguageModel);
+        AgentBuilder tools(java.util.List<Object> tools);
+        AgentBuilder systemPrompt(String prompt);
+    }
+    /** Agent run result and optional step trace. */
+    record AgentResult(String text, java.util.List<java.util.Map<String, Object>> trace) {}
 }
 

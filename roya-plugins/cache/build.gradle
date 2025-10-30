@@ -5,30 +5,22 @@ plugins {
 dependencies {
     // Core dependencies
     implementation project(':roya-api')
-    
+
     // Jackson for JSON serialization (cache values)
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
-    
+
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.9'
-    
+
     // Test dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     testImplementation 'org.mockito:mockito-core:5.5.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
 }
 
-// Enable preview features (for FFM and ScopedValue)
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += [
         '--enable-preview',
-        '--source', '21'
     ]
 }
 

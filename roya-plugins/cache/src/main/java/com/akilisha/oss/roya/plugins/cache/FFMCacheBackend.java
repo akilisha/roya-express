@@ -97,37 +97,54 @@ public class FFMCacheBackend {
         
         try (FileChannel cacheChannel = FileChannel.open(cacheFilePath, 
                 StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-            // Cap at 2GB per segment for now (MappedByteBuffer limitation)
-            // Ensure minimum size for cache file
+            // FileChannel.map() requires size <= Integer.MAX_VALUE
+            // Cap at Integer.MAX_VALUE - 1 to be safe
+            long maxAllowedSize = Integer.MAX_VALUE - 1L; // ~2GB - 1 byte
+            
+            // Calculate desired file size (max of existing size, config, or 1MB minimum)
             long cacheFileSize = Math.max(
-                Math.max(cacheChannel.size(), Math.max(config.maxSizeBytes(), 1024 * 1024)), // At least 1MB
-                2L * 1024 * 1024 * 1024 // But cap at 2GB max per segment
+                Math.max(cacheChannel.size(), config.maxSizeBytes()),
+                1024 * 1024 // At least 1MB
             );
-            cacheFileSize = Math.min(cacheFileSize, 2L * 1024 * 1024 * 1024); // Enforce cap
-            // Extend file if needed
-            if (cacheChannel.size() < cacheFileSize) {
+            
+            // Enforce hard limit for FileChannel.map()
+            cacheFileSize = Math.min(cacheFileSize, maxAllowedSize);
+            
+            // Extend file if needed (but don't exceed maxAllowedSize)
+            if (cacheChannel.size() < cacheFileSize && cacheFileSize <= maxAllowedSize) {
                 cacheChannel.position(cacheFileSize - 1);
                 cacheChannel.write(java.nio.ByteBuffer.allocate(1));
             }
+            
             // Map file to memory segment via MappedByteBuffer
+            // Convert to int for map() call (we've ensured it's <= Integer.MAX_VALUE)
+            int fileSizeInt = (int) Math.min(cacheFileSize, Integer.MAX_VALUE);
             java.nio.MappedByteBuffer buffer = cacheChannel.map(
-                FileChannel.MapMode.READ_WRITE, 0, cacheFileSize);
+                FileChannel.MapMode.READ_WRITE, 0, fileSizeInt);
             this.cacheFile = MemorySegment.ofBuffer(buffer);
         }
         
         // Index file: hash table with fixed slots
+        long maxAllowedSize = Integer.MAX_VALUE - 1L; // ~2GB - 1 byte
         long indexSize = calculateIndexSize(config.maxSizeBytes());
-        // Also cap index at 2GB, ensure minimum size
+        // Ensure minimum size, cap at Integer.MAX_VALUE
         indexSize = Math.max(indexSize, INDEX_SLOT_SIZE * 100); // At least 100 slots
-        indexSize = Math.min(indexSize, 2L * 1024 * 1024 * 1024);
+        indexSize = Math.min(indexSize, maxAllowedSize);
         try (FileChannel indexChannel = FileChannel.open(indexFilePath,
                 StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-            if (indexChannel.size() < indexSize) {
+            // Use existing size if larger (don't shrink)
+            if (indexChannel.size() > 0 && indexChannel.size() > indexSize) {
+                indexSize = indexChannel.size();
+                indexSize = Math.min(indexSize, maxAllowedSize); // Still cap
+            }
+            if (indexChannel.size() < indexSize && indexSize <= maxAllowedSize) {
                 indexChannel.position(indexSize - 1);
                 indexChannel.write(java.nio.ByteBuffer.allocate(1));
             }
+            // Convert to int for map() call
+            int indexSizeInt = (int) Math.min(indexSize, Integer.MAX_VALUE);
             java.nio.MappedByteBuffer buffer = indexChannel.map(
-                FileChannel.MapMode.READ_WRITE, 0, indexSize);
+                FileChannel.MapMode.READ_WRITE, 0, indexSizeInt);
             this.indexFile = MemorySegment.ofBuffer(buffer);
         }
         

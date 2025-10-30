@@ -44,14 +44,29 @@ public class OpenAIClient implements LLMProvider {
             messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemPrompt));
             messages.add(new ChatMessage(ChatMessageRole.USER.value(), userMessage));
 
-            ChatCompletionRequest request = ChatCompletionRequest.builder()
+            ChatCompletionRequest.ChatCompletionRequestBuilder requestBuilder = ChatCompletionRequest.builder()
                 .model(options.model())
                 .messages(messages)
                 .temperature(options.temperature())
                 .maxTokens(options.maxTokens())
                 .topP(options.topP())
-                .n(options.n())
-                .build();
+                .n(options.n());
+
+            // Add optional parameters (only those supported by OpenAI SDK)
+            if (options.frequencyPenalty() != null && options.frequencyPenalty() != 0.0) {
+                requestBuilder.frequencyPenalty(options.frequencyPenalty());
+            }
+            if (options.presencePenalty() != null && options.presencePenalty() != 0.0) {
+                requestBuilder.presencePenalty(options.presencePenalty());
+            }
+            if (options.stop() != null && !options.stop().isEmpty()) {
+                requestBuilder.stop(options.stop());
+            }
+            // Note: topK, seed, logprobs, topLogprobs, echo are in AIOptions for 
+            // extensibility but may not be supported by all SDKs. They can be passed
+            // via additionalOptions for provider-specific features.
+
+            ChatCompletionRequest request = requestBuilder.build();
 
             ChatCompletionResult result = openAiService.createChatCompletion(request);
 
@@ -87,14 +102,26 @@ public class OpenAIClient implements LLMProvider {
             messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), systemPrompt));
             messages.add(new ChatMessage(ChatMessageRole.USER.value(), userMessage));
 
-            ChatCompletionRequest request = ChatCompletionRequest.builder()
+            ChatCompletionRequest.ChatCompletionRequestBuilder requestBuilder = ChatCompletionRequest.builder()
                 .model(options.model())
                 .messages(messages)
                 .temperature(options.temperature())
                 .maxTokens(options.maxTokens())
                 .topP(options.topP())
-                .stream(true)  // Enable streaming
-                .build();
+                .stream(true);  // Enable streaming
+
+            // Add optional parameters (only those supported by OpenAI SDK)
+            if (options.frequencyPenalty() != null && options.frequencyPenalty() != 0.0) {
+                requestBuilder.frequencyPenalty(options.frequencyPenalty());
+            }
+            if (options.presencePenalty() != null && options.presencePenalty() != 0.0) {
+                requestBuilder.presencePenalty(options.presencePenalty());
+            }
+            if (options.stop() != null && !options.stop().isEmpty()) {
+                requestBuilder.stop(options.stop());
+            }
+
+            ChatCompletionRequest request = requestBuilder.build();
 
             // Stream tokens
             openAiService.streamChatCompletion(request)
@@ -121,13 +148,30 @@ public class OpenAIClient implements LLMProvider {
             messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), jsonPrompt));
             messages.add(new ChatMessage(ChatMessageRole.USER.value(), userMessage));
 
-            ChatCompletionRequest request = ChatCompletionRequest.builder()
+            // Use lower temperature for structured output if not explicitly set
+            Double temperature = options.temperature() != null 
+                ? options.temperature() 
+                : 0.3; // Default lower temp for JSON mode
+            
+            ChatCompletionRequest.ChatCompletionRequestBuilder requestBuilder = ChatCompletionRequest.builder()
                 .model(options.model())
                 .messages(messages)
-                .temperature(options.temperature() != null ? Math.min(options.temperature(), 0.3) : 0.3) // Lower temp for structured output
+                .temperature(Math.min(temperature, 0.3)) // Cap at 0.3 for structured output
                 .maxTokens(options.maxTokens())
-                .topP(options.topP())
-                .build();
+                .topP(options.topP());
+
+            // Add optional parameters (only those supported by OpenAI SDK)
+            if (options.frequencyPenalty() != null && options.frequencyPenalty() != 0.0) {
+                requestBuilder.frequencyPenalty(options.frequencyPenalty());
+            }
+            if (options.presencePenalty() != null && options.presencePenalty() != 0.0) {
+                requestBuilder.presencePenalty(options.presencePenalty());
+            }
+            if (options.stop() != null && !options.stop().isEmpty()) {
+                requestBuilder.stop(options.stop());
+            }
+
+            ChatCompletionRequest request = requestBuilder.build();
 
             ChatCompletionResult result = openAiService.createChatCompletion(request);
 
