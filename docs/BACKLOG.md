@@ -318,6 +318,57 @@ Roya + JTE + HTMX = powerful full-stack Java without JS frameworks.
 
 ## Low Priority (P3)
 
+### CLI Rich Templates (rest-api, ai-rag, object-storage)
+**Category**: Enhancement  
+**Priority**: P3-Low  
+**Estimated Effort**: 12 hours  
+**Proposed For**: Phase 9+  
+**Status**: New
+
+**Description**:
+Add richer scaffold templates beyond minimal app.
+
+**Acceptance Criteria**:
+- `roya new --template rest-api|ai-rag|object-storage`
+- Generates routes, config, and docker-compose fragments
+
+---
+
+### CLI Convenience Commands (db/ai/email/storage/openapi/secrets)
+**Category**: Enhancement  
+**Priority**: P3-Low  
+**Estimated Effort**: 16 hours  
+**Proposed For**: Phase 9+  
+**Status**: New
+
+**Description**:
+Add small wrappers over existing plugin features.
+
+**Acceptance Criteria**:
+- `roya db migrate|generate`
+- `roya ai index --collection <name> --path <dir>`
+- `roya email test --provider <id>`
+- `roya storage put|get|presign`
+- `roya openapi serve` (serve spec and open browser)
+- `roya secrets get|set` (Vault dev KV)
+
+---
+
+### CLI Plugin Add Helper
+**Category**: Enhancement  
+**Priority**: P3-Low  
+**Estimated Effort**: 8 hours  
+**Proposed For**: Phase 9+  
+**Status**: New
+
+**Description**:
+Scaffold dependency and wiring hints for known plugins.
+
+**Acceptance Criteria**:
+- `roya plugin add <plugin-id>` updates Gradle and prints usage hints
+
+---
+
 ### gRPC Support
 **Category**: Feature  
 **Priority**: P3-Low  
