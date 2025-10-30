@@ -59,6 +59,20 @@ tasks.register('runAIShowcase', JavaExec) {
     }
 }
 
+tasks.register('runDocsMcp', JavaExec) {
+    group = 'application'
+    description = 'Run Docs MCP demo server'
+    mainClass = 'com.akilisha.oss.roya.examples.mcp.DocsMcpServer'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+    String apiKey = System.getenv('AI_OPENAI_API_KEY') ?: System.getenv('OPENAI_API_KEY')
+    if (apiKey) {
+        environment 'AI_OPENAI_API_KEY', apiKey
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
 // Enable FFM features for Java 23
 tasks.withType(JavaCompile) {
     options.compilerArgs += [
