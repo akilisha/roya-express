@@ -1,0 +1,16 @@
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation project(':roya-api')
+    implementation project(':roya-core')
+    implementation project(':roya-plugins:database')
+    implementation project(':roya-plugins:cache')
+    implementation project(':roya-plugins:metrics')
+}
+
+application {
+    mainClass = 'com.akilisha.oss.roya.bench.roya.PetClinicApp'
+}
+
