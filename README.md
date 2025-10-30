@@ -171,6 +171,30 @@ void main() {
 ```
 
 ### Middleware & Authentication
+### Qdrant Setup (RAG)
+
+RAG requires a running Qdrant instance and an embedding model API key.
+
+1) Start Qdrant (docker-compose already includes it):
+
+```bash
+docker compose up -d qdrant
+```
+
+2) Configure environment:
+
+```bash
+export QDRANT_URL=http://localhost:6333
+export OPENAI_API_KEY=your-api-key
+```
+
+3) Use the unified AI APIs:
+
+```java
+ai.vectors().indexPath("kb", Path.of("docs/"), AI.ChunkingOptions.fixed(800, 200));
+var rag = ai.ragApi().ask("How do I configure caching?");
+```
+
 
 ```java
 import static com.roya.Roya.*;
