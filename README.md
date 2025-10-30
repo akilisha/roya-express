@@ -174,6 +174,29 @@ void main() {
 ### Qdrant Setup (RAG)
 ### Structured Request Logging
 
+### Object Storage: Presigned URLs and Multipart Upload
+
+Presign a GET/PUT URL and upload large files via multipart using the example server `ObjectStorageDemo` (port 3003):
+
+```bash
+docker compose up -d minio
+./gradlew :roya-examples:run --args="ObjectStorageDemo"
+
+# Presigned PUT URL (JSON body)
+curl -s localhost:3003/storage/presign/put \
+  -H 'Content-Type: application/json' \
+  -d '{"bucket":"media","key":"big.bin","ttlSeconds":600,"contentType":"application/octet-stream"}'
+
+# Presigned GET URL
+curl -s "localhost:3003/storage/presign/get?bucket=media&key=big.bin&ttlSeconds=600"
+
+# Multipart upload (base64 body for demo simplicity)
+CONTENT_B64=$(echo -n "$(head -c 10485760 /dev/zero | tr '\0' 'A')" | base64) # ~10MB of 'A'
+curl -s localhost:3003/storage/multipart/put \
+  -H 'Content-Type: application/json' \
+  -d "{\"bucket\":\"media\",\"key\":\"big.bin\",\"contentBase64\":\"${CONTENT_B64}\",\"contentType\":\"application/octet-stream\",\"partSizeMb\":5}"
+```
+
 Enable JSON logs for request tracing (Logstash-compatible) using Morgan:
 
 ```java

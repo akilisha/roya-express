@@ -15,6 +15,7 @@ public interface ObjectStorage {
     List<ObjectInfo> list(String bucket, String prefix);
     default URL presignedGet(String bucket, String key, Duration ttl) { throw new UnsupportedOperationException(); }
     default URL presignedPut(String bucket, String key, Duration ttl, String contentType) { throw new UnsupportedOperationException(); }
+    default String multipartPut(String bucket, String key, InputStream data, long contentLength, String contentType, Map<String,String> metadata, int partSizeMb) { throw new UnsupportedOperationException(); }
 }
 
 

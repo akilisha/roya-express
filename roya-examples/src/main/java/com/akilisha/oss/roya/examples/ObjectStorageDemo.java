@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Map;
+import java.time.Duration;
+import java.util.Base64;
 
 public class ObjectStorageDemo {
     public static void main(String[] args) {
@@ -27,7 +29,7 @@ public class ObjectStorageDemo {
 
         // PUT upload (expects JSON {bucket,key,content,contentType})
         app.post("/storage/put", (Request req, Response res, Next next) -> {
-            Map body = json.readValue(req.bodyText(), Map.class);
+            Map<String,Object> body = json.readValue(req.bodyText(), Map.class);
             String bucket = (String) body.getOrDefault("bucket", null);
             String key = (String) body.get("key");
             String content = (String) body.getOrDefault("content", "");
@@ -70,6 +72,42 @@ public class ObjectStorageDemo {
                 "lastModified", i.lastModified().toString()
             )).toList();
             res.json(Map.of("bucket", bucket, "prefix", prefix, "items", items));
+        });
+
+        // PRESIGNED GET
+        app.get("/storage/presign/get", (Request req, Response res, Next next) -> {
+            String bucket = req.query().get("bucket").orElse(null);
+            String key = req.query().get("key").orElse(null);
+            long ttl = req.query().get("ttlSeconds").map(Long::parseLong).orElse(300L);
+            var storage = req.get(ObjectStorage.class);
+            var url = storage.presignedGet(bucket, key, Duration.ofSeconds(ttl));
+            res.json(Map.of("url", url.toString(), "ttlSeconds", ttl));
+        });
+
+        // PRESIGNED PUT
+        app.post("/storage/presign/put", (Request req, Response res, Next next) -> {
+            Map<String,Object> body = json.readValue(req.bodyText(), Map.class);
+            String bucket = (String) body.getOrDefault("bucket", null);
+            String key = (String) body.get("key");
+            String contentType = (String) body.getOrDefault("contentType", "application/octet-stream");
+            long ttl = body.get("ttlSeconds") == null ? 300L : ((Number) body.get("ttlSeconds")).longValue();
+            var storage = req.get(ObjectStorage.class);
+            var url = storage.presignedPut(bucket, key, Duration.ofSeconds(ttl), contentType);
+            res.json(Map.of("url", url.toString(), "ttlSeconds", ttl, "contentType", contentType));
+        });
+
+        // MULTIPART PUT (expects JSON {bucket,key,contentBase64,contentType,partSizeMb})
+        app.post("/storage/multipart/put", (Request req, Response res, Next next) -> {
+            Map<String,Object> body = json.readValue(req.bodyText(), Map.class);
+            String bucket = (String) body.getOrDefault("bucket", null);
+            String key = (String) body.get("key");
+            String contentB64 = (String) body.get("contentBase64");
+            String contentType = (String) body.getOrDefault("contentType", "application/octet-stream");
+            int partSizeMb = body.get("partSizeMb") == null ? 5 : ((Number) body.get("partSizeMb")).intValue();
+            byte[] bytes = Base64.getDecoder().decode(contentB64);
+            var storage = req.get(ObjectStorage.class);
+            String etag = storage.multipartPut(bucket, key, new java.io.ByteArrayInputStream(bytes), bytes.length, contentType, Map.of(), partSizeMb);
+            res.json(Map.of("bucket", bucket, "key", key, "etag", etag, "size", bytes.length, "partSizeMb", partSizeMb));
         });
 
         app.listen(3003, () -> System.out.println("ObjectStorage demo on http://localhost:3003"));
