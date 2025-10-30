@@ -53,20 +53,20 @@ public final class FaultTolerance {
                 Runnable wrapped = runnable;
                 if (circuitBreaker.isPresent()) {
                     CircuitBreaker cb = circuitBreaker.get();
-                    wrapped = () -> cb.invoke(runnable);
+                    wrapped = () -> cb.invoke(() -> { runnable.run(); return null; });
                 }
                 if (b != null) {
                     Runnable prev = wrapped;
                     Bulkhead bb = b;
-                    wrapped = () -> bb.invoke(prev);
+                    wrapped = () -> bb.invoke(() -> { prev.run(); return null; });
                 }
                 if (r != null) {
                     Runnable prev = wrapped;
                     Retry rr = r;
-                    wrapped = () -> rr.invoke(prev);
+                    wrapped = () -> rr.invoke(() -> { prev.run(); return null; });
                 }
                 Runnable prev = wrapped;
-                wrapped = () -> t.invoke(prev);
+                wrapped = () -> t.invoke(() -> { prev.run(); return null; });
 
                 wrapped.run();
             };

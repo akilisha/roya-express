@@ -7,39 +7,42 @@ dependencies {
     api project(":roya-api")
 
     // Helidon Níma - Virtual thread-native HTTP server
-    implementation 'io.helidon.webserver:helidon-webserver:4.0.3'
-    implementation 'io.helidon.webserver:helidon-webserver-cors:4.0.3'
-    api 'io.helidon.webserver:helidon-webserver-websocket:4.0.3'
-    implementation 'io.helidon.webserver:helidon-webserver-sse:4.0.3'
+    implementation "io.helidon.webserver:helidon-webserver:${helidonVersion}"
+    implementation "io.helidon.webserver:helidon-webserver-cors:${helidonVersion}"
+    implementation "io.helidon.webserver:helidon-webserver-websocket:${helidonVersion}"
+    implementation "io.helidon.webserver:helidon-webserver-sse:${helidonVersion}"
     // Helidon Config
-    implementation 'io.helidon.config:helidon-config:4.0.3'
+    implementation "io.helidon.config:helidon-config:${helidonVersion}"
 
     // JSON processing
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
     // Helidon Health
-    implementation 'io.helidon.health:helidon-health:4.0.3'
-    implementation 'io.helidon.health:helidon-health-checks:4.0.3'
+    implementation "io.helidon.health:helidon-health:${helidonVersion}"
+    implementation "io.helidon.health:helidon-health-checks:${helidonVersion}"
 
     // Helidon Tracing (Zipkin or OTEL backend selectable via config)
-    implementation 'io.helidon.tracing:helidon-tracing:4.0.3'
-    implementation 'io.helidon.openapi:helidon-openapi:4.0.3'
+    implementation "io.helidon.tracing:helidon-tracing:${helidonVersion}"
+    implementation "io.helidon.openapi:helidon-openapi:${helidonVersion}"
 
     // Helidon Reactive Streams (Single/Multi)
-    implementation 'io.helidon.reactive:helidon-reactive-streams:4.0.3'
+    implementation "io.helidon.webserver:helidon-webserver-websocket:${helidonVersion}"
+
+    // Helidon websockets
+    implementation "io.helidon.common:helidon-common-reactive:${helidonVersion}"
 
     // Helidon SE features
-    implementation 'io.helidon.fault-tolerance:helidon-fault-tolerance:4.0.3'
-    implementation 'io.helidon.scheduling:helidon-scheduling:4.0.3'
+    implementation "io.helidon.fault-tolerance:helidon-fault-tolerance:${helidonVersion}"
+    implementation "io.helidon.scheduling:helidon-scheduling:${helidonVersion}"
 
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.10'
-    runtimeOnly 'ch.qos.logback:logback-classic:1.4.14'
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    runtimeOnly "ch.qos.logback:logback-classic:${logbackVersion}"
     // Logstash JSON encoder (optional; used when structured logging is enabled)
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 
     // Testing
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testImplementation 'org.assertj:assertj-core:3.25.1'
     testImplementation 'org.mockito:mockito-core:5.8.0'
 }

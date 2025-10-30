@@ -1,7 +1,7 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.core.middleware.Scheduling;
+import com.akilisha.oss.roya.core.middleware.SchedulingUtil;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -14,13 +14,9 @@ public class SchedulingDemo {
 
         AtomicReference<String> lastRun = new AtomicReference<>("never");
 
-        try {
-            Scheduling.fixedRate(Duration.ofSeconds(1), Duration.ofSeconds(10), (req, res, next) -> {
-                lastRun.set(Instant.now().toString());
-            });
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        SchedulingUtil.fixedRate(Duration.ofSeconds(1), Duration.ofSeconds(10), () -> {
+            lastRun.set(Instant.now().toString());
+        });
 
         app.get("/", (req, res, next) -> res.json(Map.of("status","ok")));
         app.get("/status", (req, res, next) -> res.json(Map.of("lastRun", lastRun.get())));

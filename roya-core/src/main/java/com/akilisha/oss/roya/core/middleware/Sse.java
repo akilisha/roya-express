@@ -5,6 +5,8 @@ import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
 
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintWriter;
 import java.time.Duration;
 import java.util.function.Consumer;
@@ -25,7 +27,7 @@ public final class Sse {
         return (Request req, Response res, Next next) -> {
             res.header("Content-Type", "text/event-stream");
             res.header("Cache-Control", "no-cache");
-            var out = new PrintWriter(res.outputStream(), true);
+            var out = new PrintWriter(res.stream(), true);
             Thread.startVirtualThread(() -> {
                 try {
                     while (!res.isFinished()) {
@@ -52,7 +54,7 @@ public final class Sse {
     public static Handler single(String data) {
         return (req, res, next) -> {
             res.header("Content-Type", "text/event-stream");
-            var out = new PrintWriter(res.outputStream(), true);
+            var out = new PrintWriter(res.stream(), true);
             out.print("data: ");
             out.println(data.replace("\n", "\ndata: "));
             out.println();

@@ -7,9 +7,9 @@ repositories {
 }
 
 dependencies {
-    implementation 'info.picocli:picocli:4.7.6'
-    annotationProcessor 'info.picocli:picocli-codegen:4.7.6'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    implementation "info.picocli:picocli:${picocliVersion}"
+    annotationProcessor "info.picocli:picocli-codegen:${picocliVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation 'org.assertj:assertj-core:3.25.1'
 }
 

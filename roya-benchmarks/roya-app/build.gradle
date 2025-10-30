@@ -8,9 +8,22 @@ dependencies {
     implementation project(':roya-plugins:database')
     implementation project(':roya-plugins:cache')
     implementation project(':roya-plugins:metrics')
+    implementation("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
 }
 
 application {
     mainClass = 'com.akilisha.oss.roya.bench.roya.PetClinicApp'
 }
 
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    jvmArgs += ['--enable-preview']
+}
+
+tasks.named('run') {
+    jvmArgs += ['--enable-preview']
+}

@@ -5,6 +5,20 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    ext {
+        helidonVersion = "4.3.1"
+        postgresVersion = "42.7.7"
+        jacksonVersion = "2.18.2"
+        slf4jVersion = "2.0.17"
+        jooqVersion = "3.18.34" // https://www.jooq.org/download/support-matrix
+        logbackVersion = "1.5.20"
+        hikaricpVersion = "6.3.0"
+        picocliVersion = "4.7.6"
+        assertjVersion = "3.25.1"
+        junitVersion = "5.10.2"
+        mockitoJunitVersion = "5.5.0"
+    }
 }
 
 // Maven Publishing Configuration
@@ -15,13 +29,13 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(23)  // Java 21 LTS (released Sept 2023)
+            languageVersion = JavaLanguageVersion.of(21)  // Java 21 LTS (released Sept 2023)
         }
     }
 
     dependencies {
-        testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
-        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
+        testImplementation "org.junit.jupiter:junit-jupiter"
     }
 
     tasks.named('test') {

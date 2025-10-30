@@ -197,6 +197,19 @@ curl -s localhost:3003/storage/multipart/put \
   -d "{\"bucket\":\"media\",\"key\":\"big.bin\",\"contentBase64\":\"${CONTENT_B64}\",\"contentType\":\"application/octet-stream\",\"partSizeMb\":5}"
 ```
 
+### WebSocket
+
+WebSocket registration:
+
+```java
+app.ws("/ws/echo", new io.helidon.websocket.WsListener() {
+  @Override public void onOpen(io.helidon.websocket.WsSession s) { s.send("connected"); }
+  @Override public void onMessage(io.helidon.websocket.WsSession s, String text, boolean last) { s.send("echo: " + text); }
+});
+```
+
+At `listen()`, Roya installs collected WebSocket endpoints using Helidon’s `WsRouting`. See Helidon docs for details: https://helidon.io/docs/v4/se/websocket
+
 Enable JSON logs for request tracing (Logstash-compatible) using Morgan:
 
 ```java

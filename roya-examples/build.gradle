@@ -11,19 +11,19 @@ dependencies {
     implementation project(":roya-plugins:cache")
     implementation project(":roya-plugins:email")
     // JSON parsing for examples (request body parsing in demos)
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation project(":roya-plugins:ai")
     implementation project(":roya-plugins:object-storage")
-    implementation 'io.helidon.webserver:helidon-webserver-websocket:4.0.3'
-    implementation 'io.helidon.reactive:helidon-reactive-streams:4.0.3'
-    
+    implementation "io.helidon.webserver:helidon-webserver-websocket:${helidonVersion}"
+    implementation "io.helidon.common:helidon-common-reactive:${helidonVersion}"
+
     // JOOQ for examples using database
-    implementation 'org.jooq:jooq:3.18.7'
-    
+    implementation "org.jooq:jooq:${jooqVersion}"
+
     // OAuth dependencies (for examples)
     implementation 'com.github.scribejava:scribejava-apis:8.3.3'
     implementation 'com.github.scribejava:scribejava-core:8.3.3'
-    
+
     // Micrometer for MetricsDemo
     implementation 'io.micrometer:micrometer-core:1.12.0'
 }
@@ -39,14 +39,14 @@ tasks.register('runAIShowcase', JavaExec) {
     mainClass = 'com.akilisha.oss.roya.examples.AIShowcase'
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = ['--enable-preview']
-    
+
     // Pass environment variables to the Java process
     // Check if env vars exist and pass them
     String apiKey = System.getenv('AI_OPENAI_API_KEY')
     if (apiKey == null || apiKey.isEmpty()) {
         apiKey = System.getenv('OPENAI_API_KEY')
     }
-    
+
     if (apiKey != null && !apiKey.isEmpty()) {
         // Pass as environment variable (preferred)
         environment 'AI_OPENAI_API_KEY', apiKey
@@ -54,7 +54,7 @@ tasks.register('runAIShowcase', JavaExec) {
         // Also pass as system property as backup
         systemProperty 'ai.openai.apiKey', apiKey
     }
-    
+
     // Also allow system property from command line
     if (project.hasProperty('ai.openai.apiKey')) {
         systemProperty('ai.openai.apiKey', project.findProperty('ai.openai.apiKey'))

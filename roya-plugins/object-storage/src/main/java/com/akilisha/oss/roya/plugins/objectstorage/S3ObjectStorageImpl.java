@@ -9,16 +9,9 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.*;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.time.Duration;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +20,6 @@ import java.util.Optional;
 final class S3ObjectStorageImpl implements ObjectStorage {
     private final S3Client s3;
     private final String defaultBucket;
-    private final S3Presigner presigner;
 
     S3ObjectStorageImpl(Config cfg) {
         String endpoint = cfg.get("objectStorage.endpoint").asString().orElse("http://localhost:9000");
@@ -42,12 +34,6 @@ final class S3ObjectStorageImpl implements ObjectStorage {
         this.s3 = S3Client.builder()
             .credentialsProvider(creds)
             .serviceConfiguration(s3cfg)
-            .region(Region.of(regionStr))
-            .endpointOverride(java.net.URI.create(endpoint))
-            .build();
-
-        this.presigner = S3Presigner.builder()
-            .credentialsProvider(creds)
             .region(Region.of(regionStr))
             .endpointOverride(java.net.URI.create(endpoint))
             .build();
@@ -127,89 +113,6 @@ final class S3ObjectStorageImpl implements ObjectStorage {
             });
         }
         return out;
-    }
-
-    @Override
-    public URL presignedGet(String bucket, String key, Duration ttl) {
-        String b = bucketOrDefault(bucket);
-        GetObjectRequest get = GetObjectRequest.builder().bucket(b).key(key).build();
-        GetObjectPresignRequest preq = GetObjectPresignRequest.builder()
-            .signatureDuration(ttl)
-            .getObjectRequest(get)
-            .build();
-        PresignedGetObjectRequest presigned = presigner.presignGetObject(preq);
-        return presigned.url();
-    }
-
-    @Override
-    public URL presignedPut(String bucket, String key, Duration ttl, String contentType) {
-        String b = bucketOrDefault(bucket);
-        PutObjectRequest put = PutObjectRequest.builder().bucket(b).key(key).contentType(contentType).build();
-        PutObjectPresignRequest preq = PutObjectPresignRequest.builder()
-            .signatureDuration(ttl)
-            .putObjectRequest(put)
-            .build();
-        PresignedPutObjectRequest presigned = presigner.presignPutObject(preq);
-        return presigned.url();
-    }
-
-    @Override
-    public String multipartPut(String bucket, String key, InputStream data, long contentLength, String contentType, Map<String,String> metadata, int partSizeMb) {
-        String b = bucketOrDefault(bucket);
-        ensureBucket(b);
-        int partSize = Math.max(partSizeMb, 5) * 1024 * 1024; // S3 minimum 5MB parts (except last)
-
-        CreateMultipartUploadRequest.Builder createReq = CreateMultipartUploadRequest.builder()
-            .bucket(b)
-            .key(key)
-            .contentType(contentType);
-        if (metadata != null && !metadata.isEmpty()) createReq = createReq.metadata(metadata);
-        CreateMultipartUploadResponse createResp = s3.createMultipartUpload(createReq.build());
-        String uploadId = createResp.uploadId();
-        List<CompletedPart> completed = new ArrayList<>();
-
-        try {
-            byte[] buffer = new byte[partSize];
-            int partNumber = 1;
-            long remaining = contentLength;
-            while (remaining > 0) {
-                int toRead = (int)Math.min(buffer.length, remaining);
-                int read = 0;
-                while (read < toRead) {
-                    int r = data.read(buffer, read, toRead - read);
-                    if (r == -1) break;
-                    read += r;
-                }
-                if (read <= 0) break;
-                UploadPartRequest upReq = UploadPartRequest.builder()
-                    .bucket(b)
-                    .key(key)
-                    .uploadId(uploadId)
-                    .partNumber(partNumber)
-                    .contentLength((long) read)
-                    .build();
-                UploadPartResponse upResp = s3.uploadPart(upReq, RequestBody.fromBytes(read == buffer.length ? buffer : java.util.Arrays.copyOf(buffer, read)));
-                completed.add(CompletedPart.builder().partNumber(partNumber).eTag(upResp.eTag()).build());
-                partNumber++;
-                remaining -= read;
-            }
-
-            CompletedMultipartUpload completedUpload = CompletedMultipartUpload.builder().parts(completed).build();
-            CompleteMultipartUploadRequest compReq = CompleteMultipartUploadRequest.builder()
-                .bucket(b)
-                .key(key)
-                .uploadId(uploadId)
-                .multipartUpload(completedUpload)
-                .build();
-            CompleteMultipartUploadResponse compResp = s3.completeMultipartUpload(compReq);
-            return compResp.eTag();
-        } catch (Exception e) {
-            try {
-                s3.abortMultipartUpload(AbortMultipartUploadRequest.builder().bucket(b).key(key).uploadId(uploadId).build());
-            } catch (Exception ignore) {}
-            if (e instanceof RuntimeException re) throw re;
-            throw new RuntimeException(e);
-        }
     }
 
     private void ensureBucket(String bucket) {

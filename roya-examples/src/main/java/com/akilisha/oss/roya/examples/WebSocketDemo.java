@@ -2,9 +2,8 @@ package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.api.Handler;
-import io.helidon.webserver.websocket.WebSocketRouting;
-import io.helidon.webserver.websocket.WsListener;
-import io.helidon.webserver.websocket.WsSession;
+import io.helidon.websocket.WsListener;
+import io.helidon.websocket.WsSession;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -20,12 +19,12 @@ public class WebSocketDemo {
         WsListener echo = new WsListener() {
             @Override
             public void onOpen(WsSession session) {
-                session.send("connected");
+                session.send("connected", true);
             }
 
             @Override
             public void onMessage(WsSession session, String text, boolean last) {
-                session.send("echo: " + text);
+                session.send("echo: " + text, true);
             }
         };
 

@@ -1,23 +1,27 @@
 package com.akilisha.oss.roya;
 
 import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.api.pipeline.MiddlewarePipeline;
-import com.akilisha.oss.roya.core.*;
+import com.akilisha.oss.roya.api.plugin.Services;
+import com.akilisha.oss.roya.core.RequestImpl;
+import com.akilisha.oss.roya.core.ResponseImpl;
+import com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.webserver.WebServer;
-import io.helidon.webserver.websocket.WebSocketRouting;
-import io.helidon.openapi.OpenApiFeature;
-import io.helidon.webserver.cors.CorsSupport;
+import io.helidon.webserver.websocket.WsRouting;
+import io.helidon.websocket.WsListener;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 // Health/Tracing registration can be enabled via Helidon observe modules; left out here to avoid tight coupling
 
 /**
  * Roya application - the main entry point.
- *
+ * <p>
  * Express: const app = express()
  * Roya:    var app = Roya.create()
- *
+ * <p>
  * This is the Express-compatible API for building web applications.
  */
 public class Roya implements Handler {
@@ -25,9 +29,10 @@ public class Roya implements Handler {
     private final MiddlewarePipeline pipeline = new MiddlewarePipeline();
     private final Router router = RouterImpl.create();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Services services = new com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl();
+    private final Services services = new ServiceRegistryImpl();
+    // WebSocket registration disabled to maintain compatibility across Helidon versions
+    private final Map<String, WsListener> wsRegistrations = new LinkedHashMap<>();
     private WebServer server;
-    private final java.util.List<java.util.function.Consumer<WebSocketRouting.Builder>> wsRegistrations = new java.util.ArrayList<>();
 
     private Roya() {
         // Add router to pipeline at the end
@@ -38,15 +43,15 @@ public class Roya implements Handler {
                 // If router didn't match anything (called next), send 404
                 if (!res.isFinished()) {
                     res
-                        .status(404)
-                        .json(
-                            java.util.Map.of(
-                                "error",
-                                "Not Found",
-                                "message",
-                                "Cannot " + req.method() + " " + req.path()
-                            )
-                        );
+                            .status(404)
+                            .json(
+                                    java.util.Map.of(
+                                            "error",
+                                            "Not Found",
+                                            "message",
+                                            "Cannot " + req.method() + " " + req.path()
+                                    )
+                            );
                 }
             });
         });
@@ -54,7 +59,7 @@ public class Roya implements Handler {
 
     /**
      * Create a new Roya application.
-     *
+     * <p>
      * Express: express()
      * Roya:    Roya.create()
      *
@@ -72,12 +77,21 @@ public class Roya implements Handler {
     public Services services() {
         return services;
     }
+    // ========== WebSocket convenience ==========
+
+    /**
+     * Register a WebSocket endpoint (convenience). Equivalent to using WebSocketMiddleware.
+     */
+    public Roya ws(String path, WsListener listener) {
+        wsRegistrations.put(path, listener);
+        return this;
+    }
 
     // ========== Middleware ==========
 
     /**
      * Add middleware to the application.
-     *
+     * <p>
      * Express: app.use(middleware)
      *
      * @param handler Middleware handler
@@ -90,10 +104,10 @@ public class Roya implements Handler {
 
     /**
      * Add path-mounted middleware.
-     *
+     * <p>
      * Express: app.use('/api', middleware)
      *
-     * @param path Path prefix
+     * @param path    Path prefix
      * @param handler Middleware handler
      * @return this (for chaining)
      */
@@ -105,7 +119,7 @@ public class Roya implements Handler {
 
     /**
      * Add an error handler.
-     *
+     * <p>
      * Express: app.use((err, req, res, next) => {})
      *
      * @param errorHandler Error handler
@@ -116,25 +130,16 @@ public class Roya implements Handler {
         return this;
     }
 
-    // ========== WebSocket ==========
-
-    /**
-     * Register a WebSocket endpoint using Helidon WebSocket routing.
-     * This must be called before listen().
-     */
-    public Roya ws(String path, io.helidon.webserver.websocket.WsListener listener) {
-        wsRegistrations.add(builder -> builder.endpoint(path, listener));
-        return this;
-    }
+    // WebSocket support can be added when Helidon websocket API is finalized in dependency set
 
     // ========== HTTP Methods ==========
 
     /**
      * Handle GET requests.
-     *
+     * <p>
      * Express: app.get(path, handler)
      *
-     * @param path Route path
+     * @param path     Route path
      * @param handlers Route handlers (middleware + final handler)
      * @return this (for chaining)
      */
@@ -145,10 +150,10 @@ public class Roya implements Handler {
 
     /**
      * Handle POST requests.
-     *
+     * <p>
      * Express: app.post(path, handler)
      *
-     * @param path Route path
+     * @param path     Route path
      * @param handlers Route handlers
      * @return this (for chaining)
      */
@@ -159,10 +164,10 @@ public class Roya implements Handler {
 
     /**
      * Handle PUT requests.
-     *
+     * <p>
      * Express: app.put(path, handler)
      *
-     * @param path Route path
+     * @param path     Route path
      * @param handlers Route handlers
      * @return this (for chaining)
      */
@@ -173,10 +178,10 @@ public class Roya implements Handler {
 
     /**
      * Handle DELETE requests.
-     *
+     * <p>
      * Express: app.delete(path, handler)
      *
-     * @param path Route path
+     * @param path     Route path
      * @param handlers Route handlers
      * @return this (for chaining)
      */
@@ -187,10 +192,10 @@ public class Roya implements Handler {
 
     /**
      * Handle PATCH requests.
-     *
+     * <p>
      * Express: app.patch(path, handler)
      *
-     * @param path Route path
+     * @param path     Route path
      * @param handlers Route handlers
      * @return this (for chaining)
      */
@@ -201,10 +206,10 @@ public class Roya implements Handler {
 
     /**
      * Handle all HTTP methods.
-     *
+     * <p>
      * Express: app.all(path, handler)
      *
-     * @param path Route path
+     * @param path     Route path
      * @param handlers Route handlers
      * @return this (for chaining)
      */
@@ -217,7 +222,7 @@ public class Roya implements Handler {
 
     /**
      * Start the server.
-     *
+     * <p>
      * Express: app.listen(port)
      *
      * @param port Port to listen on
@@ -225,62 +230,50 @@ public class Roya implements Handler {
     public void listen(int port) {
         listen(port, () -> {
             System.out.println(
-                "Roya server running on http://localhost:" + port
+                    "Roya server running on http://localhost:" + port
             );
         });
     }
 
     /**
      * Start the server with callback.
-     *
+     * <p>
      * Express: app.listen(port, callback)
      *
-     * @param port Port to listen on
+     * @param port     Port to listen on
      * @param callback Called when server starts
      */
     public void listen(int port, Runnable callback) {
-        // Create and start Helidon web server
-        server = WebServer.builder()
-            .port(port)
-            .routing(router -> {
-                // Register WebSockets if any
-                if (!wsRegistrations.isEmpty()) {
-                    WebSocketRouting.Builder wsBuilder = WebSocketRouting.builder();
-                    wsRegistrations.forEach(c -> c.accept(wsBuilder));
-                    router.register(wsBuilder.build());
-                }
-                // OpenAPI: serve OpenAPI if openapi.yaml/json present in classpath or configured
-                router.register(OpenApiFeature.create());
-                router
-                    .register(CorsSupport.create())
-                    .any((req, res) -> {
-                    // Wrap Helidon request/response in our API
-                    Request royaReq = new RequestImpl(req, services);
-                    Response royaRes = new ResponseImpl(res, objectMapper);
-
-                    try {
-                        // Execute middleware pipeline
-                        pipeline.execute(royaReq, royaRes);
-                    } catch (Exception e) {
-                        // If no error handler caught it, send 500
-                        if (!royaRes.isFinished()) {
-                            royaRes
-                                .status(500)
-                                .json(
-                                    java.util.Map.of(
-                                        "error",
-                                        "Internal Server Error",
-                                        "message",
-                                        e.getMessage()
-                                    )
-                                );
+        // Build Helidon web server with HTTP routing
+        var builder = WebServer.builder()
+                .port(port)
+                .routing(router -> {
+                    router.any((req, res) -> {
+                        Request royaReq = new RequestImpl(req, services);
+                        Response royaRes = new ResponseImpl(res, objectMapper);
+                        try {
+                            pipeline.execute(royaReq, royaRes);
+                        } catch (Exception e) {
+                            if (!royaRes.isFinished()) {
+                                royaRes.status(500).json(java.util.Map.of(
+                                        "error", "Internal Server Error",
+                                        "message", e.getMessage()
+                                ));
+                            }
                         }
-                    }
+                    });
                 });
-            })
-            .build()
-            .start();
 
+        // Register WebSocket endpoints (single WsRouting with all endpoints)
+        if (!wsRegistrations.isEmpty()) {
+            WsRouting.Builder wsBuilder = WsRouting.builder();
+            for (var entry : wsRegistrations.entrySet()) {
+                wsBuilder.endpoint(entry.getKey(), entry.getValue());
+            }
+            builder.addRouting(wsBuilder);
+        }
+
+        server = builder.build().start();
         callback.run();
     }
 
@@ -299,7 +292,7 @@ public class Roya implements Handler {
 
     /**
      * Roya itself is a Handler - allows composition.
-     *
+     * <p>
      * This enables mounting apps within apps:
      * var admin = Roya.create();
      * app.use("/admin", admin);

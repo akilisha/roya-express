@@ -7,15 +7,15 @@ dependencies {
     implementation project(':roya-api')
 
     // Jackson for JSON serialization (cache values)
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 
     // Test dependencies
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
-    testImplementation 'org.mockito:mockito-core:5.5.0'
-    testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoJunitVersion}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${mockitoJunitVersion}"
 }
 
 tasks.withType(JavaCompile).configureEach {

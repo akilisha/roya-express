@@ -6,6 +6,7 @@ import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
 import com.akilisha.oss.roya.core.middleware.BodyParser;
 import com.akilisha.oss.roya.core.middleware.Morgan;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
@@ -23,7 +24,7 @@ public class PetClinicApp {
 
         app.get("/owners", (req, res, next) -> res.json(new ArrayList<>(owners.values())));
         app.post("/owners", (Request req, Response res, Next next) -> {
-            Map body = new com.fasterxml.jackson.databind.ObjectMapper().readValue(req.bodyText(), Map.class);
+            Map body = new ObjectMapper().readValue(req.bodyText(), Map.class);
             String id = UUID.randomUUID().toString();
             String name = (String) body.getOrDefault("name", "Anonymous");
             Owner o = new Owner(id, name);

@@ -7,21 +7,21 @@ dependencies {
     implementation project(':roya-api')
 
     // JOOQ for type-safe SQL DSL
-    implementation 'org.jooq:jooq:3.18.7'
-    implementation 'org.jooq:jooq-meta:3.18.7'
-    implementation 'org.jooq:jooq-codegen:3.18.7'
+    implementation "org.jooq:jooq:${jooqVersion}"
+    implementation "org.jooq:jooq-meta:${jooqVersion}"
+    implementation "org.jooq:jooq-codegen:${jooqVersion}"
 
     // HikariCP for connection pooling
-    implementation 'com.zaxxer:HikariCP:5.0.1'
+    implementation "com.zaxxer:HikariCP:${hikaricpVersion}"
 
     // PostgreSQL driver
-    implementation 'org.postgresql:postgresql:42.7.1'
+    implementation "org.postgresql:postgresql:${postgresVersion}"
 
     // Flyway for database migrations
     implementation 'org.flywaydb:flyway-core:10.7.1'
 
     // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 }
 
 // JOOQ and Flyway configured and ready to use

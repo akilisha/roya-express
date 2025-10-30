@@ -48,7 +48,9 @@ public class ObjectStorageDemo {
             if (obj.isEmpty()) { res.status(404).json(Map.of("error","not_found")); return; }
             var d = obj.get();
             res.header("Content-Type", d.contentType());
-            res.stream(d.stream());
+            try (var os = res.stream(); var is = d.stream()) {
+                is.transferTo(os);
+            }
         });
 
         // DELETE
@@ -106,8 +108,8 @@ public class ObjectStorageDemo {
             int partSizeMb = body.get("partSizeMb") == null ? 5 : ((Number) body.get("partSizeMb")).intValue();
             byte[] bytes = Base64.getDecoder().decode(contentB64);
             var storage = req.get(ObjectStorage.class);
-            String etag = storage.multipartPut(bucket, key, new java.io.ByteArrayInputStream(bytes), bytes.length, contentType, Map.of(), partSizeMb);
-            res.json(Map.of("bucket", bucket, "key", key, "etag", etag, "size", bytes.length, "partSizeMb", partSizeMb));
+            String etag = storage.put(bucket, key, new java.io.ByteArrayInputStream(bytes), bytes.length, contentType, Map.of());
+            res.json(Map.of("bucket", bucket, "key", key, "etag", etag, "size", bytes.length, "multipart", false));
         });
 
         app.listen(3003, () -> System.out.println("ObjectStorage demo on http://localhost:3003"));
