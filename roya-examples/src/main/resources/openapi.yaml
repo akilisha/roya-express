@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Roya OpenAPI Demo
+  version: 1.0.0
+paths:
+  /:
+    get:
+      summary: Health
+      responses:
+        '200':
+          description: OK
+  /users/{id}:
+    get:
+      summary: Get user by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /users:
+    post:
+      summary: Create user
+      requestBody:
+        required: false
+      responses:
+        '201':
+          description: Created
+

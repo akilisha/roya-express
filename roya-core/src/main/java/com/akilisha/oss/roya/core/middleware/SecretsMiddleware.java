@@ -3,6 +3,8 @@ package com.akilisha.oss.roya.core.middleware;
 import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.core.RequestImpl;
 import io.helidon.config.Config;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
 
@@ -21,8 +23,19 @@ public final class SecretsMiddleware {
                 if (req instanceof RequestImpl ri) {
                     var services = ri.services();
                     if (!services.has(Secrets.class)) {
-                        // Register Secrets backed by Helidon Config
-                        services.singleton(Secrets.class, () -> new ConfigBackedSecrets(services.get(Config.class)));
+                        // Prefer Vault if configured; fallback to Config
+                        Config cfg = services.has(Config.class) ? services.get(Config.class) : null;
+                        boolean vaultEnabled = cfg != null && cfg.get("vault.url").asString().isPresent() && cfg.get("vault.token").asString().isPresent();
+                        if (vaultEnabled) {
+                            services.singleton(Secrets.class, () -> new VaultBackedSecrets(
+                                cfg.get("vault.url").asString().get(),
+                                cfg.get("vault.token").asString().get(),
+                                cfg.get("vault.kvMount").asString().orElse("secret")
+                            ));
+                        } else {
+                            // Register Secrets backed by Helidon Config
+                            services.singleton(Secrets.class, () -> new ConfigBackedSecrets(cfg));
+                        }
                     }
                 }
                 next.handle(req, res);
@@ -40,6 +53,42 @@ public final class SecretsMiddleware {
             // Map path/key to config key: secrets.<path with '/' -> '.'>.<key>
             String cfgKey = "secrets." + path.replace('/', '.') + "." + key;
             return config.get(cfgKey).asString().asOptional();
+        }
+    }
+
+    static final class VaultBackedSecrets implements Secrets {
+        private final String baseUrl; // e.g. http://localhost:8200
+        private final String token;
+        private final String kvMount; // e.g. secret (KV v2 default)
+        private final ObjectMapper mapper = new ObjectMapper();
+        private final java.net.http.HttpClient http = java.net.http.HttpClient.newHttpClient();
+
+        VaultBackedSecrets(String baseUrl, String token, String kvMount) {
+            this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length()-1) : baseUrl;
+            this.token = token;
+            this.kvMount = kvMount;
+        }
+
+        @Override
+        public Optional<String> getOptional(String path, String key) {
+            try {
+                // KV v2 read: GET /v1/{mount}/data/{path}
+                String url = baseUrl + "/v1/" + kvMount + "/data/" + path;
+                var req = java.net.http.HttpRequest.newBuilder(java.net.URI.create(url))
+                    .header("X-Vault-Token", token)
+                    .GET()
+                    .build();
+                var resp = http.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
+                if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
+                    JsonNode root = mapper.readTree(resp.body());
+                    JsonNode data = root.path("data").path("data");
+                    if (data.isMissingNode() || !data.has(key)) return Optional.empty();
+                    return Optional.ofNullable(data.get(key).asText());
+                }
+                return Optional.empty();
+            } catch (Exception e) {
+                return Optional.empty();
+            }
         }
     }
 }

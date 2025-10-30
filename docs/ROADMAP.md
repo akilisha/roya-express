@@ -444,61 +444,46 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 
 ---
 
-## Phase 7: Vector Store & RAG
+## Phase 7: Vector Store & RAG - ✅ COMPLETE
 
 **Timeline**: Weeks 19-21 (April-May 2025)  
-**Status**: 🚧 Design Complete - Ready for Implementation  
-**Design Doc**: See `PHASE7_DESIGN.md` for full architecture
+**Status**: ✅ COMPLETE  
+**Design Doc**: See `PHASE7_DESIGN.md` (updated for unified AI/langchain4j)
 
 ### Objectives
-- [ ] Create vector store abstraction (interface + SPI)
-- [ ] Implement embedding generation (OpenAI embeddings)
-- [ ] Support multiple vector backends (Qdrant prod, Embedded dev)
-- [ ] Implement semantic search (topK, minScore, rerank optional)
-- [ ] Create RAG pipeline (retrieve + assemble + generate)
-- [ ] Support document indexing (chunker, metadata)
+- [x] Adopt `langchain4j` as core and expose primitives via unified AI API
+- [x] Qdrant-only retrieval via `langchain4j-qdrant` (self-hosted Docker)
+- [x] Embeddings and batch indexing
+- [x] RAG pipeline (`ai.ragApi().ask`) wired to Qdrant
+- [x] Document indexing helpers (`vectors().indexPath` with chunking)
 
 ### Success Criteria
 - ✅ Documents can be indexed automatically
 - ✅ Semantic search returns relevant results
 - ✅ `ai.ragApi().ask(question)` works end-to-end
-- ✅ Multiple vector store backends work
-- ✅ Embedding happens automatically
+- ✅ Robustness: timeouts/retries to Qdrant
+- ✅ Embedding happens automatically (batch)
 
 ### Architecture
 
-**Three-Layer Design:**
+**Three-Layer Design (updated):**
 1. **RAG API** (`ai.ragApi().ask()`) - Developer-facing
 2. **RAG Pipeline** - Orchestration (embed → search → context → LLM)
 3. **Vector Store Plugin** - Storage layer (Qdrant, embedded)
 
 ### Deliverables
-
-**Phase 7.1 (Week 19) - Foundation:**
-- ✅ VectorStore interface
-- ✅ EmbeddingService (OpenAI)
-- ✅ EmbeddedVectorBackend (dev/testing)
-
-**Phase 7.2 (Week 20) - Production:**
-- ⏳ QdrantVectorBackend
-- ⏳ Document chunking
-- ⏳ Full RAG pipeline
-
-**Phase 7.3 (Week 21) - Polish:**
-- ⏳ Reranking support
-- ⏳ Performance optimization
-- ⏳ Integration examples
+- ✅ Unified AI module (`llm()`, `embeddings()`, `vectors()`, `ragApi()`, `agents()`)
+- ✅ `langchain4j` + `langchain4j-qdrant` integration
+- ✅ Qdrant Docker compose + run instructions
+- ✅ Examples updated to new AI API
+- ✅ SHOWCASE updated (Why/How this works)
 
 ### Tasks
-- [x] Design vector store interface ✅
-- [x] Design RAG pipeline ✅
-- [ ] Implement Qdrant client
-- [ ] Implement embedded vector store (for dev)
-- [ ] Add embedding generation (OpenAI)
-- [ ] Implement document chunking
-- [ ] Build RAG pipeline (retrieve + generate)
-- [ ] Add reranking support
-- [ ] Test RAG accuracy
+- [x] Refactor to `langchain4j` core
+- [x] Qdrant-only retrieval
+- [x] Batch embeddings + indexing helpers
+- [x] RAG pipeline via `langchain4j`
+- [x] Update examples and docs
 
 ### Key Design Decisions
 - **Embeddings**: OpenAI (MVP), designed for multiple providers
@@ -507,46 +492,27 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - **Pipeline**: Modular (can swap components)
 - **Metadata**: Flexible Map<String, Object>
 
-See `PHASE7_DESIGN.md` for complete architecture.
+See `PHASE7_DESIGN.md` for complete architecture and final design.
 
 ---
 
-## Phase 8: Observability
+## Phase 8: Operational Enhancements - ✅ COMPLETE
 
 **Timeline**: Weeks 22-24 (May 2025)
 
-### Objectives
-- [ ] Implement metrics collection (Prometheus)
-- [ ] Add distributed tracing (OpenTelemetry)
-- [ ] Implement structured logging
-- [ ] Create health check endpoint
-- [ ] Add request/response logging middleware
-- [ ] Build observability dashboard helpers
+### What We Completed
+- ✅ Health endpoints via Helidon Health (`/health`, `/health/live`, `/health/ready`)
+- ✅ Tracing via Helidon Tracing (backend configurable)
+- ✅ CORS via Helidon `CorsSupport`
+- ✅ Structured Morgan logging (Logstash JSON) with redaction and trace/span IDs
+- ✅ ConfigMiddleware (Helidon Config) registered as a service
+- ✅ SecretsMiddleware with Vault-backed `Secrets` (KV v2) and config fallback
+- ✅ Object Storage plugin (S3/MinIO) with presigned GET/PUT and multipart
+- ✅ Demos: WebSocket, SSE, Fault Tolerance, Scheduling
 
-### Success Criteria
-- ✅ Metrics exported in Prometheus format
-- ✅ Traces show full request path
-- ✅ Logs are structured (JSON)
-- ✅ Health checks work (`/health`)
-- ✅ Can debug production issues easily
-
-### Deliverables
-- `plugin/observability/MetricsPlugin.java`
-- `plugin/observability/TracingPlugin.java`
-- `plugin/observability/LoggingPlugin.java`
-- OpenTelemetry integration
-- Prometheus metrics endpoint
-- Structured logging (Logback + JSON)
-
-### Tasks
-- [ ] Integrate OpenTelemetry SDK
-- [ ] Add Prometheus metrics exporter
-- [ ] Implement request metrics (RPS, latency, errors)
-- [ ] Add distributed tracing
-- [ ] Implement structured logging
-- [ ] Create health check endpoint
-- [ ] Add log correlation IDs
-- [ ] Document observability setup
+### Notes
+- Vault dev container added to `docker-compose.yml`
+- README updated with Vault config keys and usage
 
 ---
 

@@ -8,6 +8,7 @@ import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.websocket.WebSocketRouting;
+import io.helidon.openapi.OpenApiFeature;
 import io.helidon.webserver.cors.CorsSupport;
 // Health/Tracing registration can be enabled via Helidon observe modules; left out here to avoid tight coupling
 
@@ -248,6 +249,8 @@ public class Roya implements Handler {
                     wsRegistrations.forEach(c -> c.accept(wsBuilder));
                     router.register(wsBuilder.build());
                 }
+                // OpenAPI: serve OpenAPI if openapi.yaml/json present in classpath or configured
+                router.register(OpenApiFeature.create());
                 router
                     .register(CorsSupport.create())
                     .any((req, res) -> {

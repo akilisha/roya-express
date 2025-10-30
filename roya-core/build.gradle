@@ -23,6 +23,7 @@ dependencies {
 
     // Helidon Tracing (Zipkin or OTEL backend selectable via config)
     implementation 'io.helidon.tracing:helidon-tracing:4.0.3'
+    implementation 'io.helidon.openapi:helidon-openapi:4.0.3'
 
     // Helidon SE features
     implementation 'io.helidon.fault-tolerance:helidon-fault-tolerance:4.0.3'

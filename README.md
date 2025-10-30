@@ -217,6 +217,19 @@ Roya enables Helidon Health/Tracing when present on the classpath:
 - Tracing backend via env/props (Zipkin/OTEL)
 
 RAG requires a running Qdrant instance and an embedding model API key.
+### Secrets (Vault) and Config
+
+- Start Vault (dev): `docker compose up -d vault`
+- Configure app to use Vault-backed secrets via Helidon Config keys:
+
+```properties
+vault.url=http://localhost:8200
+vault.token=root
+vault.kvMount=secret
+```
+
+In code, `SecretsMiddleware.defaults()` registers `Secrets` into services. It auto-detects Vault config and reads from KV v2 (`/v1/{mount}/data/{path}`), falling back to config-backed secrets at `secrets.<path>.<key>`.
+
 
 1) Start Qdrant (docker-compose already includes it):
 

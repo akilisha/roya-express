@@ -493,6 +493,49 @@ Begin implementation of Vector Store & RAG per `PHASE7_DESIGN.md`:
 
 ---
 
+## Phase 7: Vector Store & RAG - ✅ COMPLETE
+
+**Roadmap Reference**: Phase 7  
+**Completed**: October 30, 2025
+
+### What We Accomplished
+- Unified AI module adopting `langchain4j`
+- Qdrant-only retrieval (Docker self-hosted)
+- Batch embeddings, indexing helpers, and RAG pipeline
+- Examples/docs updated (SHOWCASE Why/How, README)
+
+### Design Changes
+- Removed `vector` module; consolidated under AI
+- Surfaces: `llm()`, `embeddings()`, `vectors()`, `ragApi()`, `agents()`
+- Structured outputs; cost tracking; caching
+
+### Lessons
+- Expose provider primitives; avoid unnecessary wrappers
+
+---
+
+## Phase 8: Operational Enhancements - ✅ COMPLETE
+
+**Roadmap Reference**: Phase 8  
+**Completed**: October 30, 2025
+
+### What We Accomplished
+- Health/Tracing via Helidon
+- CORS via Helidon `CorsSupport`
+- Morgan structured logging (JSON)
+- ConfigMiddleware + SecretsMiddleware (Vault-backed, config fallback)
+- Object Storage (S3/MinIO) with presigned URLs + multipart
+- Demos: WebSocket, SSE, Fault Tolerance, Scheduling
+
+### Design Changes
+- Secrets separated from Config; Vault is primary for `Secrets`
+- Prefer Helidon-native features
+- Object Storage is a plugin (not middleware)
+
+### Notes
+- `docker-compose.yml` includes Vault (dev)
+
+
 ## Phase 3: Essential Middleware - ✅ COMPLETE
 
 **Roadmap Reference**: Phase 3  
