@@ -13,6 +13,7 @@ dependencies {
     // JSON parsing for examples (request body parsing in demos)
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
     implementation project(":roya-plugins:ai")
+    implementation project(":roya-plugins:object-storage")
     
     // JOOQ for examples using database
     implementation 'org.jooq:jooq:3.18.7'
