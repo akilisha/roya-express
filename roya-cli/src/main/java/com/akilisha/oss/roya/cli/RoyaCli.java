@@ -4,6 +4,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.ScopeType;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,6 +14,11 @@ import java.util.concurrent.Callable;
 @Command(name = "roya", mixinStandardHelpOptions = true, version = "0.1",
     subcommands = {RoyaCli.New.class, RoyaCli.Run.class, RoyaCli.Dev.class, RoyaCli.Compose.class})
 public class RoyaCli implements Callable<Integer> {
+    @Option(names = "--dry-run", description = "Print commands without executing", scope = ScopeType.INHERIT)
+    boolean dryRun;
+
+    static volatile boolean DRY_RUN = false;
+    public static volatile String LAST_CMD = null;
     public static void main(String[] args) {
         int code = new CommandLine(new RoyaCli()).execute(args);
         System.exit(code);
@@ -20,6 +26,7 @@ public class RoyaCli implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        DRY_RUN = dryRun;
         CommandLine.usage(this, System.out);
         return 0;
     }
@@ -127,6 +134,10 @@ public class Main {
     }
 
     static int exec(String cmd) throws IOException, InterruptedException {
+        LAST_CMD = cmd;
+        if (DRY_RUN) {
+            return 0;
+        }
         Process p = new ProcessBuilder(shell(), shellArg(), cmd)
             .inheritIO()
             .start();

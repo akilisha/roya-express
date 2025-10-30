@@ -12,6 +12,5 @@ include 'roya-plugins:object-storage'
 // Vector module removed; unified under AI
 // include 'roya-plugins:observability'
 // include 'roya-plugins:security'
-// include 'roya-cli'
 include 'roya-cli'
 include 'roya-examples'
