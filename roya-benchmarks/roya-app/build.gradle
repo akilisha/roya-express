@@ -8,6 +8,8 @@ dependencies {
     implementation project(':roya-plugins:database')
     implementation project(':roya-plugins:cache')
     implementation project(':roya-plugins:metrics')
+    implementation("org.slf4j:slf4j-api:${slf4jVersion}")
+    runtimeOnly "ch.qos.logback:logback-classic:${logbackVersion}"
     implementation("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
 }
 

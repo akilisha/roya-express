@@ -1,0 +1,21 @@
+<configuration>
+    <appender name="ACCESS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/roya-access.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/roya-access.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%msg%n</pattern>
+            </layout>
+        </encoder>
+    </appender>
+
+    <!-- Morgan logs to logger name "http" -->
+    <logger name="http" level="INFO" additivity="false">
+        <appender-ref ref="ACCESS"/>
+    </logger>
+
+    <root level="INFO"/>
+</configuration>

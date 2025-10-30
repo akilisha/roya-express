@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 
 public class PetClinicApp {
+
     record Owner(String id, String name) {}
 
     public static void main(String[] args) {
@@ -24,7 +25,10 @@ public class PetClinicApp {
 
         app.get("/owners", (req, res, next) -> res.json(new ArrayList<>(owners.values())));
         app.post("/owners", (Request req, Response res, Next next) -> {
-            Map body = new ObjectMapper().readValue(req.bodyText(), Map.class);
+            Object raw = req.get("body");
+            Map body = (raw instanceof Map)
+                    ? (Map) raw
+                    : new ObjectMapper().readValue(String.valueOf(raw), Map.class);
             String id = UUID.randomUUID().toString();
             String name = (String) body.getOrDefault("name", "Anonymous");
             Owner o = new Owner(id, name);

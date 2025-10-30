@@ -34,28 +34,7 @@ public class Roya implements Handler {
     private final Map<String, WsListener> wsRegistrations = new LinkedHashMap<>();
     private WebServer server;
 
-    private Roya() {
-        // Add router to pipeline at the end
-        // Middleware executes first, then routing
-        pipeline.use((req, res, next) -> {
-            // Try routing
-            router.handle(req, res, (r1, r2) -> {
-                // If router didn't match anything (called next), send 404
-                if (!res.isFinished()) {
-                    res
-                            .status(404)
-                            .json(
-                                    java.util.Map.of(
-                                            "error",
-                                            "Not Found",
-                                            "message",
-                                            "Cannot " + req.method() + " " + req.path()
-                                    )
-                            );
-                }
-            });
-        });
-    }
+    private Roya() {}
 
     /**
      * Create a new Roya application.
@@ -229,8 +208,8 @@ public class Roya implements Handler {
      */
     public void listen(int port) {
         listen(port, () -> {
-            System.out.println(
-                    "Roya server running on http://localhost:" + port
+            System.out.printf(
+                    "Roya server running on http://localhost:%d\n", port
             );
         });
     }
@@ -252,7 +231,20 @@ public class Roya implements Handler {
                         Request royaReq = new RequestImpl(req, services);
                         Response royaRes = new ResponseImpl(res, objectMapper);
                         try {
+                            // 1) middleware (Morgan logs here)
                             pipeline.execute(royaReq, royaRes);
+
+                            // 2) route (only if not finished)
+                            if (!royaRes.isFinished()) {
+                                this.router.handle(royaReq, royaRes, (r1, r2) -> {
+                                    if (!royaRes.isFinished()) {
+                                        royaRes.status(404).json(java.util.Map.of(
+                                                "error", "Not Found",
+                                                "message", "Cannot " + royaReq.method() + " " + royaReq.path()
+                                        ));
+                                    }
+                                });
+                            }
                         } catch (Exception e) {
                             if (!royaRes.isFinished()) {
                                 royaRes.status(500).json(java.util.Map.of(

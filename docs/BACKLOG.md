@@ -102,6 +102,27 @@ Express doesn't have this - this would be a Roya advantage.
 
 ---
 
+### Benchmark Harness Automation (One-Command Bench)
+**Category**: Enhancement  
+**Priority**: P1-High  
+**Estimated Effort**: 6 hours  
+**Proposed For**: Phase 10 (Production Hardening)  
+**Status**: New
+
+**Description**:
+Automate capstone benchmark runs into a single command (PowerShell/Gradle), producing k6 summaries and steady-state CPU/RAM, and emitting a Markdown report.
+
+**Acceptance Criteria**:
+- Script runs Roya and Spring tests separately using a shared k6 script
+- Samples CPU/RAM during steady-state and prints averages
+- Saves k6 JSON summaries and renders a concise Markdown comparison
+- Optional flags: VUs, duration, target base URL(s)
+
+**Notes**:
+Current `bench.ps1` exists; wire into Gradle and add Markdown output.
+
+---
+
 ### WebSocket Support
 **Category**: Feature  
 **Priority**: P1-High  
@@ -206,6 +227,23 @@ API protection. Express uses `express-rate-limit`.
 
 **Dependencies**:
 - None
+
+---
+
+### k6 Script Parametrization & Warmup
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Phase 10  
+**Status**: New
+
+**Description**:
+Parameterize k6 scripts (BASE_URL, PATH, VUS, DURATION), add warmup and steady-state phases, and optional CSV/JSON export.
+
+**Acceptance Criteria**:
+- Single k6 file supporting env-based targets
+- Warmup stage (e.g., 20s) before measurement
+- Summary export to JSON/CSV for post-processing
 
 ---
 
@@ -331,6 +369,23 @@ Add richer scaffold templates beyond minimal app.
 **Acceptance Criteria**:
 - `roya new --template rest-api|ai-rag|object-storage`
 - Generates routes, config, and docker-compose fragments
+
+---
+
+### Containerized Benchmark Compose
+**Category**: Enhancement  
+**Priority**: P3-Low  
+**Estimated Effort**: 8 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+Docker Compose to run both apps, k6, and optional Zipkin/Prometheus for apples-to-apples environment.
+
+**Acceptance Criteria**:
+- Compose file spins up Roya, Spring, k6
+- Optional Zipkin/Prometheus services
+- One command to run and a single report artifact
 
 ---
 
