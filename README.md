@@ -210,6 +210,31 @@ app.use(Morgan.builder()
 
 Fields include: http.method, path, status, duration_ms, remote.ip, request_id, trace/span IDs, and redacted headers. Logs are emitted to stdout for Docker log collectors.
 
+## Roya CLI (MVP)
+
+Quick commands to boost dev ergonomics:
+
+```bash
+# Help
+./gradlew :roya-cli:run --args="--help"
+
+# Scaffold a minimal Roya app
+./gradlew :roya-cli:run --args="new my-app --group com.acme"
+
+# Run an example (same as :roya-examples:run with args)
+./gradlew :roya-cli:run --args="dev HelloWorld"
+
+# Run any module/class
+./gradlew :roya-cli:run --args="run --class com.akilisha.oss.roya.examples.ObjectStorageDemo --module :roya-examples --args \"ObjectStorageDemo\""
+
+# Docker helpers (qdrant|minio|postgres|vault)
+./gradlew :roya-cli:run --args="compose up --service qdrant"
+./gradlew :roya-cli:run --args="compose down --service qdrant"
+
+# Dry run (print commands without executing)
+./gradlew :roya-cli:run --args="--dry-run dev HelloWorld"
+```
+
 ### Health & Tracing
 
 Roya enables Helidon Health/Tracing when present on the classpath:
