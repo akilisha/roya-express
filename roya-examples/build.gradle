@@ -15,6 +15,7 @@ dependencies {
     implementation project(":roya-plugins:ai")
     implementation project(":roya-plugins:object-storage")
     implementation 'io.helidon.webserver:helidon-webserver-websocket:4.0.3'
+    implementation 'io.helidon.reactive:helidon-reactive-streams:4.0.3'
     
     // JOOQ for examples using database
     implementation 'org.jooq:jooq:3.18.7'
