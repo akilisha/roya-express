@@ -12,6 +12,14 @@ dependencies {
     // JSON processing
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
 
+    // Helidon Health
+    implementation 'io.helidon.health:helidon-health:4.0.3'
+    implementation 'io.helidon.health:helidon-health-checks:4.0.3'
+
+    // Helidon Tracing (Zipkin or OTEL backend selectable via config)
+    implementation 'io.helidon.tracing:helidon-tracing:4.0.3'
+    implementation 'io.helidon.tracing:helidon-tracing-zipkin:4.0.3'
+
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.10'
     runtimeOnly 'ch.qos.logback:logback-classic:1.4.14'

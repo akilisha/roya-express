@@ -7,6 +7,9 @@ import com.akilisha.oss.roya.core.*;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.webserver.WebServer;
+import io.helidon.health.HealthSupport;
+import io.helidon.health.checks.HealthChecks;
+import io.helidon.tracing.TracingSupport;
 
 /**
  * Roya application - the main entry point.
@@ -224,10 +227,21 @@ public class Roya implements Handler {
      */
     public void listen(int port, Runnable callback) {
         // Create and start Helidon web server
+        // Health support (native Helidon health endpoints)
+        HealthSupport health = HealthSupport.builder()
+            .add(HealthChecks.healthChecks()) // heap, deadlock, etc.
+            .build();
+
+        // Tracing support (propagates/exports spans via configured backend)
+        TracingSupport tracing = TracingSupport.create();
+
         server = WebServer.builder()
             .port(port)
             .routing(router ->
-                router.any((req, res) -> {
+                router
+                    .register(health)
+                    .register(tracing)
+                    .any((req, res) -> {
                     // Wrap Helidon request/response in our API
                     Request royaReq = new RequestImpl(req, services);
                     Response royaRes = new ResponseImpl(res, objectMapper);

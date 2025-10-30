@@ -38,6 +38,28 @@ Additional context
 
 ## High Priority (P0-P1)
 
+### Phase 7: Vector & RAG Polishing
+**Category**: Feature
+**Priority**: P1-High
+**Estimated Effort**: 24 hours
+**Proposed For**: Phase 7
+**Status**: New
+
+**Description**:
+Finalize Qdrant-only RAG with production-grade UX and ops.
+
+**Acceptance Criteria**:
+- Optional reranking stage for retrieved chunks (LLM/model-based)
+- Collection management APIs (create/delete/list, basic stats)
+- Example server adds POST /mcp/tools/docs.indexPath to index a directory
+- Richer chunking presets; support .md/.markdown/.txt (extensible)
+- Config defaults and precedence for collection/topK/minScore
+- Observability for index/search (metrics) and simple RAG tracing
+- Live Qdrant tests: index/search success, failure paths (timeouts/5xx), golden snapshots
+
+**Notes**:
+404 from Qdrant means collection missing (must index first); document this.
+
 ### HTTP/2 Server Push Support
 **Category**: Feature  
 **Priority**: P2-Medium  
