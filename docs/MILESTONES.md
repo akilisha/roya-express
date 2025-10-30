@@ -858,7 +858,7 @@ Ready to begin Phase 5: Database Plugin (first concrete plugin)
 This phase makes AI/LLM integration a natural part of the Roya framework. No bolted-on complexity - AI should feel like using any other service:
 ```java
 AI ai = req.get(AI.class);  // Same pattern as Database, Email
-String answer = ai.ask("You are helpful", question);
+String answer = ai.llm().ask("You are helpful", question);
 ```
 
 **Key Principles**:
@@ -866,7 +866,7 @@ String answer = ai.ask("You are helpful", question);
 2. **Provider-agnostic**: Start with OpenAI, designed for Anthropic, Cohere, local models
 3. **Cost-aware**: Token counting and cost tracking built-in
 4. **Performance-conscious**: Leverage Cache plugin, virtual threads, streaming
-5. **Simple API**: Minimal surface area - `ask()`, `extract()`, `stream()`, `rag()`
+5. **Simple API**: Unified surfaces - `llm().ask/extract/stream`, `ragApi().ask`, `embeddings()`, `vectors()`, `agents()`
 
 ### Design Decisions
 
@@ -951,19 +951,19 @@ OpenAIClient, AnthropicClient (thin wrappers)
 
 **Decision 5: API Surface Area**
 
-**Chosen Design**: Minimal API - `ask()`, `extract()`, `stream()`, `rag()`
+**Chosen Design**: Unified AI module - `llm()`, `embeddings()`, `vectors()`, `ragApi()`, `agents()`
 
 **Why These Four Methods?**
 - `ask()`: Core chat completion (covers 80% of use cases)
 - `extract()`: Structured outputs (killer feature - type safety)
 - `stream()`: For long responses (user experience)
-- `rag()`: Advanced but API exists (Phase 7 implementation)
+- `ragApi().ask()`: Advanced but API exists (Phase 7 implementation)
 
 **Rationale**:
 - ✅ Simple to learn (four methods)
 - ✅ Covers all major use cases
 - ✅ Extensible via options pattern (`AIOptions`)
-- ✅ Future-proof: `rag()` API exists even if impl is Phase 7
+- ✅ Future-proof: `ragApi()` exists even if retrieval impl evolves
 
 **Impact**: Developers don't need to learn complex APIs. Four methods cover everything.
 

@@ -2,7 +2,7 @@
 
 **Status**: Design Phase  
 **Timeline**: Weeks 19-21 (April-May 2025)  
-**Goal**: Make `ai().rag(question)` fully functional with real vector search
+**Goal**: Make `ai.ragApi().ask(question)` fully functional with real vector search (Qdrant-only)
 
 ---
 
@@ -11,23 +11,24 @@
 **The Goal:**
 ```java
 // Index documents (automatic chunking + embedding)
-vectorStore.index("docs/", "my-knowledge-base");
+ai.vectors().indexPath("my-knowledge-base", Path.of("docs/"), AI.ChunkingOptions.fixed(800, 200));
 
 // Ask questions - gets REAL answers from your docs
-RAGResponse answer = ai.rag("How do I configure caching?");
+RAGResponse answer = ai.ragApi().ask("How do I configure caching?");
 // Returns: answer + citations to actual docs
 
 // Full integration
 Database db = req.get(Database.class);
-VectorStore vectors = req.get(VectorStore.class);
 AI ai = req.get(AI.class);
 
 // Index database content
 List<Document> docs = db.query("SELECT * FROM articles");
-vectors.index(docs, "articles");
+ai.vectors().index("articles", docs.stream()
+    .map(d -> new AI.VectorDoc(d.id(), d.content(), d.metadata()))
+    .toList());
 
 // RAG query
-RAGResponse response = ai.rag("What articles discuss AI?", 
+RAGResponse response = ai.ragApi().ask("What articles discuss AI?", 
     RAGOptions.builder().topK(5).build());
 ```
 

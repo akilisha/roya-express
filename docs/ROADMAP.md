@@ -397,9 +397,9 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - [x] Implement response caching ✅
 
 ### Success Criteria
-- ✅ `ai().ask(prompt)` returns completions
-- ✅ `ai().extract(Record.class, prompt)` returns typed data
-- ✅ Streaming responses work (`ai().stream()`)
+- ✅ `ai.llm().ask(prompt)` returns completions
+- ✅ `ai.llm().extract(Record.class, prompt)` returns typed data
+- ✅ Streaming responses work (`ai.llm().stream()`)
 - ✅ Token usage tracked per request
 - ✅ Caching reduces duplicate calls by 90%+
 
@@ -456,14 +456,14 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 ### Success Criteria
 - ✅ Documents can be indexed automatically
 - ✅ Semantic search returns relevant results
-- ✅ `ai().rag(question)` works end-to-end
+- ✅ `ai.ragApi().ask(question)` works end-to-end
 - ✅ Multiple vector store backends work
 - ✅ Embedding happens automatically
 
 ### Architecture
 
 **Three-Layer Design:**
-1. **RAG API** (`ai().rag()`) - Developer-facing
+1. **RAG API** (`ai.ragApi().ask()`) - Developer-facing
 2. **RAG Pipeline** - Orchestration (embed → search → context → LLM)
 3. **Vector Store Plugin** - Storage layer (Qdrant, embedded)
 
