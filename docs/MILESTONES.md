@@ -535,6 +535,35 @@ Begin implementation of Vector Store & RAG per `PHASE7_DESIGN.md`:
 ### Notes
 - `docker-compose.yml` includes Vault (dev)
 
+---
+
+## Phase 9: CLI Tool - ✅ MVP COMPLETE
+
+**Roadmap Reference**: Phase 9  
+**Completed**: October 30, 2025 (MVP)
+
+### What We Accomplished
+- Created `roya-cli` module (picocli)
+- Implemented commands: `new`, `dev`, `run`, `compose`
+- Added `--dry-run` for safe CI/testing
+- Wrote unit tests and README usage snippet
+
+### Deferred (Next)
+- Rich templates (rest-api, ai-rag, object-storage)
+- Additional convenience commands (db/ai/email/storage/openapi/secrets)
+
+### Design Changes
+- Keep CLI thin and transparent (print underlying commands)
+- Cross-platform portability (PowerShell/cmd/bash)
+
+---
+
+### Additional Middleware Delivered (Phase 8 addendum)
+- WebSocket registration via `Roya.ws(...)`
+- SSE helper (`Sse`) for server-sent events
+- Fault tolerance wrapper (`FaultTolerance`) – timeout/retries/bulkhead
+- Scheduling utility (`Scheduling`) with virtual threads
+- Reactive Streams helper (`Reactive`) exposing Single/Multi
 
 ## Phase 3: Essential Middleware - ✅ COMPLETE
 
