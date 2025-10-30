@@ -1,3 +1,15 @@
+### Run the Docs MCP server (roya-mcp)
+
+```bash
+./gradlew :roya-plugins:mcp:run \
+  -Dai.openai.apiKey=$OPENAI_API_KEY \
+  -Dqdrant.url=${QDRANT_URL:-http://localhost:6333}
+
+# Then call the tool
+curl -s http://localhost:3002/mcp/tools/docs.searchAndSummarize \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What is Roya Framework?","topK":5}'
+```
 # 🚀 Roya Framework
 
 > **Express for Java. AI-Native. 100x Faster.**

@@ -8,6 +8,7 @@ include 'roya-plugins:metrics'
 include 'roya-plugins:cache'
 include 'roya-plugins:email'
 include 'roya-plugins:ai'
+include 'roya-plugins:mcp'
 // Vector module removed; unified under AI
 // include 'roya-plugins:observability'
 // include 'roya-plugins:security'
