@@ -1,0 +1,9 @@
+FROM eclipse-temurin:21-jre AS runtime
+WORKDIR /app
+
+# Build artifacts
+COPY build/libs/roya-examples-1.0.0-SNAPSHOT.jar app.jar
+
+EXPOSE 3000
+ENTRYPOINT ["java","--enable-preview","-jar","/app/app.jar"]
+

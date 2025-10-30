@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roya-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: roya-example
+  template:
+    metadata:
+      labels:
+        app: roya-example
+    spec:
+      containers:
+        - name: app
+          image: roya-examples:jvm
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+

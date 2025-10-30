@@ -1,0 +1,14 @@
+# Example native build; adjust as needed for your environment
+FROM ghcr.io/graalvm/graalvm-community:21 AS build
+WORKDIR /workspace
+COPY . /workspace
+RUN gu install native-image
+# This is a placeholder; native-image setup depends on your entrypoint class
+# RUN native-image -jar build/libs/roya-examples-1.0.0-SNAPSHOT.jar app
+
+FROM gcr.io/distroless/cc-debian12 AS runtime
+WORKDIR /app
+COPY --from=build /workspace/app /app/app
+EXPOSE 3000
+ENTRYPOINT ["/app/app"]
+
