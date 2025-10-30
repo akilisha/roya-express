@@ -565,6 +565,40 @@ Begin implementation of Vector Store & RAG per `PHASE7_DESIGN.md`:
 - Scheduling utility (`Scheduling`) with virtual threads
 - Reactive Streams helper (`Reactive`) exposing Single/Multi
 
+---
+
+## Phase 10: Production Hardening - 🚧 IN PROGRESS
+
+**Roadmap Reference**: Phase 10  
+**Started**: October 30, 2025  
+**Completed**: TBA
+
+### Plan & Scope
+- Native build path (GraalVM) alongside JVM builds
+- Container images (JVM and native) for examples/reference
+- Kubernetes manifests with health probes and sane resources
+- Security posture review (Helmet, CORS, Secrets, log redaction)
+- Observability: logs/traces/metrics and correlation
+- Baseline performance targets and simple load tests
+- Production documentation (build → containerize → deploy → operate)
+
+### Deliverables
+- docs/PRODUCTION.md (JVM/native, Docker, k8s, observability, security, tuning)
+- Dockerfile.jvm, Dockerfile.native (in `roya-examples/`)
+- deploy/k8s/deployment.yaml, deploy/k8s/service.yaml (probes to `/health/live|ready`)
+- Observability specifics (tracing exporter config, log fields, metrics endpoint)
+- Security defaults and recommended prod configs (CSP, CORS, Vault)
+
+### Status
+- ✅ Initial docs and artifacts added (JVM/native Dockerfiles, k8s manifests, PRODUCTION.md)
+- ⏳ Observability docs: tracing/metrics/log correlation
+- ⏳ Security review docs: Helmet/CORS/Secrets/log redaction
+- ⏳ Baseline performance notes and sample load test scripts
+
+### Notes
+- Prefer JVM builds first; adopt native after parity checks
+- Ensure Vault used for secrets; never bake secrets into images
+
 ## Phase 3: Essential Middleware - ✅ COMPLETE
 
 **Roadmap Reference**: Phase 3  

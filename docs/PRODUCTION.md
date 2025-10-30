@@ -48,15 +48,24 @@ kubectl apply -f deploy/k8s/
 ## 4) Observability
 
 - Logs: Morgan JSON to stdout; includes trace/span/request IDs
+  - Enable structured logging in code via `Morgan.builder().structured(true)`
+  - Redact headers like Authorization/Cookie by default
+  - Fields: http.method, path, status, duration_ms, remote.ip, request_id, trace_id, span_id
 - Tracing: Helidon Tracing (Zipkin/OTEL via env)
+  - Example env: `TRACING_ZIPKIN_URL=http://zipkin:9411/api/v2/spans`
+  - Correlation: request_id ↔ trace/span present in logs
 - Metrics: expose /metrics (if Metrics plugin present)
+  - Prometheus scrape example:
+    - job_name: 'roya'
+    - static_configs: targets: ['service:3000']
 
 ## 5) Security
 
-- Helmet defaults; review CSP
-- CORS via Helidon; restrict origins
+- Helmet defaults; review CSP for your app (script-src, connect-src)
+- CORS via Helidon; restrict origins and allowed headers in prod
 - Secrets via Vault; never bake secrets
-- Redaction enabled in logs
+  - Config keys: `vault.url`, `vault.token`, `vault.kvMount` (dev token only locally)
+- Redaction enabled in logs (Authorization, Cookie, Set-Cookie)
 
 ## 6) Performance
 
