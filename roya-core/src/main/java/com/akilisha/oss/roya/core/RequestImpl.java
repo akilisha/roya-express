@@ -164,4 +164,9 @@ public class RequestImpl implements Request {
     ServerRequest helidonRequest() {
         return helidonRequest;
     }
+
+    // Expose Services for framework middleware that needs to register singletons
+    public Services services() {
+        return services;
+    }
 }

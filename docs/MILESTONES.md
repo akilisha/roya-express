@@ -868,6 +868,14 @@ String answer = ai.llm().ask("You are helpful", question);
 4. **Performance-conscious**: Leverage Cache plugin, virtual threads, streaming
 5. **Simple API**: Unified surfaces - `llm().ask/extract/stream`, `ragApi().ask`, `embeddings()`, `vectors()`, `agents()`
 
+---
+
+### Operational Enhancements (added during Phase 7)
+
+- Health checks (Helidon Health): `/health`, `/health/live`, `/health/ready`
+- Tracing (Helidon Tracing): backend configured via env/props
+- Structured request logging: Morgan JSON mode (logstash-compatible) with redaction and correlation (request_id, trace/span)
+
 ### Design Decisions
 
 **Decision 1: Structured Outputs Implementation**

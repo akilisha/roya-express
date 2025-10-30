@@ -7,6 +7,7 @@ import com.akilisha.oss.roya.core.*;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.webserver.WebServer;
+import io.helidon.webserver.cors.CorsSupport;
 // Health/Tracing registration can be enabled via Helidon observe modules; left out here to avoid tight coupling
 
 /**
@@ -229,6 +230,7 @@ public class Roya implements Handler {
             .port(port)
             .routing(router ->
                 router
+                    .register(CorsSupport.create())
                     .any((req, res) -> {
                     // Wrap Helidon request/response in our API
                     Request royaReq = new RequestImpl(req, services);
@@ -259,6 +261,8 @@ public class Roya implements Handler {
 
         callback.run();
     }
+
+    // CORS customization can be provided via Helidon config; default CORS is enabled
 
     /**
      * Stop the server.

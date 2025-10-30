@@ -60,6 +60,22 @@ Finalize Qdrant-only RAG with production-grade UX and ops.
 **Notes**:
 404 from Qdrant means collection missing (must index first); document this.
 
+---
+
+### Structured Logging Redaction/Sampling
+**Category**: Enhancement  
+**Priority**: P1-High  
+**Proposed For**: Phase 8  
+**Status**: New
+
+**Description**:
+Expand Morgan JSON mode with preset redaction profiles and optional sampling.
+
+**Acceptance Criteria**:
+- Presets: minimal, standard (default), strict redaction
+- Probabilistic sampling (morgan.sampleRate)
+- Configurable service/env fields
+
 ### HTTP/2 Server Push Support
 **Category**: Feature  
 **Priority**: P2-Medium  

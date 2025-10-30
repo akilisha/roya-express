@@ -409,6 +409,11 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - ✅ `plugin/ai/providers/OpenAIClient.java` - OpenAI integration
 - ✅ `plugin/ai/AIServiceImpl.java` - Orchestration with caching & token counting
 - ✅ `plugin/ai/LLMResponse.java` - Response with cost tracking
+- ✅ Native Health/Tracing enabled (Helidon)
+  - Health endpoints via Helidon Health (`/health`, `/health/live`, `/health/ready`)
+  - Tracing wiring via Helidon Tracing (backend configured by env/props)
+- ✅ Structured request logging (Morgan JSON)
+  - Logstash-compatible JSON logs with trace/request IDs and redaction
 - ✅ `plugin/ai/providers/LLMProvider.java` - Provider abstraction
 - ✅ Integration with Cache plugin for response caching
 - ✅ Comprehensive test suite (28 tests, 100% passing)

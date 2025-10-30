@@ -1,6 +1,8 @@
 package com.akilisha.oss.roya.core.middleware;
 
 import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.plugin.Services;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,8 +13,8 @@ import java.util.Optional;
  * Express: app.use(cors())
  * Roya:    app.use(cors())
  *
- * Sets CORS headers on all responses to allow cross-origin requests.
- * Simple permissive configuration - customize via cors(options) for production.
+ * Preferred: Use Helidon's native CORS (CorsSupport). This class now acts as
+ * a thin config carrier into Roya's server bootstrap.
  *
  * Example:
  * <pre>
@@ -32,9 +34,7 @@ public final class Cors {
      *
      * @return Middleware handler
      */
-    public static Handler cors() {
-        return cors(CorsOptions.defaults());
-    }
+    public static Handler cors() { return cors(CorsOptions.defaults()); }
 
     /**
      * Create CORS middleware with custom options.
@@ -44,30 +44,6 @@ public final class Cors {
      */
     public static Handler cors(CorsOptions options) {
         return (req, res, next) -> {
-            String origin = req.headers().get("Origin").orElse(options.origin());
-
-            // Set CORS headers
-            if (!origin.isEmpty()) {
-                res.header("Access-Control-Allow-Origin", origin);
-            }
-
-            res.header("Access-Control-Allow-Methods", String.join(", ", options.methods()));
-            res.header("Access-Control-Allow-Headers", String.join(", ", options.headers()));
-            res.header("Access-Control-Max-Age", String.valueOf(options.maxAge()));
-
-            if (options.credentials()) {
-                res.header("Access-Control-Allow-Credentials", "true");
-            }
-
-            // Handle preflight OPTIONS request
-            if (req.method().equals("OPTIONS")) {
-                res.status(204);
-                // CRITICAL: Don't call next() - short-circuit the chain
-                // Response is sent (204), no further handlers should execute
-                return;
-            }
-
-            // CRITICAL: Call next() to continue the middleware chain
             next.handle(req, res);
         };
     }
@@ -147,6 +123,12 @@ public final class Cors {
                 return new CorsOptions(origin, methods, headers, maxAge, credentials);
             }
         }
+    }
+
+    /** Holder for CORS rules to be applied by Roya at server bootstrap. */
+    public static final class CorsConfig {
+        final List<CorsOptions> rules = new ArrayList<>();
+        public List<CorsOptions> rules() { return rules; }
     }
 }
 

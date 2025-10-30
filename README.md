@@ -172,6 +172,26 @@ void main() {
 
 ### Middleware & Authentication
 ### Qdrant Setup (RAG)
+### Structured Request Logging
+
+Enable JSON logs for request tracing (Logstash-compatible) using Morgan:
+
+```java
+app.use(Morgan.builder()
+    .format(Morgan.Format.COMBINED)
+    .structured(true)
+    .captureRequestIdHeader("X-Request-Id")
+    .redactHeaders(Set.of("authorization","cookie","set-cookie"))
+    .build());
+```
+
+Fields include: http.method, path, status, duration_ms, remote.ip, request_id, trace/span IDs, and redacted headers. Logs are emitted to stdout for Docker log collectors.
+
+### Health & Tracing
+
+Roya enables Helidon Health/Tracing when present on the classpath:
+- Health endpoints: `/health`, `/health/live`, `/health/ready`
+- Tracing backend via env/props (Zipkin/OTEL)
 
 RAG requires a running Qdrant instance and an embedding model API key.
 

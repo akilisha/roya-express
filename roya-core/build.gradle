@@ -8,6 +8,9 @@ dependencies {
 
     // Helidon Níma - Virtual thread-native HTTP server
     implementation 'io.helidon.webserver:helidon-webserver:4.0.3'
+    implementation 'io.helidon.webserver:helidon-webserver-cors:4.0.3'
+    // Helidon Config
+    implementation 'io.helidon.config:helidon-config:4.0.3'
 
     // JSON processing
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
