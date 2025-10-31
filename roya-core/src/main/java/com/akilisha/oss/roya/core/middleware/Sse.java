@@ -5,11 +5,8 @@ import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.io.PrintWriter;
 import java.time.Duration;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**

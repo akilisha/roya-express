@@ -1,7 +1,6 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import java.util.Optional;
+import com.akilisha.oss.roya.api.Handler;
 
 /**
  * Cookie parser middleware - Express-compatible.
@@ -16,7 +15,7 @@ import java.util.Optional;
  * Example:
  * <pre>
  * app.use(cookieParser());
- * 
+ *
  * app.get("/profile", (req, res) -> {
  *     Optional<String> sessionId = req.cookies().get("sessionId");
  *     // ...

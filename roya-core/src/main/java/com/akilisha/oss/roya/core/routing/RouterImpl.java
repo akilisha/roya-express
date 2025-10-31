@@ -4,7 +4,7 @@ import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.api.routing.PathMatcher;
 import com.akilisha.oss.roya.api.routing.Route;
 import com.akilisha.oss.roya.api.routing.RouteMatch;
-import com.akilisha.oss.roya.core.ParamsImpl;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,12 +38,12 @@ public class RouterImpl implements Router {
         routes.add(createRoute(null, path, handler));
         return this;
     }
-    
+
     /**
      * Mount a router at a specific path (nested routing).
-     * 
+     *
      * Express: app.use('/api', router)
-     * 
+     *
      * @param mountPath Path to mount this router at
      * @param router Router to mount
      * @return this
@@ -52,17 +52,17 @@ public class RouterImpl implements Router {
         // Create a wrapper handler that strips mount path before routing
         Handler wrapper = (req, res, next) -> {
             String originalPath = req.path();
-            
+
             // Strip mount path from request path for nested router
             if (originalPath.startsWith(mountPath)) {
                 String remainingPath = originalPath.substring(mountPath.length());
                 if (remainingPath.isEmpty()) {
                     remainingPath = "/";
                 }
-                
+
                 // Create a path-adjusted request that exposes only the remaining path
                 Request adjustedRequest = new PathAdjustedRequest(req, remainingPath);
-                
+
                 // Delegate to nested router with adjusted path
                 router.handle(adjustedRequest, res, next);
             } else {
@@ -70,48 +70,60 @@ public class RouterImpl implements Router {
                 next.handle(req, res);
             }
         };
-        
+
         routes.add(createRoute(null, mountPath, wrapper));
         return this;
     }
 
     @Override
     public Router get(String path, Handler... handlers) {
-        for (Handler handler : handlers) {
-            routes.add(createRoute("GET", path, handler));
+        if (handlers.length == 0) {
+            return this;
         }
+        // Chain handlers together - each calls next() to invoke the next handler
+        Handler chainedHandler = chainHandlers(handlers);
+        routes.add(createRoute("GET", path, chainedHandler));
         return this;
     }
 
     @Override
     public Router post(String path, Handler... handlers) {
-        for (Handler handler : handlers) {
-            routes.add(createRoute("POST", path, handler));
+        if (handlers.length == 0) {
+            return this;
         }
+        // Chain handlers together - each calls next() to invoke the next handler
+        Handler chainedHandler = chainHandlers(handlers);
+        routes.add(createRoute("POST", path, chainedHandler));
         return this;
     }
 
     @Override
     public Router put(String path, Handler... handlers) {
-        for (Handler handler : handlers) {
-            routes.add(createRoute("PUT", path, handler));
+        if (handlers.length == 0) {
+            return this;
         }
+        Handler chainedHandler = chainHandlers(handlers);
+        routes.add(createRoute("PUT", path, chainedHandler));
         return this;
     }
 
     @Override
     public Router delete(String path, Handler... handlers) {
-        for (Handler handler : handlers) {
-            routes.add(createRoute("DELETE", path, handler));
+        if (handlers.length == 0) {
+            return this;
         }
+        Handler chainedHandler = chainHandlers(handlers);
+        routes.add(createRoute("DELETE", path, chainedHandler));
         return this;
     }
 
     @Override
     public Router patch(String path, Handler... handlers) {
-        for (Handler handler : handlers) {
-            routes.add(createRoute("PATCH", path, handler));
+        if (handlers.length == 0) {
+            return this;
         }
+        Handler chainedHandler = chainHandlers(handlers);
+        routes.add(createRoute("PATCH", path, chainedHandler));
         return this;
     }
 
@@ -142,7 +154,7 @@ public class RouterImpl implements Router {
 
             if (match != null) {
                 routeMatched = true;
-                
+
                 // Found a match! Set path parameters
                 if (!match.params().isEmpty()) {
                     req.setParams(match.params());
@@ -211,5 +223,42 @@ public class RouterImpl implements Router {
             !path.contains("+") &&
             !path.contains("(")
         );
+    }
+
+    /**
+     * Chain multiple handlers together so they execute in sequence.
+     * Each handler (except the last) should call next() to continue to the next handler.
+     */
+    private Handler chainHandlers(Handler... handlers) {
+        if (handlers.length == 1) {
+            return handlers[0];
+        }
+
+        // Build chain from last to first (reverse order)
+        Handler chain = handlers[handlers.length - 1]; // Final handler
+
+        // Wrap each previous handler to call the next one
+        for (int i = handlers.length - 2; i >= 0; i--) {
+            final Handler current = handlers[i];
+            final Handler nextInChain = chain;
+
+            chain = (req, res, next) -> {
+                // Create a next that invokes the next handler in chain
+                Next chainNext = new Next() {
+                    @Override
+                    public void handle(Request r, Response s) throws Exception {
+                        nextInChain.handle(r, s, next);
+                    }
+
+                    @Override
+                    public void error(Exception error, Request r, Response s) {
+                        next.error(error, r, s);
+                    }
+                };
+                current.handle(req, res, chainNext);
+            };
+        }
+
+        return chain;
     }
 }

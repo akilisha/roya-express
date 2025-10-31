@@ -1,8 +1,10 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.core.middleware.*;
+import com.akilisha.oss.roya.core.middleware.BodyParser;
+import com.akilisha.oss.roya.core.middleware.Cors;
+import com.akilisha.oss.roya.core.middleware.Morgan;
+import com.akilisha.oss.roya.core.middleware.Session;
 import com.akilisha.oss.roya.plugins.auth.*;
 import com.akilisha.oss.roya.plugins.database.Database;
 
@@ -27,7 +29,7 @@ public class AuthDemo {
 
     public static void main(String[] args) {
         var app = Roya.create();
-        
+
         // Register plugins (Database must come first)
         var services = app.services();
         new com.akilisha.oss.roya.plugins.database.DatabasePlugin().register(services);
@@ -77,7 +79,7 @@ public class AuthDemo {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String email = (String) body.get("email");
                 String password = (String) body.get("password");
                 @SuppressWarnings("unchecked")
@@ -116,7 +118,7 @@ public class AuthDemo {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String email = (String) body.get("email");
                 String password = (String) body.get("password");
 
@@ -150,7 +152,7 @@ public class AuthDemo {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String email = (String) body.get("email");
                 String password = (String) body.get("password");
 
@@ -207,7 +209,7 @@ public class AuthDemo {
                 User user = (User) req.get("user");
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String oldPassword = (String) body.get("oldPassword");
                 String newPassword = (String) body.get("newPassword");
 
@@ -259,7 +261,7 @@ public class AuthDemo {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String resetToken = (String) body.get("resetToken");
                 String newPassword = (String) body.get("newPassword");
 
@@ -290,7 +292,7 @@ public class AuthDemo {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> session = Session.getSession(req);
                 session.clear();
-                
+
                 // In production, also invalidate refresh tokens
                 Auth auth = req.get(Auth.class);
                 // Note: logout() requires token, for session-based logout just clear session

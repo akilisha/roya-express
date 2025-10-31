@@ -2,12 +2,14 @@ package com.akilisha.oss.roya.plugins.auth;
 
 import com.akilisha.oss.roya.plugins.database.Database;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
-import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 import org.mindrot.jbcrypt.BCrypt;
 
 import javax.crypto.SecretKey;
@@ -38,7 +40,7 @@ public class AuthServiceImpl implements Auth {
         this(database, jwtSecret, 3600, 604800); // 1 hour access, 7 days refresh
     }
 
-    public AuthServiceImpl(Database database, String jwtSecret, 
+    public AuthServiceImpl(Database database, String jwtSecret,
                           long accessTokenExpirySeconds, long refreshTokenExpirySeconds) {
         this.database = database;
         // Use HMAC-SHA for JWT signing
@@ -57,12 +59,12 @@ public class AuthServiceImpl implements Auth {
     public User register(String email, String password, Map<String, Object> userData) {
         // Check if email already exists with email provider
         DSLContext dsl = database.dsl();
-        
+
         Result<Record> existing = dsl.selectFrom(table("auth_users"))
             .where(field("email").eq(email))
             .and(field("provider").eq("email"))
             .fetch();
-        
+
         if (!existing.isEmpty()) {
             throw new AuthException("User with email " + email + " already exists");
         }
@@ -72,17 +74,18 @@ public class AuthServiceImpl implements Auth {
 
         // Generate UUID for user
         UUID userId = UUID.randomUUID();
-        
+
         // Serialize user_data to JSON
         String userDataJson = toJson(userData);
 
         // Insert user (email provider, user_data as JSONB)
+        // Cast String to JSONB for PostgreSQL
         dsl.insertInto(table("auth_users"))
             .set(field("id"), userId)
             .set(field("email"), email)
             .set(field("password_hash"), passwordHash)
             .set(field("provider"), "email")
-            .set(field("user_data"), userDataJson)
+            .set(field("user_data"), cast(userDataJson, SQLDataType.JSONB))
             .execute();
 
         // Fetch created user
@@ -93,19 +96,19 @@ public class AuthServiceImpl implements Auth {
     @Override
     public AuthResult login(String email, String password) {
         DSLContext dsl = database.dsl();
-        
+
         // Find user by email
         Result<Record> users = dsl.selectFrom(table("auth_users"))
             .where(field("email").eq(email))
             .fetch();
-        
+
         if (users.isEmpty()) {
             throw new AuthException("Invalid email or password");
         }
 
         Record userRecord = users.get(0);
         String passwordHash = userRecord.get("password_hash", String.class);
-        
+
         // Verify password
         if (!BCrypt.checkpw(password, passwordHash)) {
             throw new AuthException("Invalid email or password");
@@ -161,22 +164,22 @@ public class AuthServiceImpl implements Auth {
     @Override
     public AuthResult refreshToken(String refreshToken) {
         DSLContext dsl = database.dsl();
-        
+
         String tokenHash = hashToken(refreshToken);
-        
+
         // Find refresh token
         Result<Record> tokens = dsl.selectFrom(table("auth_refresh_tokens"))
             .where(field("token_hash").eq(tokenHash))
             .and(field("expires_at").greaterThan(currentTimestamp()))
             .fetch();
-        
+
         if (tokens.isEmpty()) {
             throw new AuthException("Invalid or expired refresh token");
         }
 
         Record tokenRecord = tokens.get(0);
         String userId = tokenRecord.get("user_id", UUID.class).toString();
-        
+
         // Delete old refresh token
         dsl.deleteFrom(table("auth_refresh_tokens"))
             .where(field("token_hash").eq(tokenHash))
@@ -202,7 +205,7 @@ public class AuthServiceImpl implements Auth {
         dsl.deleteFrom(table("auth_refresh_tokens"))
             .where(field("token_hash").eq(tokenHash))
             .execute();
-        
+
         // TODO: For session-based logout, also delete from auth_sessions
     }
 
@@ -214,7 +217,7 @@ public class AuthServiceImpl implements Auth {
     @Override
     public User updateUser(String userId, Map<String, Object> updates) {
         DSLContext dsl = database.dsl();
-        
+
         // Get existing user
         User existing = getUserById(userId)
             .orElseThrow(() -> new AuthException("User not found"));
@@ -224,8 +227,9 @@ public class AuthServiceImpl implements Auth {
         newUserData.putAll(updates);
 
         // Update user (user_data as JSONB)
+        // Cast String to JSONB for PostgreSQL
         dsl.update(table("auth_users"))
-            .set(field("user_data"), toJson(newUserData))
+            .set(field("user_data"), cast(toJson(newUserData), SQLDataType.JSONB))
             .set(field("updated_at"), currentTimestamp())
             .where(field("id").eq(UUID.fromString(userId)))
             .execute();
@@ -240,7 +244,7 @@ public class AuthServiceImpl implements Auth {
         int deleted = dsl.deleteFrom(table("auth_users"))
             .where(field("id").eq(UUID.fromString(userId)))
             .execute();
-        
+
         if (deleted == 0) {
             throw new AuthException("User not found");
         }
@@ -249,19 +253,19 @@ public class AuthServiceImpl implements Auth {
     @Override
     public void changePassword(String userId, String oldPassword, String newPassword) {
         DSLContext dsl = database.dsl();
-        
+
         // Get user and verify old password
         Result<Record> users = dsl.selectFrom(table("auth_users"))
             .where(field("id").eq(UUID.fromString(userId)))
             .fetch();
-        
+
         if (users.isEmpty()) {
             throw new AuthException("User not found");
         }
 
         Record userRecord = users.get(0);
         String passwordHash = userRecord.get("password_hash", String.class);
-        
+
         if (!BCrypt.checkpw(oldPassword, passwordHash)) {
             throw new AuthException("Incorrect old password");
         }
@@ -283,12 +287,12 @@ public class AuthServiceImpl implements Auth {
     @Override
     public String requestPasswordReset(String email) {
         DSLContext dsl = database.dsl();
-        
+
         // Find user
         Result<Record> users = dsl.selectFrom(table("auth_users"))
             .where(field("email").eq(email))
             .fetch();
-        
+
         if (users.isEmpty()) {
             // Don't reveal if user exists (security best practice)
             return UUID.randomUUID().toString(); // Return dummy token
@@ -300,10 +304,10 @@ public class AuthServiceImpl implements Auth {
         // Generate reset token
         String resetToken = UUID.randomUUID().toString();
         String tokenHash = hashToken(resetToken);
-        
+
         // Store reset token (expires in 1 hour)
         Instant expiresAt = Instant.now().plus(1, ChronoUnit.HOURS);
-        
+
         dsl.insertInto(table("auth_password_resets"))
             .set(field("user_id"), UUID.fromString(userId))
             .set(field("token_hash"), tokenHash)
@@ -318,16 +322,16 @@ public class AuthServiceImpl implements Auth {
     @Override
     public void resetPassword(String resetToken, String newPassword) {
         DSLContext dsl = database.dsl();
-        
+
         String tokenHash = hashToken(resetToken);
-        
+
         // Find valid reset token
         Result<Record> resets = dsl.selectFrom(table("auth_password_resets"))
             .where(field("token_hash").eq(tokenHash))
             .and(field("expires_at").greaterThan(currentTimestamp()))
             .and(field("used").eq(false))
             .fetch();
-        
+
         if (resets.isEmpty()) {
             throw new AuthException("Invalid or expired reset token");
         }
@@ -335,7 +339,7 @@ public class AuthServiceImpl implements Auth {
         Record resetRecord = resets.get(0);
         String userId = resetRecord.get("user_id", UUID.class).toString();
         boolean used = resetRecord.get("used", Boolean.class);
-        
+
         if (used) {
             throw new AuthException("Reset token already used");
         }
@@ -366,7 +370,7 @@ public class AuthServiceImpl implements Auth {
             // Try to get token from Authorization header
             String authHeader = req.headers().get("Authorization").orElse("");
             String token = null;
-            
+
             if (authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
             }
@@ -410,7 +414,7 @@ public class AuthServiceImpl implements Auth {
             // Similar to required(), but doesn't fail if not authenticated
             String authHeader = req.headers().get("Authorization").orElse("");
             String token = null;
-            
+
             if (authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
             }
@@ -449,11 +453,11 @@ public class AuthServiceImpl implements Auth {
 
     private Optional<User> getUserById(String userId) {
         DSLContext dsl = database.dsl();
-        
+
         Result<Record> users = dsl.selectFrom(table("auth_users"))
             .where(field("id").eq(UUID.fromString(userId)))
             .fetch();
-        
+
         if (users.isEmpty()) {
             return Optional.empty();
         }
@@ -467,7 +471,7 @@ public class AuthServiceImpl implements Auth {
         String email = record.get("email", String.class);
         Instant createdAt = record.get("created_at", java.sql.Timestamp.class).toInstant();
         Instant updatedAt = record.get("updated_at", java.sql.Timestamp.class).toInstant();
-        
+
         // Parse user_data JSONB
         Object userDataObj = record.get("user_data");
         Map<String, Object> userData = Map.of();
@@ -499,7 +503,7 @@ public class AuthServiceImpl implements Auth {
                 } else {
                     providerMetadata = Map.of();
                 }
-                
+
                 // Merge provider metadata into userData
                 Map<String, Object> merged = new HashMap<>(userData);
                 merged.put("_provider", record.get("provider", String.class));
@@ -536,7 +540,7 @@ public class AuthServiceImpl implements Auth {
         DSLContext dsl = database.dsl();
         String tokenHash = hashToken(refreshToken);
         Instant expiresAt = Instant.now().plus(refreshTokenExpirySeconds, ChronoUnit.SECONDS);
-        
+
         dsl.insertInto(table("auth_refresh_tokens"))
             .set(field("user_id"), UUID.fromString(userId))
             .set(field("token_hash"), tokenHash)

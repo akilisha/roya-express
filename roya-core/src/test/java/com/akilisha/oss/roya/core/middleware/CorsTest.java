@@ -1,11 +1,15 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
+import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Next;
+import com.akilisha.oss.roya.api.Request;
+import com.akilisha.oss.roya.api.Response;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -30,10 +34,10 @@ class CorsTest {
     void shouldSetCorsHeaders() throws Exception {
         when(mockRequest.method()).thenReturn("POST");
         when(mockRequest.headers().get("Origin")).thenReturn(java.util.Optional.of("https://example.com"));
-        
+
         Handler middleware = Cors.cors();
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockResponse).header("Access-Control-Allow-Origin", "https://example.com");
         verify(mockResponse).header(eq("Access-Control-Allow-Methods"), anyString());
         verify(mockResponse).header(eq("Access-Control-Allow-Headers"), anyString());
@@ -44,10 +48,10 @@ class CorsTest {
     @DisplayName("should handle preflight OPTIONS request")
     void shouldHandlePreflightOptions() throws Exception {
         when(mockRequest.method()).thenReturn("OPTIONS");
-        
+
         Handler middleware = Cors.cors();
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockResponse).status(204);
         verify(mockNext, never()).handle(mockRequest, mockResponse);
     }
@@ -57,15 +61,15 @@ class CorsTest {
     void shouldAllowCustomCorsOptions() throws Exception {
         when(mockRequest.method()).thenReturn("POST");
         when(mockRequest.headers().get("Origin")).thenReturn(java.util.Optional.of("https://mydomain.com"));
-        
+
         Cors.CorsOptions options = Cors.CorsOptions.builder()
             .origin("https://mydomain.com")
             .credentials(true)
             .build();
-        
+
         Handler middleware = Cors.cors(options);
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockResponse).header("Access-Control-Allow-Origin", "https://mydomain.com");
         verify(mockResponse).header("Access-Control-Allow-Credentials", "true");
     }

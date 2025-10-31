@@ -2,16 +2,16 @@ package com.akilisha.oss.roya.core;
 
 import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.api.plugin.Services;
-import io.helidon.http.ServerRequestHeaders;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.webserver.http.ServerRequest;
+
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Request implementation backed by Helidon ServerRequest.
- * 
+ *
  * Implements DatabaseAware by delegating to Database plugin via Services.
  */
 public class RequestImpl implements Request {
@@ -28,7 +28,7 @@ public class RequestImpl implements Request {
         this.helidonRequest = helidonRequest;
         this.services = services;
     }
-    
+
 
     @Override
     public String method() {
@@ -104,12 +104,49 @@ public class RequestImpl implements Request {
         return helidonRequest.content().inputStream();
     }
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String BODY_KEY = "body";
+
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T body(Class<T> type) {
-        // TODO: Implement JSON deserialization with Jackson
-        throw new UnsupportedOperationException(
-            "Body parsing not yet implemented"
-        );
+        Object parsedBody = get(BODY_KEY);
+        
+        if (parsedBody == null) {
+            // Body not parsed yet - try to parse it now if it's JSON
+            if (headers().contentType().map(ct -> ct.contains("application/json")).orElse(false)) {
+                String bodyText = bodyText();
+                if (bodyText != null && !bodyText.isEmpty()) {
+                    try {
+                        parsedBody = objectMapper.readValue(bodyText, type);
+                        set(BODY_KEY, parsedBody); // Cache it
+                        return type.cast(parsedBody);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to parse JSON body to " + type.getName(), e);
+                    }
+                }
+            }
+            return null;
+        }
+        
+        // Body was already parsed by middleware - convert it
+        if (type.isInstance(parsedBody)) {
+            return type.cast(parsedBody);
+        }
+        
+        // Try to convert using Jackson (e.g., Map -> Record/POJO)
+        try {
+            return objectMapper.convertValue(parsedBody, type);
+        } catch (Exception e) {
+            throw new ClassCastException(
+                "Cannot convert body from " + parsedBody.getClass().getName() + " to " + type.getName() + ": " + e.getMessage()
+            );
+        }
+    }
+
+    @Override
+    public Object body() {
+        return get(BODY_KEY);
     }
 
     @Override

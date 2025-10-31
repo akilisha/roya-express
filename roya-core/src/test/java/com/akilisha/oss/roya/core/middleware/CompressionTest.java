@@ -1,11 +1,15 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
+import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Next;
+import com.akilisha.oss.roya.api.Request;
+import com.akilisha.oss.roya.api.Response;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -30,10 +34,10 @@ class CompressionTest {
     void shouldSetGzipWhenClientAccepts() throws Exception {
         when(mockRequest.method()).thenReturn("GET");
         when(mockRequest.headers().get("Accept-Encoding")).thenReturn(java.util.Optional.of("gzip, deflate"));
-        
+
         Handler middleware = Compression.compression();
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockResponse).header("Content-Encoding", "gzip");
         verify(mockNext).handle(mockRequest, mockResponse);
     }
@@ -43,10 +47,10 @@ class CompressionTest {
     void shouldNotSetEncodingWhenNoGzip() throws Exception {
         when(mockRequest.method()).thenReturn("GET");
         when(mockRequest.headers().get("Accept-Encoding")).thenReturn(java.util.Optional.of("deflate"));
-        
+
         Handler middleware = Compression.compression();
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockResponse, never()).header(eq("Content-Encoding"), anyString());
         verify(mockNext).handle(mockRequest, mockResponse);
     }
@@ -57,10 +61,10 @@ class CompressionTest {
         when(mockRequest.method()).thenReturn("GET");
         when(mockRequest.path()).thenReturn("/api/users");
         when(mockRequest.headers().get("Accept-Encoding")).thenReturn(java.util.Optional.of("gzip"));
-        
+
         Handler middleware = Compression.compression(req -> req.path().startsWith("/static"));
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockResponse, never()).header(eq("Content-Encoding"), anyString());
         verify(mockNext).handle(mockRequest, mockResponse);
     }

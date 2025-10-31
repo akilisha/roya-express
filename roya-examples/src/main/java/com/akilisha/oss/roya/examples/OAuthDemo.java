@@ -1,9 +1,13 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.core.middleware.*;
-import com.akilisha.oss.roya.plugins.auth.*;
+import com.akilisha.oss.roya.core.middleware.BodyParser;
+import com.akilisha.oss.roya.core.middleware.Cors;
+import com.akilisha.oss.roya.core.middleware.Morgan;
+import com.akilisha.oss.roya.core.middleware.Session;
+import com.akilisha.oss.roya.plugins.auth.Auth;
+import com.akilisha.oss.roya.plugins.auth.AuthPlugin;
+import com.akilisha.oss.roya.plugins.auth.User;
 import com.akilisha.oss.roya.plugins.database.Database;
 
 import java.util.Map;
@@ -33,7 +37,7 @@ public class OAuthDemo {
 
     public static void main(String[] args) {
         var app = Roya.create();
-        
+
         // Register plugins (Database must come first)
         var services = app.services();
         new com.akilisha.oss.roya.plugins.database.DatabasePlugin().register(services);
@@ -83,7 +87,7 @@ public class OAuthDemo {
             try {
                 Auth auth = req.get(Auth.class);
                 com.akilisha.oss.roya.plugins.auth.oauth.OAuth oauth = auth.oauth();
-                
+
                 res.json(Map.of(
                     "providers", oauth.getProviders(),
                     "message", "Available OAuth providers",
@@ -145,7 +149,7 @@ public class OAuthDemo {
             try {
                 Auth auth = req.get(Auth.class);
                 com.akilisha.oss.roya.plugins.auth.oauth.OAuth oauth = auth.oauth();
-                
+
                 res.json(Map.of(
                     "message", "Roya OAuth Demo",
                     "availableProviders", oauth.getProviders(),

@@ -1,14 +1,31 @@
-# Example native build; adjust as needed for your environment
+# Multi-stage native build
 FROM ghcr.io/graalvm/graalvm-community:21 AS build
 WORKDIR /workspace
 COPY . /workspace
+
+# Install native-image
 RUN gu install native-image
-# This is a placeholder; native-image setup depends on your entrypoint class
-# RUN native-image -jar build/libs/roya-examples-1.0.0-SNAPSHOT.jar app
+
+# Build JAR first
+RUN ./gradlew :roya-examples:build -x test --no-daemon
+
+# Generate native image
+# Note: Requires reflection configs for Jackson/Helidon
+# For now, this is a template; full native-image config needs:
+# - Reflection config for Jackson serialization
+# - Resource bundles for Helidon
+# - Dynamic proxy classes
+RUN native-image \
+    -H:IncludeResources=".*" \
+    -H:+StaticExecutableWithDynamicLibC \
+    --no-fallback \
+    --enable-preview \
+    -jar roya-examples/build/libs/roya-examples-1.0.0-SNAPSHOT.jar \
+    roya-example || echo "Native build requires additional config; using JVM fallback"
 
 FROM gcr.io/distroless/cc-debian12 AS runtime
 WORKDIR /app
-COPY --from=build /workspace/app /app/app
+COPY --from=build /workspace/roya-example /app/roya-example
 EXPOSE 3000
-ENTRYPOINT ["/app/app"]
+ENTRYPOINT ["/app/roya-example"]
 

@@ -1,11 +1,11 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.core.middleware.*;
+import com.akilisha.oss.roya.core.middleware.BodyParser;
+import com.akilisha.oss.roya.core.middleware.Cors;
+import com.akilisha.oss.roya.core.middleware.Morgan;
 import com.akilisha.oss.roya.plugins.email.Email;
 import com.akilisha.oss.roya.plugins.email.EmailMessage;
-import com.akilisha.oss.roya.plugins.email.EmailResult;
 
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public class EmailDemo {
 
     public static void main(String[] args) {
         var app = Roya.create();
-        
+
         // Register Email plugin
         var services = app.services();
         var emailPlugin = new com.akilisha.oss.roya.plugins.email.EmailPlugin();
@@ -61,11 +61,11 @@ public class EmailDemo {
             try {
                 Email email = req.get(Email.class);
                 Map<String, Object> body = req.body(Map.class);
-                
+
                 String to = (String) body.get("to");
                 String subject = (String) body.get("subject");
                 String message = (String) body.get("message");
-                
+
                 email.send(to, subject, message)
                     .thenAccept(result -> {
                         if (result.success()) {
@@ -78,7 +78,7 @@ public class EmailDemo {
                         System.err.println("✗ Email exception: " + e.getMessage());
                         return null;
                     });
-                
+
                 res.json(Map.of(
                     "status", "sending",
                     "message", "Email queued for sending"
@@ -93,13 +93,13 @@ public class EmailDemo {
             try {
                 Email email = req.get(Email.class);
                 Map<String, Object> body = req.body(Map.class);
-                
+
                 String to = (String) body.get("to");
                 String subject = (String) body.get("subject");
                 String templateName = (String) body.get("template");
                 @SuppressWarnings("unchecked")
                 Map<String, Object> templateData = (Map<String, Object>) body.get("data");
-                
+
                 email.sendTemplate(to, subject, templateName, templateData)
                     .thenAccept(result -> {
                         if (result.success()) {
@@ -108,7 +108,7 @@ public class EmailDemo {
                             System.err.println("✗ Template email failed: " + result.error().orElse("Unknown error"));
                         }
                     });
-                
+
                 res.json(Map.of(
                     "status", "sending",
                     "message", "Template email queued"
@@ -123,7 +123,7 @@ public class EmailDemo {
             try {
                 Email email = req.get(Email.class);
                 Map<String, Object> body = req.body(Map.class);
-                
+
                 EmailMessage message = EmailMessage.builder()
                     .from((String) body.getOrDefault("from", "noreply@example.com"))
                     .to((String) body.get("to"))
@@ -132,7 +132,7 @@ public class EmailDemo {
                     .textBody((String) body.get("textBody"))
                     .tag((String) body.getOrDefault("tag", "api-send"))
                     .build();
-                
+
                 email.send(message)
                     .thenAccept(result -> {
                         if (result.success()) {
@@ -141,7 +141,7 @@ public class EmailDemo {
                             System.err.println("✗ Advanced email failed: " + result.error().orElse("Unknown error"));
                         }
                     });
-                
+
                 res.json(Map.of(
                     "status", "sending",
                     "message", "Advanced email queued"
@@ -156,7 +156,7 @@ public class EmailDemo {
             try {
                 Email email = req.get(Email.class);
                 String providerName = email.provider(com.akilisha.oss.roya.plugins.email.providers.EmailProvider.class).name();
-                
+
                 res.json(Map.of(
                     "provider", providerName,
                     "templates", System.getProperty("email.templates", "./email-templates"),

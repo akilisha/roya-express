@@ -1,6 +1,6 @@
 package com.akilisha.oss.roya.plugins.auth.oauth;
 
-import com.akilisha.oss.roya.plugins.auth.*;
+import com.akilisha.oss.roya.plugins.auth.Auth;
 import com.akilisha.oss.roya.plugins.database.Database;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,8 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for OAuthServiceImpl.
@@ -23,7 +21,7 @@ class OAuthServiceImplTest {
 
     @Mock
     private Auth auth;
-    
+
     @Mock
     private Database database;
 
@@ -40,9 +38,9 @@ class OAuthServiceImplTest {
     void testRegisterProvider() {
         OAuthConfig config = new OAuthConfig("id", "secret", Arrays.asList("scope"));
         GoogleOAuthProvider provider = new GoogleOAuthProvider(config);
-        
+
         oauthService.registerProvider(provider);
-        
+
         List<String> providers = oauthService.getProviders();
         assertEquals(1, providers.size());
         assertTrue(providers.contains("google"));
@@ -60,10 +58,10 @@ class OAuthServiceImplTest {
     void testGetProvidersMultiple() {
         OAuthConfig googleConfig = new OAuthConfig("g-id", "g-secret", Arrays.asList("scope"));
         OAuthConfig githubConfig = new OAuthConfig("gh-id", "gh-secret", Arrays.asList("scope"));
-        
+
         oauthService.registerProvider(new GoogleOAuthProvider(googleConfig));
         oauthService.registerProvider(new GitHubOAuthProvider(githubConfig));
-        
+
         List<String> providers = oauthService.getProviders();
         assertEquals(2, providers.size());
         assertTrue(providers.contains("google"));
@@ -76,7 +74,7 @@ class OAuthServiceImplTest {
         OAuthException exception = assertThrows(OAuthException.class, () -> {
             oauthService.getAuthorizationUrl("unknown", "http://localhost/callback");
         });
-        
+
         assertTrue(exception.getMessage().contains("not registered"));
     }
 
@@ -86,9 +84,9 @@ class OAuthServiceImplTest {
         OAuthConfig config = new OAuthConfig("id", "secret", Arrays.asList("scope"));
         GoogleOAuthProvider provider = new GoogleOAuthProvider(config);
         oauthService.registerProvider(provider);
-        
+
         OAuthAuthorizationUrl authUrl = oauthService.getAuthorizationUrl("google", "http://localhost/callback");
-        
+
         assertNotNull(authUrl);
         assertNotNull(authUrl.url());
         assertNotNull(authUrl.state());
@@ -103,10 +101,10 @@ class OAuthServiceImplTest {
         OAuthConfig config = new OAuthConfig("id", "secret", Arrays.asList("scope"));
         GoogleOAuthProvider provider = new GoogleOAuthProvider(config);
         oauthService.registerProvider(provider);
-        
+
         OAuthAuthorizationUrl url1 = oauthService.getAuthorizationUrl("google", "http://localhost/callback");
         OAuthAuthorizationUrl url2 = oauthService.getAuthorizationUrl("google", "http://localhost/callback");
-        
+
         // States should be different (unique)
         assertNotEquals(url1.state(), url2.state());
     }

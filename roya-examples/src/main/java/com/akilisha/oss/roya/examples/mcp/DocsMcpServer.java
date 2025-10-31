@@ -8,9 +8,9 @@ import com.akilisha.oss.roya.core.middleware.BodyParser;
 import com.akilisha.oss.roya.core.middleware.Cors;
 import com.akilisha.oss.roya.core.middleware.Morgan;
 import com.akilisha.oss.roya.plugins.ai.AI;
+import com.akilisha.oss.roya.plugins.ai.AIPlugin;
 import com.akilisha.oss.roya.plugins.ai.RAGOptions;
 import com.akilisha.oss.roya.plugins.ai.RAGResponse;
-import com.akilisha.oss.roya.plugins.ai.AIPlugin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;

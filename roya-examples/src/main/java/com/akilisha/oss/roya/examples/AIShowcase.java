@@ -1,9 +1,9 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
+import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
-import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.core.middleware.BodyParser;
 import com.akilisha.oss.roya.core.middleware.Cors;
 import com.akilisha.oss.roya.core.middleware.Morgan;
@@ -12,12 +12,12 @@ import com.akilisha.oss.roya.plugins.ai.AIOptions;
 import com.akilisha.oss.roya.plugins.ai.AIPlugin;
 import com.akilisha.oss.roya.plugins.ai.AIResponse;
 import com.akilisha.oss.roya.plugins.cache.CachePlugin;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.HashMap;
 
 /**
  * AI Plugin Showcase - Demonstrates the revolutionary developer experience.
@@ -121,8 +121,8 @@ public class AIShowcase {
                 "question", question,
                 "answer", response.data(),
                 "metadata", metadata,
-                "note", response.cached() 
-                    ? "✅ Served from cache (FREE!)" 
+                "note", response.cached()
+                    ? "✅ Served from cache (FREE!)"
                     : "💰 Fresh API call (cost tracked)"
             ));
         });
@@ -149,17 +149,17 @@ public class AIShowcase {
                 // Serialize record using Jackson (handles nulls gracefully)
                 @SuppressWarnings("unchecked")
                 Map<String, Object> extracted = objectMapper.convertValue(response.data(), Map.class);
-                
+
                 @SuppressWarnings("unchecked")
                 Map<String, Object> metadata = objectMapper.convertValue(response, Map.class);
-                
+
                 res.json(Map.of(
                     "description", description,
                     "extracted", extracted,
                     "metadata", metadata,
                     "type", response.data().getClass().getSimpleName(),
-                    "note", response.cached() 
-                        ? "✅ Cached response (FREE!) - Type-safe Java object" 
+                    "note", response.cached()
+                        ? "✅ Cached response (FREE!) - Type-safe Java object"
                         : "💰 Fresh extraction - Type-safe Java object with cost tracking"
                 ));
             } catch (Exception e) {
@@ -258,7 +258,7 @@ public class AIShowcase {
                 res.status(400).json(Map.of("error", "question is required"));
                 return;
             }
-            
+
             // Use GPT-4 with custom temperature
             AIOptions options = AIOptions.builder()
                 .model("gpt-4")

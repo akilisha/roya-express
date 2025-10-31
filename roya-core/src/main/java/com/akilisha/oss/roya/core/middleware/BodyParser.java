@@ -1,9 +1,13 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.Handler;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Body parser middleware - Multi-format body parsing.
@@ -20,7 +24,7 @@ import java.util.*;
  * Example:
  * <pre>
  * app.use(BodyParser.bodyParser());
- * 
+ *
  * app.post("/login", (req, res) -> {
  *     // JSON body
  *     if (req.headers().contentType().contains("application/json")) {
@@ -28,7 +32,7 @@ import java.util.*;
  *         Map<String, Object> body = (Map<String, Object>) req.get("body");
  *         String username = (String) body.get("username");
  *     }
- *     
+ *
  *     // URL-encoded form
  *     if (req.headers().contentType().contains("application/x-www-form-urlencoded")) {
  *         Map<String, String> form = req.get("body");
@@ -38,6 +42,9 @@ import java.util.*;
  * </pre>
  */
 public final class BodyParser {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String BODY_KEY = "body";
 
     /**
      * Create body parser middleware with default options.
@@ -57,7 +64,7 @@ public final class BodyParser {
     public static Handler bodyParser(BodyParserOptions options) {
         return (req, res, next) -> {
             // Skip if already parsed
-            if (req.get("body") != null) {
+            if (req.get(BODY_KEY) != null) {
                 next.handle(req, res);
                 return;
             }
@@ -77,32 +84,36 @@ public final class BodyParser {
             String contentTypeStr = contentType.get().toLowerCase();
 
             try {
+                String bodyText = req.bodyText();
+                
                 // Parse based on Content-Type
                 if (contentTypeStr.contains("application/json")) {
-                    // Use Json middleware for JSON parsing
-                    String bodyText = req.bodyText();
+                    // Parse JSON into Object (Map, JsonNode, etc.)
                     if (bodyText != null && !bodyText.isEmpty()) {
-                        // Parse JSON using Jackson (you'd use your JSON parser here)
-                        req.set("body", bodyText); // Simplified for now
+                        Object parsed = objectMapper.readValue(bodyText, Object.class);
+                        req.set(BODY_KEY, parsed);
+                    } else {
+                        req.set(BODY_KEY, Map.of()); // Empty JSON object
                     }
                 } else if (contentTypeStr.contains("application/x-www-form-urlencoded")) {
-                    // URL-encoded form data
-                    Map<String, String> formData = parseUrlEncoded(req.bodyText());
-                    req.set("body", formData);
+                    // URL-encoded form data → Map<String, String>
+                    Map<String, String> formData = parseUrlEncoded(bodyText);
+                    req.set(BODY_KEY, formData);
                 } else if (contentTypeStr.contains("text/")) {
-                    // Plain text
-                    req.set("body", req.bodyText());
+                    // Plain text → String
+                    req.set(BODY_KEY, bodyText != null ? bodyText : "");
                 } else {
-                    // Default: raw body
-                    String bodyText = req.bodyText();
+                    // Default: raw body → byte[]
                     if (bodyText != null && !bodyText.isEmpty()) {
-                        req.set("body", bodyText.getBytes(StandardCharsets.UTF_8));
+                        req.set(BODY_KEY, bodyText.getBytes(StandardCharsets.UTF_8));
                     }
                 }
 
                 next.handle(req, res);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                res.status(400).json(Map.of("error", "Invalid JSON", "message", e.getMessage()));
             } catch (Exception e) {
-                res.status(400).json(Map.of("error", "Failed to parse body"));
+                res.status(400).json(Map.of("error", "Failed to parse body", "message", e.getMessage()));
             }
         };
     }
@@ -112,7 +123,7 @@ public final class BodyParser {
      */
     private static Map<String, String> parseUrlEncoded(String bodyText) {
         Map<String, String> result = new HashMap<>();
-        
+
         if (bodyText == null || bodyText.isEmpty()) {
             return result;
         }

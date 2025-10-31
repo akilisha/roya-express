@@ -1,12 +1,10 @@
 package com.akilisha.oss.roya.plugins.cache;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Cache service implementation.
@@ -91,10 +89,10 @@ public class CacheServiceImpl implements Cache {
             Optional<Long> cached = get(key, Long.class);
             long current = cached.orElse(v != null ? v : 0L);
             long newValue = current + amount;
-            
+
             // Store in backend cache (no TTL for numeric values)
             backend.set(key, newValue, defaultTtl);
-            
+
             return newValue;
         });
     }

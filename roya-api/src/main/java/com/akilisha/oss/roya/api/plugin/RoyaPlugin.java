@@ -1,7 +1,5 @@
 package com.akilisha.oss.roya.api.plugin;
 
-import com.akilisha.oss.roya.api.*;
-
 /**
  * Plugin interface - allows extending Roya functionality.
  *
@@ -14,7 +12,7 @@ import com.akilisha.oss.roya.api.*;
  *     public void register(Services services) {
  *         services.singleton(Database.class, this::createDatabase);
  *     }
- *     
+ *
  *     public void setup(Application app) {
  *         app.use(DatabaseMiddleware.create());
  *     }

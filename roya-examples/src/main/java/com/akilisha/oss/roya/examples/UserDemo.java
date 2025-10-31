@@ -1,22 +1,20 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.plugins.database.Database;
 import com.akilisha.oss.roya.plugins.database.DatabaseServiceImpl;
-import org.jooq.*;
-import org.jooq.impl.DSL;
-import java.util.*;
-import java.util.stream.Collectors;
 
-import static org.jooq.impl.DSL.*;
+import java.util.Map;
+
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.table;
 
 /**
  * Complete CRUD demo with JOOQ, Postgres, and cURL verification.
  *
  * Setup:
  * 1. Start Postgres: docker-compose up -d (schema auto-creates)
- * 2. Run this: ./gradlew :roya-examples:run --args="UserDemo"  
+ * 2. Run this: ./gradlew :roya-examples:run --args="UserDemo"
  * 3. Test with curl commands (see USER_DEMO_GUIDE.md)
  * 4. Verify with: psql -h localhost -U postgres -d roya -c "SELECT * FROM users"
  */
@@ -45,7 +43,7 @@ public class UserDemo {
         // GET /users - List all users
         app.get("/users", (req, res, next) -> {
             Database database = req.get(Database.class);
-            
+
             // Use JOOQ manual mode to query database
             var users = database.dsl()
                 .selectFrom(table("users"))
@@ -59,7 +57,7 @@ public class UserDemo {
                         r.get("age", Integer.class)
                     );
                 });
-            
+
             res.json(users);
         });
 
@@ -67,7 +65,7 @@ public class UserDemo {
         app.get("/users/:id", (req, res, next) -> {
             Integer id = Integer.parseInt(req.params().get("id").orElse("0"));
             Database database = req.get(Database.class);
-            
+
             var user = database.dsl()
                 .selectFrom(table("users"))
                 .where(field("id").eq(id))
@@ -80,7 +78,7 @@ public class UserDemo {
                         r.get("age", Integer.class)
                     );
                 });
-            
+
             if (user != null) {
                 res.json(user);
             } else {
@@ -91,12 +89,12 @@ public class UserDemo {
         // POST /users - Create user
         app.post("/users", (req, res, next) -> {
             Database database = req.get(Database.class);
-            
+
             // Parse request body (simple JSON for now)
             String body = req.bodyText();
             // TODO: Parse JSON body properly with BodyParser middleware
             // For now, skip - just demonstrate pattern
-            
+
             // Insert with JOOQ
             var id = database.dsl()
                 .insertInto(table("users"))
@@ -106,7 +104,7 @@ public class UserDemo {
                 .returning(field("id"))
                 .fetchOne()
                 .get("id", Integer.class);
-            
+
             res.status(201).json(Map.of(
                 "message", "User created",
                 "id", id
@@ -117,13 +115,13 @@ public class UserDemo {
         app.put("/users/:id", (req, res, next) -> {
             Integer id = Integer.parseInt(req.params().get("id").orElse("0"));
             Database database = req.get(Database.class);
-            
+
             int updated = database.dsl()
                 .update(table("users"))
                 .set(field("name"), "Updated Name") // Would use parsed body
                 .where(field("id").eq(id))
                 .execute();
-            
+
             if (updated > 0) {
                 res.json(Map.of("message", "User updated", "id", id));
             } else {
@@ -135,12 +133,12 @@ public class UserDemo {
         app.delete("/users/:id", (req, res, next) -> {
             Integer id = Integer.parseInt(req.params().get("id").orElse("0"));
             Database database = req.get(Database.class);
-            
+
             int deleted = database.dsl()
                 .deleteFrom(table("users"))
                 .where(field("id").eq(id))
                 .execute();
-            
+
             if (deleted > 0) {
                 res.json(Map.of("message", "User deleted", "id", id));
             } else {
@@ -152,7 +150,7 @@ public class UserDemo {
         app.get("/health", (req, res, next) -> {
             Database database = req.get(Database.class);
             var stats = database.getStats();
-            
+
             res.json(Map.of(
                 "status", "healthy",
                 "database", Map.of(

@@ -1,8 +1,8 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.core.middleware.*;
+import com.akilisha.oss.roya.core.middleware.Morgan;
+
 import java.util.Map;
 
 /**

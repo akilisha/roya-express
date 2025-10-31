@@ -1,9 +1,7 @@
 package com.akilisha.oss.roya.plugins.email;
 
-import com.akilisha.oss.roya.plugins.email.providers.EmailFeature;
 import com.akilisha.oss.roya.plugins.email.providers.EmailProvider;
 import com.akilisha.oss.roya.plugins.email.providers.EmailRequest;
-import com.akilisha.oss.roya.plugins.email.template.HandlebarsTemplateEngine;
 import com.akilisha.oss.roya.plugins.email.template.TemplateEngine;
 
 import java.util.List;

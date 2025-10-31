@@ -1,9 +1,9 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
+import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
-import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.core.middleware.BodyParser;
 import com.akilisha.oss.roya.core.middleware.Cors;
 import com.akilisha.oss.roya.core.middleware.Morgan;
@@ -80,13 +80,13 @@ public class AIDemo {
         app.post("/ai/ask", (Request req, Response res, Next next) -> {
             try {
                 AI ai = req.get(AI.class);
-                
+
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String systemPrompt = (String) body.getOrDefault("systemPrompt", "You are a helpful assistant.");
                 String userMessage = (String) body.get("userMessage");
-                
+
                 if (userMessage == null) {
                     res.status(400).json(Map.of("error", "userMessage is required"));
                     return;
@@ -120,12 +120,12 @@ public class AIDemo {
         app.post("/ai/extract", (Request req, Response res, Next next) -> {
             try {
                 AI ai = req.get(AI.class);
-                
+
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String prompt = (String) body.get("prompt");
-                
+
                 if (prompt == null) {
                     res.status(400).json(Map.of("error", "prompt is required"));
                     return;
@@ -157,13 +157,13 @@ public class AIDemo {
         app.post("/ai/stream", (Request req, Response res, Next next) -> {
             try {
                 AI ai = req.get(AI.class);
-                
+
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String systemPrompt = (String) body.getOrDefault("systemPrompt", "You are a helpful assistant.");
                 String userMessage = (String) body.get("userMessage");
-                
+
                 if (userMessage == null) {
                     res.status(400).json(Map.of("error", "userMessage is required"));
                     return;
@@ -180,7 +180,7 @@ public class AIDemo {
                 res.header("Content-Type", "text/event-stream");
                 res.header("Cache-Control", "no-cache");
                 res.header("Connection", "keep-alive");
-                
+
                 // Format as SSE and send
                 String sseResponse = "data: " + fullResponse.toString().replace("\n", "\\n") + "\n\ndata: [DONE]\n\n";
                 res.send(sseResponse);

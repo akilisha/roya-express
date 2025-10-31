@@ -1,14 +1,20 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Request;
+import com.akilisha.oss.roya.api.Response;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Morgan request logger middleware - Express-compatible.
@@ -22,7 +28,7 @@ import java.util.*;
  * Example:
  * <pre>
  * app.use(Morgan.morgan());
- * 
+ *
  * // Or with custom format:
  * app.use(Morgan.combined());
  * app.use(Morgan.tiny());
@@ -32,7 +38,7 @@ import java.util.*;
  */
 public final class Morgan {
 
-    private static final DateTimeFormatter TIME_FORMATTER = 
+    private static final DateTimeFormatter TIME_FORMATTER =
         DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z");
 
     private static final Logger LOG = LoggerFactory.getLogger("http");
@@ -159,7 +165,7 @@ public final class Morgan {
         String timestamp = LocalDateTime.now().format(TIME_FORMATTER);
         String referer = req.headers().get("Referer").orElse("-");
         String userAgent = req.headers().get("User-Agent").orElse("-");
-        
+
         return String.format(
             "%s - - [%s] \"%s %s %s\" %d - %d \"%s\" \"%s\"",
             req.ip(),

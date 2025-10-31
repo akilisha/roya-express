@@ -1,12 +1,9 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Request;
+
 import java.util.Optional;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * Compression middleware - Express-compatible.
@@ -20,7 +17,7 @@ import java.util.zip.GZIPOutputStream;
  * Example:
  * <pre>
  * app.use(compression());
- * 
+ *
  * // Or with custom filter:
  * app.use(compression((req) -> {
  *     return req.path().startsWith("/api");
@@ -38,7 +35,7 @@ public final class Compression {
         return (req, res, next) -> {
             // Check if client accepts gzip
             Optional<String> acceptEncoding = req.headers().get("Accept-Encoding");
-            
+
             if (acceptEncoding.isPresent() && acceptEncoding.get().contains("gzip")) {
                 // Wrap response with gzip
                 res.header("Content-Encoding", "gzip");
@@ -64,7 +61,7 @@ public final class Compression {
 
             // Check if client accepts gzip
             Optional<String> acceptEncoding = req.headers().get("Accept-Encoding");
-            
+
             if (acceptEncoding.isPresent() && acceptEncoding.get().contains("gzip")) {
                 // Wrap response with gzip
                 res.header("Content-Encoding", "gzip");

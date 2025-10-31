@@ -1,7 +1,6 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.core.middleware.*;
 
 import java.util.Map;
@@ -26,41 +25,41 @@ public class AllMiddlewareDemo {
         var app = Roya.create();
 
         // ========== ALL MIDDLEWARE ==========
-        
+
         System.out.println("Setting up middleware stack...\n");
-        
+
         // 1. Morgan - Request logging (FIRST to log everything)
         app.use(Morgan.combined());
         System.out.println("✓ Morgan: Request logging enabled");
-        
+
         // 2. Cors - CORS headers
         app.use(Cors.cors());
         System.out.println("✓ CORS: Cross-origin requests enabled");
-        
+
         // 3. Helmet - Security headers
         app.use(Helmet.helmet());
         System.out.println("✓ Helmet: Security headers active");
-        
+
         // 4. Compression - GZIP compression
         app.use(Compression.compression());
         System.out.println("✓ Compression: Response compression enabled");
-        
+
         // 5. BodyParser - Multi-format body parsing
         app.use(BodyParser.bodyParser());
         System.out.println("✓ BodyParser: JSON, URL-encoded, text parsing");
-        
+
         // 6. Json - JSON body parsing (alternative to BodyParser)
         app.use(Json.json());
         System.out.println("✓ Json: JSON-specific parsing");
-        
+
         // 7. CookieParser - Cookie parsing
         app.use(CookieParser.cookieParser());
         System.out.println("✓ CookieParser: Cookie parsing enabled");
-        
+
         // 8. Session - Session management
         app.use(Session.session());
         System.out.println("✓ Session: In-memory session management");
-        
+
         System.out.println("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
         // ========== ROUTES DEMONSTRATING MIDDLEWARE ==========
@@ -117,9 +116,9 @@ public class AllMiddlewareDemo {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String name = (String) body.get("name");
-                Integer age = body.get("age") instanceof Integer ? (Integer) body.get("age") : 
+                Integer age = body.get("age") instanceof Integer ? (Integer) body.get("age") :
                               body.get("age") instanceof Double ? ((Double) body.get("age")).intValue() : null;
 
                 if (name == null || age == null) {
@@ -144,7 +143,7 @@ public class AllMiddlewareDemo {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String username = (String) body.get("username");
                 String password = (String) body.get("password");
 
@@ -176,7 +175,7 @@ public class AllMiddlewareDemo {
         // GET profile - validates session
         app.get("/api/profile", (req, res, next) -> {
             Map<String, Object> session = Session.getSession(req);
-            
+
             if (session == null || session.isEmpty() || session.get("userId") == null) {
                 res.status(401).json(Map.of("error", "Unauthorized - no session"));
                 return;
@@ -196,7 +195,7 @@ public class AllMiddlewareDemo {
         app.use((error, req, res, next) -> {
             System.err.println("❌ Error: " + error.getMessage());
             error.printStackTrace();
-            
+
             res.status(500).json(Map.of(
                 "error", "Internal Server Error",
                 "message", error.getMessage(),

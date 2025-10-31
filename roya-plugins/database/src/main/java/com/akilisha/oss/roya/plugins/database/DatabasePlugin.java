@@ -1,8 +1,9 @@
 package com.akilisha.oss.roya.plugins.database;
 
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.api.plugin.*;
-import java.util.Properties;
+import com.akilisha.oss.roya.api.plugin.Application;
+import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
+import com.akilisha.oss.roya.api.plugin.Services;
+import io.helidon.config.Config;
 
 /**
  * Database plugin - registers JOOQ-based database service.
@@ -33,10 +34,27 @@ public class DatabasePlugin implements RoyaPlugin {
     }
 
     private Database createDatabase(Services services) {
-        // TODO: Read configuration from Properties or config file
-        String jdbcUrl = System.getProperty("database.url", "jdbc:postgresql://localhost:5432/postgres");
-        String username = System.getProperty("database.username", "postgres");
-        String password = System.getProperty("database.password", "postgres");
+        // Access Config from Services (created by ConfigMiddleware if registered)
+        // If Config not available, create default (supports env vars, system props, etc.)
+        Config config = services.has(Config.class)
+            ? services.get(Config.class)
+            : Config.create();
+
+        // Read database configuration from Config (supports multiple sources)
+        // Config reads from: environment variables, system properties, application.yaml, etc.
+        String jdbcUrl = config.get("database.url").asString().orElse(
+            config.get("DATABASE_URL").asString().orElse(
+                "jdbc:postgresql://localhost:5432/postgres"
+            )
+        );
+
+        String username = config.get("database.username").asString().orElse(
+            config.get("DATABASE_USER").asString().orElse("postgres")
+        );
+
+        String password = config.get("database.password").asString().orElse(
+            config.get("DATABASE_PASSWORD").asString().orElse("postgres")
+        );
 
         return new DatabaseServiceImpl(jdbcUrl, username, password);
     }

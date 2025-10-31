@@ -1,11 +1,14 @@
 package com.akilisha.oss.roya.plugins.auth.oauth;
 
-import com.akilisha.oss.roya.plugins.auth.*;
+import com.akilisha.oss.roya.plugins.auth.Auth;
+import com.akilisha.oss.roya.plugins.auth.AuthResult;
 import com.akilisha.oss.roya.plugins.auth.AuthServiceImpl;
+import com.akilisha.oss.roya.plugins.auth.User;
 import com.akilisha.oss.roya.plugins.database.Database;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
+import org.jooq.impl.SQLDataType;
 
 import java.security.SecureRandom;
 import java.util.*;
@@ -109,7 +112,7 @@ public class OAuthServiceImpl implements OAuth {
 
             dsl.update(table("auth_users"))
                 .set(field("email"), userInfo.email())
-                .set(field("provider_metadata"), toJson(providerMetadata))
+                .set(field("provider_metadata"), cast(toJson(providerMetadata), SQLDataType.JSONB))
                 .set(field("updated_at"), currentTimestamp())
                 .where(field("id").eq(java.util.UUID.fromString(userId)))
                 .execute();
@@ -139,7 +142,7 @@ public class OAuthServiceImpl implements OAuth {
                 dsl.update(table("auth_users"))
                     .set(field("provider"), provider)
                     .set(field("provider_id"), userInfo.providerId())
-                    .set(field("provider_metadata"), toJson(providerMetadata))
+                    .set(field("provider_metadata"), cast(toJson(providerMetadata), SQLDataType.JSONB))
                     .set(field("updated_at"), currentTimestamp())
                     .where(field("id").eq(java.util.UUID.fromString(userId)))
                     .execute();
@@ -172,8 +175,8 @@ public class OAuthServiceImpl implements OAuth {
             .set(field("password_hash"), (String) null) // OAuth users don't have passwords
             .set(field("provider"), provider)
             .set(field("provider_id"), userInfo.providerId())
-            .set(field("user_data"), toJson(userData))
-            .set(field("provider_metadata"), toJson(providerMetadata))
+            .set(field("user_data"), cast(toJson(userData), SQLDataType.JSONB))
+            .set(field("provider_metadata"), cast(toJson(providerMetadata), SQLDataType.JSONB))
             .execute();
 
         return auth.getUser(userId.toString())

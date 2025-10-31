@@ -1,7 +1,5 @@
 package com.akilisha.oss.roya.plugins.auth.oauth;
 
-import java.util.Map;
-
 /**
  * OAuth provider interface - abstracts OAuth 2.0 flow.
  *

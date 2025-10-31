@@ -4,11 +4,7 @@ import com.akilisha.oss.roya.plugins.ai.providers.LLMProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theokanning.openai.embedding.EmbeddingRequest;
 import com.theokanning.openai.service.OpenAiService;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -605,7 +601,7 @@ public class AIServiceImpl implements AI {
      */
     private String buildCacheKey(String systemPrompt, String userMessage, AIOptions options) {
         // Include model in key (different models may give different results)
-        return "ai:ask:" + options.model() + ":" + 
+        return "ai:ask:" + options.model() + ":" +
                Integer.toHexString((systemPrompt + userMessage).hashCode());
     }
 

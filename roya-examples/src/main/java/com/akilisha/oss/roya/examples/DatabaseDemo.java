@@ -1,8 +1,10 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.plugins.database.*;
+import com.akilisha.oss.roya.plugins.database.ConnectionPoolStats;
+import com.akilisha.oss.roya.plugins.database.Database;
+import com.akilisha.oss.roya.plugins.database.DatabaseServiceImpl;
+
 import java.util.Map;
 
 /**
@@ -25,7 +27,7 @@ public class DatabaseDemo {
 
         // Register the database plugin
         // In production, this would be loaded via ServiceLoader
-        app.services().singleton(Database.class, () -> 
+        app.services().singleton(Database.class, () ->
             new DatabaseServiceImpl(
                 "jdbc:postgresql://localhost:5432/roya",
                 "postgres",
@@ -37,7 +39,7 @@ public class DatabaseDemo {
         app.get("/health", (req, res, next) -> {
             Database db = req.get(Database.class);
             ConnectionPoolStats stats = db.getStats();
-            
+
             res.json(Map.of(
                 "status", "healthy",
                 "pool", Map.of(
@@ -52,7 +54,7 @@ public class DatabaseDemo {
         // TODO: Add JOOQ code generation for this
         app.get("/users", (req, res, next) -> {
             Database db = req.get(Database.class);
-            
+
             res.json(Map.of(
                 "message", "Users endpoint - need JOOQ code generation",
                 "note", "Database service is available and working"

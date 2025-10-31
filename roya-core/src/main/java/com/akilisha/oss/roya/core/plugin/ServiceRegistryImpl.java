@@ -1,9 +1,8 @@
 package com.akilisha.oss.roya.core.plugin;
 
-import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.ServiceKey;
 import com.akilisha.oss.roya.api.plugin.Services;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -23,7 +22,7 @@ public class ServiceRegistryImpl implements Services {
     private final Map<Class<?>, Supplier<?>> prototypeServices = new ConcurrentHashMap<>();
     private final Map<ServiceKey<?>, Supplier<?>> namedServices = new ConcurrentHashMap<>();
     private final Map<Class<?>, Object> singletonInstances = new ConcurrentHashMap<>();
-    
+
     // ScopedValues for request-scoped services
     private final Map<Class<?>, ScopedValue<?>> requestScopedValues = new ConcurrentHashMap<>();
 
@@ -61,7 +60,7 @@ public class ServiceRegistryImpl implements Services {
             }
             return (T) singletonInstances.get(serviceType);
         }
-        
+
         // Check if request-scoped
         factory = (Supplier<T>) requestServices.get(serviceType);
         if (factory != null) {
@@ -78,13 +77,13 @@ public class ServiceRegistryImpl implements Services {
             }
             return factory.get();
         }
-        
+
         // Check if prototype
         factory = (Supplier<T>) prototypeServices.get(serviceType);
         if (factory != null) {
             return factory.get(); // New instance every time
         }
-        
+
         throw new IllegalStateException("Service not registered: " + serviceType);
     }
 

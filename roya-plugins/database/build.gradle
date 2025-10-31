@@ -18,7 +18,12 @@ dependencies {
     implementation "org.postgresql:postgresql:${postgresVersion}"
 
     // Flyway for database migrations
-    implementation 'org.flywaydb:flyway-core:10.7.1'
+    implementation 'org.flywaydb:flyway-core:11.7.2'
+    // Flyway 10+ requires separate database modules (no longer bundled)
+    implementation 'org.flywaydb:flyway-database-postgresql:11.7.2'
+
+    // Helidon Config for configuration management
+    implementation "io.helidon.config:helidon-config:${helidonVersion}"
 
     // Logging
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"

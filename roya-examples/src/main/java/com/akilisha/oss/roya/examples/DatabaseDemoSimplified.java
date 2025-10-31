@@ -1,7 +1,7 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
+
 import java.util.Map;
 
 /**

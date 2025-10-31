@@ -1,11 +1,9 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.api.plugin.Services;
+import com.akilisha.oss.roya.api.Handler;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * CORS (Cross-Origin Resource Sharing) middleware - Express-compatible.
@@ -19,7 +17,7 @@ import java.util.Optional;
  * Example:
  * <pre>
  * app.use(cors());
- * 
+ *
  * // Or with custom options:
  * app.use(cors(CorsOptions.builder()
  *     .origin("https://example.com")
@@ -58,7 +56,7 @@ public final class Cors {
         private final int maxAge;
         private final boolean credentials;
 
-        private CorsOptions(String origin, List<String> methods, List<String> headers, 
+        private CorsOptions(String origin, List<String> methods, List<String> headers,
                           int maxAge, boolean credentials) {
             this.origin = origin;
             this.methods = methods;

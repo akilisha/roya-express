@@ -10,10 +10,9 @@ import com.akilisha.oss.roya.core.middleware.Morgan;
 import com.akilisha.oss.roya.plugins.objectstorage.ObjectStorage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.List;
-import java.util.Map;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Map;
 
 public class ObjectStorageDemo {
     public static void main(String[] args) {

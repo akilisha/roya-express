@@ -1,7 +1,12 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import java.util.*;
+import com.akilisha.oss.roya.api.Cookie;
+import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Request;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -18,12 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * app.use(Session.session(SessionOptions.builder()
  *     .secret("my-secret-key")
  *     .build()));
- * 
+ *
  * app.post("/login", (req, res) -> {
  *     req.session().put("userId", user.getId());
  *     res.json(Map.of("message", "Logged in"));
  * });
- * 
+ *
  * app.get("/profile", (req, res) -> {
  *     String userId = (String) req.session().get("userId");
  *     if (userId == null) {
@@ -37,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Session {
 
     // In-memory session store (in production, use Redis/Memcached)
-    private static final Map<String, Map<String, Object>> SESSION_STORE = 
+    private static final Map<String, Map<String, Object>> SESSION_STORE =
         new ConcurrentHashMap<>();
 
     /**
@@ -64,7 +69,7 @@ public final class Session {
             if (sessionId == null || !SESSION_STORE.containsKey(sessionId)) {
                 sessionId = generateSessionId();
                 SESSION_STORE.put(sessionId, new HashMap<>());
-                
+
                 // Set session cookie
                 res.cookie(new Cookie(
                     "sessionId",

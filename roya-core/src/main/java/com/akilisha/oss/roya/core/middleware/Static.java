@@ -1,10 +1,6 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import com.akilisha.oss.roya.api.Handler;
 
 /**
  * Static file serving middleware - Express-compatible.
@@ -17,7 +13,7 @@ import java.nio.file.Path;
  * Example:
  * <pre>
  * app.use(static("public"));
- * 
+ *
  * // Or with custom options:
  * app.use(static("public", StaticOptions.builder()
  *     .index("index.html")
@@ -47,12 +43,12 @@ public final class Static {
         return (req, res, next) -> {
             // Check if request is for a static file
             String path = req.path();
-            
+
             // Remove leading slash
             if (path.startsWith("/")) {
                 path = path.substring(1);
             }
-            
+
             // For now, just pass through - implementation will be added later
             // This is a placeholder for the middleware pattern
             next.handle(req, res);

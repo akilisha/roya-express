@@ -1,0 +1,94 @@
+plugins {
+    id 'application'
+    id 'org.jooq.jooq-codegen-gradle' version "${jooqVersion}"
+}
+
+dependencies {
+    implementation project(":roya-api")
+    implementation project(":roya-core")
+    implementation project(":roya-plugins:database")
+    implementation project(":roya-plugins:auth")
+    implementation project(":roya-plugins:metrics")
+    implementation project(":roya-plugins:cache")
+    implementation project(":roya-plugins:email")
+    implementation project(":roya-plugins:ai")
+    implementation project(":roya-plugins:object-storage")
+
+    // JSON
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+
+    // JOOQ
+    implementation "org.jooq:jooq:${jooqVersion}"
+    runtimeOnly("org.postgresql:postgresql:${postgresVersion}")
+    // Add PostgreSQL driver to JOOQ codegen classpath
+    // runtimeOnly dependencies are not available to build-time tasks
+    jooqCodegen("org.postgresql:postgresql:${postgresVersion}")
+
+    // WebSocket/SSE
+    implementation "io.helidon.webserver:helidon-webserver-websocket:${helidonVersion}"
+    implementation "io.helidon.common:helidon-common-reactive:${helidonVersion}"
+
+    // Micrometer
+    implementation 'io.micrometer:micrometer-core:1.12.0'
+
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // BCrypt for password hashing
+    implementation 'org.mindrot:jbcrypt:0.4'
+}
+
+application {
+    mainClass = 'com.akilisha.oss.roya.docuRoya.DocuRoyaApp'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.named('run') {
+    jvmArgs += ['--enable-preview']
+}
+
+// Include generated JOOQ sources
+java {
+    sourceSets.main.java.srcDirs += 'build/generated/jooq'
+}
+
+// JOOQ code generation task
+jooq {
+    configuration {
+        jdbc {
+            driver = 'org.postgresql.Driver'
+            url = System.getenv('DATABASE_URL') ?: 'jdbc:postgresql://localhost:5432/docuRoya'
+            user = System.getenv('DATABASE_USER') ?: 'postgres'
+            password = System.getenv('DATABASE_PASSWORD') ?: 'postgres'
+        }
+        generator {
+            database {
+                name = 'org.jooq.meta.postgres.PostgresDatabase'
+                inputSchema = 'public'
+                includes = 'articles|comments|auth_users'
+            }
+            target {
+                packageName = 'com.akilisha.oss.roya.docuRoya.jooq'
+                directory = 'build/generated/jooq'
+            }
+            generate {
+                records = true
+                fluentSetters = true
+                pojos = true
+                javaTimeTypes = true
+            }
+        }
+    }
+}
+
+// Ensure migrations run before codegen
+tasks.named('jooqCodegen') {
+    dependsOn(':roya-plugins:database:compileJava')
+}
+
+

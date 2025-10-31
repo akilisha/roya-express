@@ -1,11 +1,14 @@
 package com.akilisha.oss.roya.plugins.auth;
 
-import com.akilisha.oss.roya.api.plugin.*;
-import com.akilisha.oss.roya.plugins.auth.oauth.*;
+import com.akilisha.oss.roya.api.plugin.Application;
+import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
+import com.akilisha.oss.roya.api.plugin.Services;
+import com.akilisha.oss.roya.plugins.auth.oauth.GitHubOAuthProvider;
+import com.akilisha.oss.roya.plugins.auth.oauth.GoogleOAuthProvider;
+import com.akilisha.oss.roya.plugins.auth.oauth.OAuthConfig;
 import com.akilisha.oss.roya.plugins.database.Database;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,19 +43,19 @@ public class AuthPlugin implements RoyaPlugin {
             if (!services.has(Database.class)) {
                 throw new IllegalStateException("Database plugin must be registered before Auth plugin");
             }
-            
+
             Database database = services.get(Database.class);
-            
+
             // Get JWT secret from system property or use default (change in production!)
-            String jwtSecret = System.getProperty("auth.jwt.secret", 
+            String jwtSecret = System.getProperty("auth.jwt.secret",
                 "change-this-secret-key-in-production-use-long-random-string");
-            
+
             AuthServiceImpl authService = new AuthServiceImpl(database, jwtSecret);
-            
+
             // Register OAuth providers if configured
             com.akilisha.oss.roya.plugins.auth.oauth.OAuth oauthService = authService.oauth();
             registerOAuthProviders(oauthService);
-            
+
             return authService;
         });
     }
@@ -96,14 +99,14 @@ public class AuthPlugin implements RoyaPlugin {
             try {
                 Auth auth = req.get(Auth.class);
                 com.akilisha.oss.roya.plugins.auth.oauth.OAuth oauth = auth.oauth();
-                
+
                 String provider = req.params().get("provider").orElse("");
                 String redirectUri = req.query().get("redirect_uri")
                     .orElse(req.protocol() + "://" + req.hostname() + ":3000/auth/" + provider + "/callback");
-                
-                com.akilisha.oss.roya.plugins.auth.oauth.OAuthAuthorizationUrl authUrl = 
+
+                com.akilisha.oss.roya.plugins.auth.oauth.OAuthAuthorizationUrl authUrl =
                     oauth.getAuthorizationUrl(provider, redirectUri);
-                
+
                 // Store state in session or cookie for verification
                 @SuppressWarnings("unchecked")
                 Map<String, Object> session = (Map<String, Object>) req.get("session");
@@ -111,7 +114,7 @@ public class AuthPlugin implements RoyaPlugin {
                     session.put("oauth_state", authUrl.state());
                     session.put("oauth_redirect_uri", redirectUri);
                 }
-                
+
                 res.redirect(authUrl.url());
             } catch (com.akilisha.oss.roya.plugins.auth.oauth.OAuthException e) {
                 res.status(400).json(Map.of("error", e.getMessage()));
@@ -125,47 +128,47 @@ public class AuthPlugin implements RoyaPlugin {
             try {
                 Auth auth = req.get(Auth.class);
                 com.akilisha.oss.roya.plugins.auth.oauth.OAuth oauth = auth.oauth();
-                
+
                 String provider = req.params().get("provider").orElse("");
                 String code = req.query().get("code").orElse("");
                 String state = req.query().get("state").orElse("");
                 String error = req.query().get("error").orElse("");
-                
+
                 if (!error.isEmpty()) {
                     res.status(400).json(Map.of("error", "OAuth error: " + error));
                     return;
                 }
-                
+
                 // Verify state from session
                 @SuppressWarnings("unchecked")
                 Map<String, Object> session = (Map<String, Object>) req.get("session");
                 String storedState = session != null ? (String) session.get("oauth_state") : null;
                 String redirectUri = session != null ? (String) session.get("oauth_redirect_uri") : null;
-                
+
                 if (storedState == null || !storedState.equals(state)) {
                     res.status(400).json(Map.of("error", "Invalid or expired state token"));
                     return;
                 }
-                
+
                 if (redirectUri == null) {
                     redirectUri = req.protocol() + "://" + req.hostname() + ":3000/auth/" + provider + "/callback";
                 }
-                
+
                 // Clear state from session
                 if (session != null) {
                     session.remove("oauth_state");
                     session.remove("oauth_redirect_uri");
                 }
-                
+
                 // Handle callback
                 AuthResult result = oauth.handleCallback(provider, code, state, redirectUri);
-                
+
                 // Set session
                 if (session != null) {
                     session.put("userId", result.user().id());
                     session.put("email", result.user().email());
                 }
-                
+
                 // Return JWT and user info
                 res.json(Map.of(
                     "token", result.token(),
@@ -189,7 +192,7 @@ public class AuthPlugin implements RoyaPlugin {
             try {
                 Auth auth = req.get(Auth.class);
                 com.akilisha.oss.roya.plugins.auth.oauth.OAuth oauth = auth.oauth();
-                
+
                 res.json(Map.of(
                     "providers", oauth.getProviders(),
                     "message", "Available OAuth providers"

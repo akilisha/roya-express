@@ -1,11 +1,15 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
+import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Next;
+import com.akilisha.oss.roya.api.Request;
+import com.akilisha.oss.roya.api.Response;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for CookieParser middleware.
@@ -29,7 +33,7 @@ class CookieParserTest {
     void shouldCallNext() throws Exception {
         Handler middleware = CookieParser.cookieParser();
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockNext).handle(mockRequest, mockResponse);
     }
 
@@ -38,7 +42,7 @@ class CookieParserTest {
     void shouldWorkWithSecret() throws Exception {
         Handler middleware = CookieParser.cookieParser("my-secret");
         middleware.handle(mockRequest, mockResponse, mockNext);
-        
+
         verify(mockNext).handle(mockRequest, mockResponse);
     }
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.scribejava.apis.GoogleApi20;
 import com.github.scribejava.core.builder.ServiceBuilder;
-import com.github.scribejava.core.builder.api.DefaultApi20;
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.model.OAuthRequest;
 import com.github.scribejava.core.model.Response;
@@ -29,7 +28,7 @@ public class GoogleOAuthProvider implements OAuthProvider {
     public GoogleOAuthProvider(OAuthConfig config) {
         this.config = config;
         this.objectMapper = new ObjectMapper();
-        
+
         // Build OAuth service with Google API
         this.oauthService = new ServiceBuilder(config.clientId())
             .apiSecret(config.clientSecret())
@@ -51,7 +50,7 @@ public class GoogleOAuthProvider implements OAuthProvider {
     public OAuthToken exchangeCode(String code, String redirectUri) throws OAuthException {
         try {
             OAuth2AccessToken accessToken = oauthService.getAccessToken(code);
-            
+
             // Extract expiry if available
             Instant expiresAt = null;
             if (accessToken.getExpiresIn() != null) {
@@ -82,14 +81,14 @@ public class GoogleOAuthProvider implements OAuthProvider {
         try {
             OAuthRequest request = new OAuthRequest(Verb.GET, "https://www.googleapis.com/oauth2/v2/userinfo");
             oauthService.signRequest(new OAuth2AccessToken(token.accessToken()), request);
-            
+
             Response response = oauthService.execute(request);
             if (!response.isSuccessful()) {
                 throw new OAuthException("Failed to fetch user info: " + response.getCode() + " " + response.getBody());
             }
 
             JsonNode userData = objectMapper.readTree(response.getBody());
-            
+
             String id = userData.get("id").asText();
             String email = userData.has("email") ? userData.get("email").asText() : null;
             String name = userData.has("name") ? userData.get("name").asText() : null;

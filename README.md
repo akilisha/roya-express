@@ -223,6 +223,33 @@ app.use(Morgan.builder()
 
 Fields include: http.method, path, status, duration_ms, remote.ip, request_id, trace/span IDs, and redacted headers. Logs are emitted to stdout for Docker log collectors.
 
+### Rate Limiting
+
+Protect endpoints from abuse with IP-based rate limiting:
+
+```java
+import com.akilisha.oss.roya.core.middleware.RateLimit;
+import java.time.Duration;
+
+// Default: 100 requests per 15 minutes per IP
+app.use(RateLimit.rateLimit());
+
+// Custom limit
+app.use(RateLimit.builder()
+    .max(200)
+    .window(Duration.ofMinutes(1))
+    .build());
+
+// Custom key function (e.g., rate limit by user ID)
+app.use(RateLimit.builder()
+    .key(req -> req.get("user").userId())
+    .max(50)
+    .window(Duration.ofSeconds(60))
+    .build());
+```
+
+When the limit is exceeded, requests receive `429 Too Many Requests` with `Retry-After` header and `X-RateLimit-*` headers.
+
 ## Roya CLI (MVP)
 
 Quick commands to boost dev ergonomics:

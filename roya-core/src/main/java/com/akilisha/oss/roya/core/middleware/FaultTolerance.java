@@ -6,7 +6,6 @@ import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
 import io.helidon.faulttolerance.Bulkhead;
 import io.helidon.faulttolerance.CircuitBreaker;
-import io.helidon.faulttolerance.Fallback;
 import io.helidon.faulttolerance.Retry;
 import io.helidon.faulttolerance.Timeout;
 

@@ -2,6 +2,28 @@
 
 This guide covers building, containerizing, deploying, and operating Roya services in production.
 
+## 0) Health & OpenAPI Verification
+
+Health endpoints are automatically enabled when Helidon Health is on the classpath (default in Roya):
+
+```bash
+# Start any Roya app
+./gradlew :roya-examples:run
+
+# Test health endpoints
+curl http://localhost:3000/health
+curl http://localhost:3000/health/live
+curl http://localhost:3000/health/ready
+```
+
+OpenAPI spec is available when Helidon OpenAPI is configured:
+
+```bash
+curl http://localhost:3000/openapi.json
+```
+
+See `OpenApiDemo` for an example setup.
+
 ## 1) Build Options
 
 - JVM (recommended baseline)

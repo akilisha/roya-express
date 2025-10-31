@@ -48,6 +48,7 @@ public final class SchedulingMiddleware {
         public Headers headers() { return new com.akilisha.oss.roya.core.HeadersImpl(null); }
         public java.io.InputStream bodyStream() { return java.io.InputStream.nullInputStream(); }
         public <T> T body(Class<T> type) { return null; }
+        public Object body() { return null; }
         public String bodyText() { return ""; }
         public Cookies cookies() { return new com.akilisha.oss.roya.core.CookiesImpl(Map.of()); }
         public boolean accepts(String contentType) { return false; }

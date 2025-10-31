@@ -1,19 +1,19 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.plugins.database.Database;
 import com.akilisha.oss.roya.plugins.database.DatabaseServiceImpl;
+
 import java.util.Map;
 
 /**
  * Demo showcasing Database plugin admin capabilities.
- * 
+ *
  * Demonstrates:
  * - migrate() - Run Flyway migrations
  * - generateModel() - Generate JOOQ classes
  * - Explicit req.get(Database.class) usage
- * 
+ *
  * Endpoints:
  * - POST /admin/migrate
  * - POST /admin/generate-model
@@ -43,7 +43,7 @@ public class DatabaseAdminDemo {
         app.post("/admin/migrate", (req, res, next) -> {
             Database database = req.get(Database.class);
             int count = database.migrate();
-            
+
             res.json(Map.of(
                 "message", "Migrations executed",
                 "count", count,
@@ -54,10 +54,10 @@ public class DatabaseAdminDemo {
         // POST /admin/generate-model - Generate JOOQ classes
         app.post("/admin/generate-model", (req, res, next) -> {
             Database database = req.get(Database.class);
-            
+
             try {
                 int count = database.generateModel();
-                
+
                 res.json(Map.of(
                     "message", "Model generated successfully",
                     "count", count,
@@ -76,7 +76,7 @@ public class DatabaseAdminDemo {
         app.get("/health", (req, res, next) -> {
             Database database = req.get(Database.class);
             var stats = database.getStats();
-            
+
             res.json(Map.of(
                 "status", "healthy",
                 "database", Map.of(

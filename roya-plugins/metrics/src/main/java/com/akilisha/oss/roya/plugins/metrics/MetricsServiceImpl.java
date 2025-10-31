@@ -1,15 +1,14 @@
 package com.akilisha.oss.roya.plugins.metrics;
 
 import com.akilisha.oss.roya.api.Handler;
-import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
-import io.micrometer.core.instrument.*;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 
-import java.time.Duration;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -31,16 +30,16 @@ public class MetricsServiceImpl implements Metrics {
             String method = req.method();
             String route = normalizeRoute(req.path());
             int statusCode = 500; // Default, will be updated
-            
+
             try {
                 // Execute handler chain
                 next.handle(req, res);
-                
+
                 // Get status code (if response finished)
                 if (res.isFinished()) {
                     statusCode = res.getStatus();
                 }
-                
+
                 // Record metrics
                 recordHttpMetrics(method, route, statusCode, startTime, req, res);
             } catch (Exception e) {
@@ -51,11 +50,11 @@ public class MetricsServiceImpl implements Metrics {
         };
     }
 
-    private void recordHttpMetrics(String method, String route, int statusCode, 
+    private void recordHttpMetrics(String method, String route, int statusCode,
                                    long startTime, Request req, Response res) {
         // Request duration (in nanoseconds, convert to seconds)
         long durationNanos = System.nanoTime() - startTime;
-        
+
         Timer.builder("http_request_duration_seconds")
             .description("HTTP request duration in seconds")
             .tag("method", method)
@@ -64,7 +63,7 @@ public class MetricsServiceImpl implements Metrics {
             .publishPercentiles(0.5, 0.95, 0.99)
             .register(registry)
             .record(durationNanos, TimeUnit.NANOSECONDS);
-        
+
         // Request count
         Counter.builder("http_requests_total")
             .description("Total number of HTTP requests")
@@ -74,7 +73,7 @@ public class MetricsServiceImpl implements Metrics {
             .tag("error", statusCode >= 400 ? "true" : "false")
             .register(registry)
             .increment();
-        
+
         // Request/response size (if available)
         // Note: Size tracking would require intercepting body streams
         // For now, we skip this to keep middleware lightweight

@@ -2,7 +2,6 @@ package com.akilisha.oss.roya.plugins.email.providers;
 
 import com.akilisha.oss.roya.plugins.email.EmailResult;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,14 +10,14 @@ import java.util.concurrent.Executors;
  * MailerSend email provider.
  *
  * Thin wrapper around MailerSend Java SDK.
- * 
+ *
  * Example usage:
  * <pre>
  * // Configure via system properties:
  * // email.provider=mailersend
  * // email.mailersend.apiKey=&lt;your-api-key&gt;
  * </pre>
- * 
+ *
  * SDK Dependency: com.mailersend:mailersend-java (add to build.gradle)
  */
 public class MailerSendProvider implements EmailProvider {
@@ -54,12 +53,12 @@ public class MailerSendProvider implements EmailProvider {
                     .setSubject(request.subject())
                     .setHtml(request.htmlBody())
                     .build();
-                
+
                 com.mailersend.sdk.emails.EmailResponse response = mailerSend.email().send(email);
                 String messageId = response.messageId();
                 return EmailResult.success(messageId, "mailersend");
                 */
-                
+
                 // Placeholder implementation
                 // When SDK is available, replace this with actual SDK calls
                 String messageId = "mailersend-" + System.currentTimeMillis();

@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.cache;
 
-import com.akilisha.oss.roya.api.plugin.*;
+import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
+import com.akilisha.oss.roya.api.plugin.Services;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,16 +44,16 @@ public class CachePlugin implements RoyaPlugin {
                     System.getProperty("cache.eviction", "LRU"));
                 Duration defaultTtl = Duration.ofSeconds(
                     Long.parseLong(System.getProperty("cache.ttl", "86400"))); // 24 hours
-                
+
                 EvictionConfig config = new EvictionConfig(
                     maxSizeBytes,
                     strategy,
                     defaultTtl
                 );
-                
+
                 Path cachePath = Paths.get(cacheDir);
                 Files.createDirectories(cachePath);
-                
+
                 return new CacheServiceImpl(cachePath, config);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to initialize cache", e);

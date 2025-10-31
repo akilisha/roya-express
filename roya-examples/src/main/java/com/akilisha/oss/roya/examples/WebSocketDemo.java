@@ -1,11 +1,9 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.Handler;
 import io.helidon.websocket.WsListener;
 import io.helidon.websocket.WsSession;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class WebSocketDemo {

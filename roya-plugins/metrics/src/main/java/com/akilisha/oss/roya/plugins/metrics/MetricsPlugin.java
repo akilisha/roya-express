@@ -1,8 +1,8 @@
 package com.akilisha.oss.roya.plugins.metrics;
 
-import com.akilisha.oss.roya.api.plugin.*;
-
-import java.util.Map;
+import com.akilisha.oss.roya.api.plugin.Application;
+import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
+import com.akilisha.oss.roya.api.plugin.Services;
 
 /**
  * Metrics plugin - registers metrics service and exposes Prometheus endpoint.
@@ -44,7 +44,7 @@ public class MetricsPlugin implements RoyaPlugin {
             Metrics metrics = req.get(Metrics.class);
             metrics.middleware().handle(req, res, next);
         });
-        
+
         // Add Prometheus /metrics endpoint
         app.route("GET", "/metrics", (req, res, next) -> {
             try {

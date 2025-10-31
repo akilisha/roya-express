@@ -1,8 +1,6 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
-import java.util.Map;
-import java.util.function.Function;
+import com.akilisha.oss.roya.api.Handler;
 
 /**
  * Helmet security headers middleware - Express-compatible.
@@ -16,7 +14,7 @@ import java.util.function.Function;
  * Example:
  * <pre>
  * app.use(helmet());
- * 
+ *
  * // Or with custom options:
  * app.use(helmet(HelmetOptions.builder()
  *     .contentSecurityPolicy("default-src 'self'")
@@ -57,7 +55,7 @@ public final class Helmet {
             // Strict-Transport-Security (HSTS)
             // Forces HTTPS connections
             if (req.secure() && options.hsts()) {
-                res.header("Strict-Transport-Security", 
+                res.header("Strict-Transport-Security",
                     String.format("max-age=%d", options.hstsMaxAge()));
             }
 

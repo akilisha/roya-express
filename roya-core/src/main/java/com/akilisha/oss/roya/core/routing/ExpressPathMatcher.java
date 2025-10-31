@@ -2,7 +2,10 @@ package com.akilisha.oss.roya.core.routing;
 
 import com.akilisha.oss.roya.api.routing.PathMatcher;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -148,7 +151,7 @@ public class ExpressPathMatcher implements PathMatcher {
                 }
                 i++;
             } else if (c == '?' && regex.length() > 1) {
-                // Quantifier: zero or one of previous  
+                // Quantifier: zero or one of previous
                 char prev = regex.charAt(regex.length() - 1);
                 if (prev != '*' && prev != '+' && prev != '?') {
                     regex.setCharAt(regex.length() - 1, '(');

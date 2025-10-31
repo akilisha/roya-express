@@ -44,7 +44,28 @@ public interface Request {
 
     // Body
     InputStream bodyStream();
+    
+    /**
+     * Get the parsed request body as a typed object.
+     * Requires BodyParser or Json middleware to have parsed the body first.
+     * 
+     * @param type Target type (e.g., Map.class, MyRecord.class)
+     * @return Parsed body converted to requested type
+     * @throws ClassCastException if body cannot be converted to requested type
+     */
     <T> T body(Class<T> type);
+    
+    /**
+     * Get the parsed request body as an Object.
+     * Requires BodyParser or Json middleware to have parsed the body first.
+     * For JSON: returns Map<String, Object> or JsonNode
+     * For form-urlencoded: returns Map<String, String>
+     * For text: returns String
+     * 
+     * @return Parsed body object, or null if not parsed
+     */
+    Object body();
+    
     String bodyText();
 
     // Cookies

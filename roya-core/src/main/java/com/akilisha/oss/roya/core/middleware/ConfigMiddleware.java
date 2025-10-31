@@ -1,12 +1,11 @@
 package com.akilisha.oss.roya.core.middleware;
 
 import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
-import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.core.RequestImpl;
 import io.helidon.config.Config;
-import io.helidon.config.ConfigSources;
 
 import java.util.ArrayList;
 import java.util.List;

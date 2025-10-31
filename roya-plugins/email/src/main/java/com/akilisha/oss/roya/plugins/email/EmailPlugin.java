@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.email;
 
-import com.akilisha.oss.roya.api.plugin.*;
+import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
+import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.plugins.email.providers.MailerSendProvider;
 import com.akilisha.oss.roya.plugins.email.providers.SendGridProvider;
 import com.akilisha.oss.roya.plugins.email.providers.SmtpProvider;

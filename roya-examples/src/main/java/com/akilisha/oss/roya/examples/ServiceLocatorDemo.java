@@ -1,8 +1,6 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Demo showcasing the Service Locator pattern.
@@ -61,23 +59,23 @@ public class ServiceLocatorDemo {
 
     public static void main(String[] args) {
         var app = Roya.create();
-        
+
         var services = app.services();
 
         // Register services with different lifetimes
         System.out.println("Service Locator Demo");
         System.out.println("===================\n");
         System.out.println("Registering services...\n");
-        
+
         // Singleton: one instance for entire application lifetime
-        services.singleton(DatabaseService.class, () -> 
+        services.singleton(DatabaseService.class, () ->
             new DatabaseService("postgres://localhost:5432/mydb"));
         System.out.println("  ✓ Registered DatabaseService as SINGLETON");
-        
+
         // Request-scoped: one instance per request
         services.request(UserService.class, () -> new UserService());
         System.out.println("  ✓ Registered UserService as REQUEST-scoped");
-        
+
         // Prototype: new instance every time it's accessed
         services.prototype(HttpClient.class, () -> new HttpClient());
         System.out.println("  ✓ Registered HttpClient as PROTOTYPE\n");
@@ -97,7 +95,7 @@ public class ServiceLocatorDemo {
             // Singleton service - same instance every request
             DatabaseService db = req.get(DatabaseService.class);
             String result = db.query("users");
-            
+
             res.json(java.util.Map.of(
                 "message", "Retrieved singleton DatabaseService",
                 "result", result,
@@ -109,7 +107,7 @@ public class ServiceLocatorDemo {
             // Request-scoped service - new instance per request
             UserService user = req.get(UserService.class);
             String currentUser = user.currentUser();
-            
+
             res.json(java.util.Map.of(
                 "message", "Retrieved request-scoped UserService",
                 "result", currentUser,
@@ -121,7 +119,7 @@ public class ServiceLocatorDemo {
             // Prototype service - new instance every time it's accessed
             HttpClient client1 = req.get(HttpClient.class);
             HttpClient client2 = req.get(HttpClient.class); // Different instances
-            
+
             res.json(java.util.Map.of(
                 "message", "Retrieved prototype HttpClient instances",
                 "first_call", client1.get("https://api.example.com"),

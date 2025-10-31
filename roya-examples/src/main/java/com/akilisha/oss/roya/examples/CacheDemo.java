@@ -1,8 +1,9 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.core.middleware.*;
+import com.akilisha.oss.roya.core.middleware.BodyParser;
+import com.akilisha.oss.roya.core.middleware.Cors;
+import com.akilisha.oss.roya.core.middleware.Morgan;
 import com.akilisha.oss.roya.plugins.cache.Cache;
 import com.akilisha.oss.roya.plugins.cache.CacheStats;
 
@@ -30,7 +31,7 @@ public class CacheDemo {
 
     public static void main(String[] args) {
         var app = Roya.create();
-        
+
         // Register Cache plugin
         var services = app.services();
         var cachePlugin = new com.akilisha.oss.roya.plugins.cache.CachePlugin();
@@ -64,7 +65,7 @@ public class CacheDemo {
             try {
                 Cache cache = req.get(Cache.class);
                 String key = req.params().get("key").orElse("");
-                
+
                 // Try to get - we need to know the type
                 // For demo, assume it's a Map or String
                 Optional<Map> value = cache.get(key, Map.class);
@@ -102,13 +103,13 @@ public class CacheDemo {
                 Map<String, Object> body = req.body(Map.class);
                 Object value = body.get("value");
                 Long ttlSeconds = body.containsKey("ttl") ? Long.parseLong(body.get("ttl").toString()) : null;
-                
+
                 if (ttlSeconds != null) {
                     cache.set(key, value, Duration.ofSeconds(ttlSeconds));
                 } else {
                     cache.set(key, value);
                 }
-                
+
                 res.json(Map.of(
                     "message", "Value cached",
                     "key", key,
@@ -124,9 +125,9 @@ public class CacheDemo {
             try {
                 Cache cache = req.get(Cache.class);
                 String key = req.params().get("key").orElse("");
-                
+
                 cache.delete(key);
-                
+
                 res.json(Map.of(
                     "message", "Value deleted",
                     "key", key
@@ -141,7 +142,7 @@ public class CacheDemo {
             try {
                 Cache cache = req.get(Cache.class);
                 CacheStats stats = cache.getStats();
-                
+
                 res.json(Map.of(
                     "size", stats.size(),
                     "maxSize", stats.maxSize(),
@@ -161,9 +162,9 @@ public class CacheDemo {
                 String key = req.params().get("key").orElse("");
                 Map<String, Object> body = req.body(Map.class);
                 Long amount = body.containsKey("amount") ? Long.parseLong(body.get("amount").toString()) : 1L;
-                
+
                 Long newValue = cache.incrementBy(key, amount);
-                
+
                 res.json(Map.of(
                     "key", key,
                     "value", newValue,
@@ -180,7 +181,7 @@ public class CacheDemo {
                 Cache cache = req.get(Cache.class);
                 String userId = req.params().get("id").orElse("");
                 String cacheKey = "user:" + userId;
-                
+
                 // Try cache first
                 Optional<Map> cached = cache.get(cacheKey, Map.class);
                 if (cached.isPresent()) {
@@ -191,16 +192,16 @@ public class CacheDemo {
                     ));
                     return;
                 }
-                
+
                 // Cache miss - simulate DB fetch
                 Map<String, Object> user = new HashMap<>();
                 user.put("id", userId);
                 user.put("name", "User " + userId);
                 user.put("email", "user" + userId + "@example.com");
-                
+
                 // Store in cache (1 hour TTL)
                 cache.set(cacheKey, user, Duration.ofHours(1));
-                
+
                 res.json(Map.of(
                     "user", user,
                     "source", "database",

@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.ai;
 
-import com.akilisha.oss.roya.api.plugin.*;
+import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
+import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.plugins.ai.providers.OpenAIClient;
 
 /**
@@ -29,7 +30,7 @@ public class AIPlugin implements RoyaPlugin {
     public void register(Services services) {
         services.singleton(AI.class, () -> {
             // Configuration from system properties or environment variables
-            String provider = System.getProperty("ai.provider", 
+            String provider = System.getProperty("ai.provider",
                 System.getenv().getOrDefault("AI_PROVIDER", "openai"));
             String apiKey = System.getProperty("ai.openai.apiKey");
             if (apiKey == null || apiKey.isBlank()) {
@@ -81,13 +82,13 @@ public class AIPlugin implements RoyaPlugin {
         if (apiKey == null || apiKey.isBlank()) {
             apiKey = System.getenv("OPENAI_API_KEY");
         }
-        
+
         System.out.println("✓ AIPlugin: AI service initialized");
-        System.out.println("  - Provider: " + System.getProperty("ai.provider", 
+        System.out.println("  - Provider: " + System.getProperty("ai.provider",
             System.getenv().getOrDefault("AI_PROVIDER", "openai")));
         System.out.println("  - Caching: " + System.getProperty("ai.cache.enabled", "true"));
-        System.out.println("  - API Key: " + (apiKey != null && !apiKey.isBlank() 
-            ? "✓ Set (" + apiKey.substring(0, Math.min(8, apiKey.length())) + "...)" 
+        System.out.println("  - API Key: " + (apiKey != null && !apiKey.isBlank()
+            ? "✓ Set (" + apiKey.substring(0, Math.min(8, apiKey.length())) + "...)"
             : "✗ Not set"));
         System.out.println("  - Usage: AI ai = req.get(AI.class);");
     }

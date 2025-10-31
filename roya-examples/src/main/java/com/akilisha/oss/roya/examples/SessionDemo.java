@@ -1,8 +1,11 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.core.middleware.*;
+import com.akilisha.oss.roya.core.middleware.BodyParser;
+import com.akilisha.oss.roya.core.middleware.Cors;
+import com.akilisha.oss.roya.core.middleware.Morgan;
+import com.akilisha.oss.roya.core.middleware.Session;
+
 import java.util.Map;
 
 /**
@@ -26,7 +29,7 @@ public class SessionDemo {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> body = (Map<String, Object>) req.get("body");
-                
+
                 String username = (String) body.get("username");
                 String password = (String) body.get("password");
 
@@ -51,7 +54,7 @@ public class SessionDemo {
         // Protected endpoint - requires session
         app.get("/dashboard", (req, res, next) -> {
             Map<String, Object> session = Session.getSession(req);
-            
+
             if (session == null || !Boolean.TRUE.equals(session.get("authenticated"))) {
                 res.status(401).json(Map.of("error", "Please login first"));
                 return;

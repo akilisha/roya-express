@@ -11,7 +11,7 @@ allprojects {
         postgresVersion = "42.7.7"
         jacksonVersion = "2.18.2"
         slf4jVersion = "2.0.17"
-        jooqVersion = "3.18.34" // https://www.jooq.org/download/support-matrix
+        jooqVersion = "3.19.27" // https://www.jooq.org/download/support-matrix
         logbackVersion = "1.5.20"
         hikaricpVersion = "6.3.0"
         picocliVersion = "4.7.6"
@@ -29,7 +29,7 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(21)  // Java 21 LTS (released Sept 2023)
+            languageVersion = JavaLanguageVersion.of(23)  // Java 21 LTS (released Sept 2023)
         }
     }
 

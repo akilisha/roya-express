@@ -1,0 +1,8 @@
+# DocuRoya Application Configuration
+# Helidon Config will read this file automatically
+
+database:
+  url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/docuRoya}
+  username: ${DATABASE_USER:postgres}
+  password: ${DATABASE_PASSWORD:postgres}
+

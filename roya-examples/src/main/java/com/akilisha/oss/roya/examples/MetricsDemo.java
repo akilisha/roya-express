@@ -1,8 +1,10 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.*;
-import com.akilisha.oss.roya.core.middleware.*;
+import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.core.middleware.BodyParser;
+import com.akilisha.oss.roya.core.middleware.Cors;
+import com.akilisha.oss.roya.core.middleware.Morgan;
 import com.akilisha.oss.roya.plugins.metrics.Metrics;
 
 import java.util.Map;
@@ -25,7 +27,7 @@ public class MetricsDemo {
 
     public static void main(String[] args) {
         var app = Roya.create();
-        
+
         // Register Metrics plugin
         var services = app.services();
         var metricsPlugin = new com.akilisha.oss.roya.plugins.metrics.MetricsPlugin();
@@ -106,11 +108,11 @@ public class MetricsDemo {
         app.get("/users/:id", (req, res, next) -> {
             Metrics metrics = req.get(Metrics.class);
             String userId = req.params().get("id").orElse("unknown");
-            
+
             // Custom metric: user views
             var userViews = metrics.counter("user_views", "user_id", userId);
             userViews.increment();
-            
+
             res.json(Map.of(
                 "userId", userId,
                 "message", "User profile",
@@ -123,7 +125,7 @@ public class MetricsDemo {
         app.post("/api/users", (req, res, next) -> {
             Metrics metrics = req.get(Metrics.class);
             var dbQueryTimer = metrics.timer("db_query_duration", "operation", "create_user");
-            
+
             // Simulate database operation
             var sample = io.micrometer.core.instrument.Timer.start(metrics.registry());
             try {
@@ -132,7 +134,7 @@ public class MetricsDemo {
                 Thread.currentThread().interrupt();
             }
             sample.stop(dbQueryTimer);
-            
+
             res.json(Map.of(
                 "message", "User created",
                 "queryTime", "measured",
@@ -143,10 +145,10 @@ public class MetricsDemo {
         // Example route with gauge
         app.get("/stats", (req, res, next) -> {
             Metrics metrics = req.get(Metrics.class);
-            
+
             // Register gauge (will be included in /metrics)
             metrics.gauge("active_connections", () -> 42.0, "server", "main");
-            
+
             res.json(Map.of(
                 "message", "Server stats",
                 "activeConnections", 42,

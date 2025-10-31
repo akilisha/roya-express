@@ -1,11 +1,8 @@
 package com.akilisha.oss.roya.core;
 
 import com.akilisha.oss.roya.api.Params;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+
+import java.util.*;
 
 /**
  * Implementation of path parameters extracted from route patterns.

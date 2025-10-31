@@ -1,6 +1,6 @@
 package com.akilisha.oss.roya.core.middleware;
 
-import com.akilisha.oss.roya.api.*;
+import com.akilisha.oss.roya.api.Handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -46,7 +46,7 @@ public final class Json {
 
             try {
                 String bodyText = req.bodyText();
-                
+
                 if (bodyText == null || bodyText.isEmpty()) {
                     req.set(BODY_KEY, Map.of());
                 } else {
@@ -86,7 +86,7 @@ public final class Json {
 
             try {
                 String bodyText = req.bodyText();
-                
+
                 if (bodyText == null || bodyText.isEmpty()) {
                     req.set(BODY_KEY, Map.of());
                 } else {
