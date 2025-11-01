@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .product-header {
+            border-bottom: 2px solid #f0f4ff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .product-name {
+            font-size: 28px;
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        .product-price {
+            font-size: 32px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .product-details {
+            margin: 30px 0;
+        }
+        .product-description {
+            color: #666;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        .stock-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .stock-in {
+            background: #d4edda;
+            color: #155724;
+        }
+        .stock-out {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .buy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .buy-button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>{{title}}</h1>
+        <div class="product-header">
+            <h2 class="product-name">{{product.name}}</h2>
+            <div class="product-price">{{product.price}}</div>
+        </div>
+        <div class="product-details">
+            <p class="product-description">{{product.description}}</p>
+            <div>
+                {{#if product.inStock}}
+                <span class="stock-badge stock-in">✓ In Stock</span>
+                {{else}}
+                <span class="stock-badge stock-out">✗ Out of Stock</span>
+                {{/if}}
+            </div>
+        </div>
+        <button class="buy-button">Add to Cart</button>
+    </div>
+</body>
+</html>
+

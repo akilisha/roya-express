@@ -93,8 +93,49 @@ Are you able to follow my router search algorithm? How does this compare to how 
 
 
 Nested routing
-Earlier we were able to figure out how to implement regex parts in the request path - by using path segments and segment matchers. While this was a great milestone, 
-there was one thing that kept gnawing at my mind. And this is about the ".any(...)" method. I have been wondering why on earth that method would be useful. 
-Which use-case would possibly need this capability? I then it hit me. Aha! There is one such use-case after all.
-This use-case if for handling nested routers, which I've been racking my brain about how to implement. So this is the algorithm, and tell me what you think.
+Earlier we were able to figure out how to handle regex parts in the request path - by using path segments and segment matchers. While this was a great milestone, 
+there was one thing that kept gnawing at my mind. And this is about the ".any(...)" method. I have been wondering how on earth that method would be useful. 
+Which use-case would possibly need this functionality? I then it hit me. Aha! There is one such use-case after all.
+
+This use-case seems ideal for handling nested routers, which I've been racking my brain about wondering how to implement. So this is the algorithm, and tell me what you think.
+
+root router
+|-- [POST|GET|PUT|PATCH|DELETE] routers
+|    |----"tracing"
+|           |----"<node>"
+|    |----"metrics"
+|           |----"users"
+|                  |----"<node>"
+|           |----"products"
+|                  |----"<node>"
+|-- ALL router
+|    |----"api"
+|           |----<Nested Router>
+|                  |----GET router
+|                        |----"users"
+|                                |----"(.*)"
+|                                       |----<node>
+|                  |----POST
+|                        |----"users"
+|     |----"health"
+|           |----<Nested Router>
+|                  |----GET router
+|                        |----"<node>"
+
+
+So how would this work? 
+
+GET /api/user/:id
+
+Request handler resolution. It will always search DFS on if a matching method handler exists (at that level). 
+Otherwise, it will speak breadth-wise (at that level) to the ALL matcher, to find a nested router in that path
+
+root router 
+  -> GET
+    -> search for /api/user/:id fails
+      -> bubbles bck
+  -> ALL
+    -> it will find /api
+      -> nested router
+        -> it will find /users/(:id)
 

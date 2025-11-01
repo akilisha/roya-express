@@ -18,6 +18,7 @@ allprojects {
         assertjVersion = "3.25.1"
         junitVersion = "5.10.2"
         mockitoJunitVersion = "5.5.0"
+        handlebarsVersion = "4.3.1"
     }
 }
 

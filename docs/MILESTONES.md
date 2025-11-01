@@ -1387,6 +1387,140 @@ Automatic API documentation generation. Investigate Helidon's native OpenAPI cap
 
 ---
 
+## Template Engine & View Rendering - ✅ COMPLETE
+
+**Roadmap Reference**: Enhancement to Core Framework  
+**Started**: January 2025  
+**Completed**: January 2025  
+**Team**: Core team
+
+### What We Accomplished
+
+#### Express-Compatible Template Engine API
+- ✅ **app.engine(viewEngineName, TemplateEngine)** - Register template engines by name
+- ✅ **app.set("view engine", name)** - Express-compatible setting
+- ✅ **app.set("views", path)** - Set views directory with auto-engine creation
+- ✅ **app.view(ViewOptions)** - Type-safe view configuration
+- ✅ **app.get(setting)** / **app.set(setting, value)** - Generic settings API
+
+#### TemplateEngine Interface
+- ✅ **TemplateEngine** - Functional interface for rendering templates
+  - `render(template, data, req, res)` method signature
+  - Access to Request/Response for full context
+  - IOException handling for file I/O errors
+
+#### Handlebars Integration
+- ✅ **HandlebarsEngine** - Full Handlebars implementation
+  - FileTemplateLoader for file-based templates
+  - Context creation with MapValueResolver
+  - Automatic template compilation and rendering
+  - Jackson helpers registered for JSON data
+
+#### ViewOptions Pattern
+- ✅ **ViewOptions Interface** - Extensible configuration pattern
+- ✅ **HandlebarsViewOptions** - Type-safe Handlebars configuration
+  - Record-based with builder pattern
+  - Implements `engine()`, `viewsPath()`, `templateEngine()`
+  - Easy to extend for other engines (JTE, Thymeleaf, etc.)
+
+#### TemplateEngineFactory Pattern
+- ✅ **TemplateEngineFactory** - Factory for engine creation
+  - `register(name, factory)` - Register engine factories
+  - `get(name)` - Retrieve factory by name
+  - Decouples engine creation from Application code
+- ✅ **TemplateEngineRegistry** - Thread-safe in-memory registry
+- ✅ **Automatic Registration** - Handlebars factory pre-registered in static initializer
+
+#### Response.render() Implementation
+- ✅ **res.render(template, data)** - Express-compatible API
+- ✅ **Template lookup** - Retrieves engine from app instance
+- ✅ **Error handling** - Clear error messages for missing engines
+- ✅ **Content-Type** - Sets text/html automatically
+
+#### Demo & Documentation
+- ✅ **TemplateRenderingDemo** - Complete working example
+  - 3 Handlebars templates (home, users, product)
+  - Demonstrates all configuration approaches
+  - Beautiful, modern UI styling
+- ✅ **Template files** - Professional HTML/CSS templates
+  - Handlebars conditionals ({{#if}})
+  - Handlebars iteration ({{#each}})
+  - Partial support ready
+
+### Design Decisions
+- **Express compatibility**: All APIs match Express.js patterns exactly
+- **Single active engine**: Only one view engine per app (Express-style)
+- **Factory pattern**: Decouples engine creation from framework
+- **Interface-based**: Easy to add new engines without touching core
+- **Type-safe options**: Record-based ViewOptions with builders
+- **No circular dependencies**: Pass application instance to Response for lookup
+
+### How to Add a New View Engine
+
+1. **Implement TemplateEngine**:
+```java
+public class MyEngine implements TemplateEngine {
+    public void render(String template, Object data, Request req, Response res) throws IOException {
+        // Render template and write to response
+        res.send(renderedContent);
+    }
+}
+```
+
+2. **Create ViewOptions** (optional):
+```java
+public record MyEngineOptions(String viewsPath) implements ViewOptions {
+    @Override public String engine() { return "myengine"; }
+    @Override public TemplateEngine templateEngine() {
+        return new MyEngine(viewsPath);
+    }
+}
+```
+
+3. **Register Factory**:
+```java
+static {
+    TemplateEngineFactory.register("myengine", MyEngine::new);
+}
+```
+
+4. **Use in Application**:
+```java
+// Approach 1: Express-style
+app.set("view engine", "myengine");
+app.set("views", "views");
+
+// Approach 2: Type-safe
+app.view(MyEngineOptions.create("views"));
+
+// Approach 3: Direct
+app.engine("myengine", new MyEngine("views"));
+```
+
+### Metrics
+- **View Engines**: 1 (Handlebars) with extensible architecture
+- **Templates**: 3 professional demo templates
+- **API Methods**: 3 configuration approaches supported
+- **Lines of Code**: ~800 (engine + options + factory + demo)
+
+### Challenges Encountered
+- **Circular dependency**: Solution was to pass Application instance to Response
+- **Method resolution**: Multiple `get()` methods required proper Java overload resolution
+- **Factory registration**: Needed thread-safe registry for multi-threaded scenarios
+
+### Lessons Learned
+- **Express patterns translate well**: Template engine APIs map cleanly from Express to Java
+- **Factory pattern is powerful**: Separates creation from usage, enables plugin-like extensions
+- **One active engine is enough**: Express-style simplicity beats flexibility complexity
+- **Static initializers for setup**: Global factory registration works well for built-in engines
+
+### Next Steps
+- Consider adding JTE (Java Template Engine) support
+- Add template caching for production performance
+- Explore compile-time template validation
+
+---
+
 ## Milestone Summary
 
 | Phase | Status | Start Date | Completed Date | Duration |

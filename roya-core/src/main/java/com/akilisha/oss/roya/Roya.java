@@ -4,6 +4,8 @@ import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.api.pipeline.MiddlewarePipeline;
 import com.akilisha.oss.roya.api.plugin.Application;
 import com.akilisha.oss.roya.api.plugin.Services;
+import com.akilisha.oss.roya.core.HandlebarsEngine;
+import com.akilisha.oss.roya.core.HandlebarsViewOptions;
 import com.akilisha.oss.roya.core.RequestImpl;
 import com.akilisha.oss.roya.core.ResponseImpl;
 import com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl;
@@ -27,6 +29,11 @@ import java.util.Map;
  * This is the Express-compatible API for building web applications.
  */
 public class Roya implements Handler, Application {
+    
+    static {
+        // Register built-in template engine factories
+        TemplateEngineFactory.register("hbs", HandlebarsEngine::new);
+    }
 
     private final MiddlewarePipeline pipeline = new MiddlewarePipeline();
     private final Router router = RouterImpl.create();
@@ -36,6 +43,11 @@ public class Roya implements Handler, Application {
     private final Services services = new ServiceRegistryImpl();
     // WebSocket registration disabled to maintain compatibility across Helidon versions
     private final Map<String, WsListener> wsRegistrations = new LinkedHashMap<>();
+    // Application settings (Express-style app.set/get)
+    private final Map<String, Object> settings = new LinkedHashMap<>();
+    // Template engine - only one active engine per app (Express-style)
+    private String viewEngine;
+    private TemplateEngine templateEngine;
     private WebServer server;
 
     private Roya() {
@@ -63,6 +75,109 @@ public class Roya implements Handler, Application {
     public Services services() {
         return services;
     }
+    
+    // ========== Template Engine ==========
+    
+    /**
+     * Register a template engine.
+     * <p>
+     * Express: app.engine('hbs', hbs.engine)
+     * Roya:    app.engine("hbs", engine)
+     * 
+     * @param viewEngineName View engine name
+     * @param engine Template engine implementation
+     * @return this (for chaining)
+     */
+    @Override
+    public Application engine(String viewEngineName, TemplateEngine engine) {
+        this.viewEngine = viewEngineName;
+        this.templateEngine = engine;
+        return this;
+    }
+    
+    /**
+     * Get the current view engine name.
+     */
+    public String getViewEngine() {
+        return viewEngine;
+    }
+    
+    /**
+     * Get the current template engine.
+     */
+    public TemplateEngine getTemplateEngine() {
+        return templateEngine;
+    }
+    
+    /**
+     * Configure view engine using options.
+     * <p>
+     * Express: app.set('view engine', 'hbs'); app.set('views', './views')
+     * Roya:    app.view(HandlebarsViewOptions.create("views"))
+     * 
+     * @param options View engine configuration options
+     * @return this (for chaining)
+     */
+    @Override
+    public Application view(ViewOptions options) {
+        engine(options.engine(), options.templateEngine());
+        return this;
+    }
+    
+    // ========== Application Settings (Express app.set/get) ==========
+    
+    /**
+     * Set application setting.
+     * <p>
+     * Express: app.set('view engine', 'hbs')
+     * 
+     * Special cases:
+     * - "view engine" sets the template engine name
+     * - "views" sets the views path and creates the engine
+     * 
+     * @param setting Setting name (e.g., "view engine", "views")
+     * @param value Setting value
+     * @return this (for chaining)
+     */
+    @Override
+    public Application set(String setting, Object value) {
+        if ("view engine".equals(setting)) {
+            // Set the view engine name
+            this.viewEngine = value.toString();
+        } else if ("views".equals(setting)) {
+            // Set views path and create the engine if view engine name is set
+            settings.put("views", value);
+            String viewsPath = value.toString();
+            if (viewEngine != null && templateEngine == null) {
+                // Auto-create the engine using the factory
+                var factory = TemplateEngineFactory.get(viewEngine);
+                if (factory != null) {
+                    engine(viewEngine, factory.create(viewsPath));
+                }
+            }
+        } else {
+            // Generic setting storage
+            settings.put(setting, value);
+        }
+        return this;
+    }
+    
+    /**
+     * Get application setting.
+     * <p>
+     * Express: app.get('view engine')
+     * 
+     * @param setting Setting name
+     * @return Setting value (empty if not set)
+     */
+    @Override
+    public java.util.Optional<Object> get(String setting) {
+        if ("view engine".equals(setting)) {
+            return java.util.Optional.ofNullable(viewEngine);
+        }
+        return java.util.Optional.ofNullable(settings.get(setting));
+    }
+    
     // ========== WebSocket convenience ==========
 
     /**
@@ -292,6 +407,8 @@ public class Roya implements Handler, Application {
                     router.any((req, res) -> {
                         Request royaReq = new RequestImpl(req, services);
                         Response royaRes = new ResponseImpl(res, objectMapper);
+                        ((ResponseImpl) royaRes).setRequest(royaReq); // Pair request/response
+                        ((ResponseImpl) royaRes).setApp(this); // Set app for template engine access
                         try {
                             // 1) middleware (Morgan logs here)
                             pipeline.execute(royaReq, royaRes);

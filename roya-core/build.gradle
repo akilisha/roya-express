@@ -18,6 +18,10 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
 
+    // Template engine - Handlebars
+    implementation("com.github.jknack:handlebars:${handlebarsVersion}")
+    implementation("com.github.jknack:handlebars-jackson2:${handlebarsVersion}")
+
     // Helidon Health
     implementation "io.helidon.health:helidon-health:${helidonVersion}"
     implementation "io.helidon.health:helidon-health-checks:${helidonVersion}"

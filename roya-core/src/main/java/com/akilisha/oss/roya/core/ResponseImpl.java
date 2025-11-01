@@ -1,9 +1,12 @@
 package com.akilisha.oss.roya.core;
 
+import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.api.Cookie;
 import com.akilisha.oss.roya.api.FileSendOptions;
 import com.akilisha.oss.roya.api.JsonStream;
+import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
+import com.akilisha.oss.roya.api.TemplateEngine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.http.HeaderNames;
 import io.helidon.http.Status;
@@ -27,6 +30,8 @@ public class ResponseImpl implements Response {
 
     private final ServerResponse helidonResponse;
     private final ObjectMapper objectMapper;
+    private Roya app; // For accessing template engines
+    private Request currentRequest; // Set when response is paired with request
     private int statusCode = 200;
     private boolean sent = false;
 
@@ -36,6 +41,20 @@ public class ResponseImpl implements Response {
     ) {
         this.helidonResponse = helidonResponse;
         this.objectMapper = objectMapper;
+    }
+    
+    /**
+     * Set the current request (called by framework when pairing request/response).
+     */
+    public void setRequest(Request req) {
+        this.currentRequest = req;
+    }
+    
+    /**
+     * Set the app instance (called by framework for template engine access).
+     */
+    public void setApp(Roya app) {
+        this.app = app;
     }
 
     @Override
@@ -297,10 +316,20 @@ public class ResponseImpl implements Response {
 
     @Override
     public void render(String template, Object data) {
-        // TODO: Implement template rendering
-        throw new UnsupportedOperationException(
-                "Template rendering not yet implemented"
-        );
+        if (sent) {
+            throw new IllegalStateException("Response already sent");
+        }
+        
+        if (app == null || app.getTemplateEngine() == null) {
+            throw new IllegalStateException("No template engine configured. Call app.engine() or app.useHandlebars() first.");
+        }
+        
+        try {
+            sent = true;
+            app.getTemplateEngine().render(template, data, currentRequest, this);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to render template: " + template, e);
+        }
     }
 
     @Override

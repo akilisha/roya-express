@@ -59,6 +59,29 @@ public class MetricsDemo {
                 }
                 return this;
             }
+            
+            @Override
+            public com.akilisha.oss.roya.api.plugin.Application engine(String viewEngineName, com.akilisha.oss.roya.api.TemplateEngine engine) {
+                app.engine(viewEngineName, engine);
+                return this;
+            }
+            
+            @Override
+            public com.akilisha.oss.roya.api.plugin.Application view(com.akilisha.oss.roya.api.ViewOptions options) {
+                app.view(options);
+                return this;
+            }
+            
+            @Override
+            public com.akilisha.oss.roya.api.plugin.Application set(String setting, Object value) {
+                app.set(setting, value);
+                return this;
+            }
+            
+            @Override
+            public java.util.Optional<Object> get(String setting) {
+                return app.get(setting);
+            }
         });
 
         System.out.println("╔══════════════════════════════════════════════════════════╗");
