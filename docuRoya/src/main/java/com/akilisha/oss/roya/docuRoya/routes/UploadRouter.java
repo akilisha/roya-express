@@ -49,7 +49,7 @@ public class UploadRouter {
             String key = "uploads/" + UUID.randomUUID() + "/" + fileName;
 
             var storage = req.get(ObjectStorage.class);
-            String etag = storage.put("docuRoya", key, content, contentType, Map.of(
+            String etag = storage.put("ducuroya", key, content, contentType, Map.of(
                 "uploadedBy", user.id()
             ));
 
@@ -67,7 +67,7 @@ public class UploadRouter {
             long ttl = Long.parseLong(req.query().get("ttl").orElse("3600")); // 1 hour default
 
             var storage = req.get(ObjectStorage.class);
-            URL url = storage.presignedGet("docuRoya", key, Duration.ofSeconds(ttl));
+            URL url = storage.presignedGet("ducuroya", key, Duration.ofSeconds(ttl));
 
             res.json(Map.of(
                 "url", url.toString(),
@@ -88,7 +88,7 @@ public class UploadRouter {
             String key = "articles/" + articleId + "/" + UUID.randomUUID() + "/" + fileName;
 
             var storage = req.get(ObjectStorage.class);
-            storage.put("docuRoya", key, content, contentType, Map.of(
+            storage.put("ducuroya", key, content, contentType, Map.of(
                 "articleId", articleId,
                 "uploadedBy", user.id()
             ));

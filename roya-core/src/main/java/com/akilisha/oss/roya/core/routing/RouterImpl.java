@@ -9,14 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Router implementation.
+ * Router implementation using tree-based routing.
  *
- * Maintains a list of routes and matches incoming requests against them.
- * Routes are matched in registration order (Express behavior).
+ * Routes are organized in a tree: Method → Segments → Handler
+ * Uses depth-first search for O(depth) matching instead of O(n).
  */
 public class RouterImpl implements Router {
 
-    private final List<Route> routes = new ArrayList<>();
+    private final RouteTree routeTree = new RouteTree();
+    // Keep legacy routes list for middleware (no method/path)
+    private final List<Route> middlewareRoutes = new ArrayList<>();
 
     /**
      * Create a new router.
@@ -28,14 +30,14 @@ public class RouterImpl implements Router {
     @Override
     public Router use(Handler handler) {
         // Middleware with no path - matches all requests
-        routes.add(createRoute(null, null, handler));
+        middlewareRoutes.add(createRoute(null, null, handler));
         return this;
     }
 
     @Override
     public Router use(String path, Handler handler) {
         // Middleware with path prefix - match if path starts with prefix
-        routes.add(createRoute(null, path, handler));
+        middlewareRoutes.add(createRoute(null, path, handler));
         return this;
     }
 
@@ -71,7 +73,7 @@ public class RouterImpl implements Router {
             }
         };
 
-        routes.add(createRoute(null, mountPath, wrapper));
+        middlewareRoutes.add(createRoute(null, mountPath, wrapper));
         return this;
     }
 
@@ -80,9 +82,8 @@ public class RouterImpl implements Router {
         if (handlers.length == 0) {
             return this;
         }
-        // Chain handlers together - each calls next() to invoke the next handler
         Handler chainedHandler = chainHandlers(handlers);
-        routes.add(createRoute("GET", path, chainedHandler));
+        routeTree.addRoute("GET", path, chainedHandler);
         return this;
     }
 
@@ -91,9 +92,8 @@ public class RouterImpl implements Router {
         if (handlers.length == 0) {
             return this;
         }
-        // Chain handlers together - each calls next() to invoke the next handler
         Handler chainedHandler = chainHandlers(handlers);
-        routes.add(createRoute("POST", path, chainedHandler));
+        routeTree.addRoute("POST", path, chainedHandler);
         return this;
     }
 
@@ -103,7 +103,7 @@ public class RouterImpl implements Router {
             return this;
         }
         Handler chainedHandler = chainHandlers(handlers);
-        routes.add(createRoute("PUT", path, chainedHandler));
+        routeTree.addRoute("PUT", path, chainedHandler);
         return this;
     }
 
@@ -113,7 +113,7 @@ public class RouterImpl implements Router {
             return this;
         }
         Handler chainedHandler = chainHandlers(handlers);
-        routes.add(createRoute("DELETE", path, chainedHandler));
+        routeTree.addRoute("DELETE", path, chainedHandler);
         return this;
     }
 
@@ -123,20 +123,20 @@ public class RouterImpl implements Router {
             return this;
         }
         Handler chainedHandler = chainHandlers(handlers);
-        routes.add(createRoute("PATCH", path, chainedHandler));
+        routeTree.addRoute("PATCH", path, chainedHandler);
         return this;
     }
 
     @Override
     public Router all(String path, Handler... handlers) {
         for (Handler handler : handlers) {
-            routes.add(createRoute(null, path, handler));
+            routeTree.addRoute(null, path, handler); // null = all methods
         }
         return this;
     }
 
     /**
-     * Handle incoming request by matching against routes.
+     * Handle incoming request by matching against routes using tree-based search.
      *
      * This is the Handler interface implementation - makes routers composable.
      */
@@ -145,35 +145,39 @@ public class RouterImpl implements Router {
         String method = req.method();
         String path = req.path();
 
-        // Track whether any route matched
-        boolean routeMatched = false;
-
-        // Try to match routes in order
-        for (Route route : routes) {
-            RouteMatch match = route.match(method, path);
-
+        // First, try middleware (path-prefix matching)
+        boolean middlewareMatched = false;
+        for (Route route : middlewareRoutes) {
+            RouteMatch match = route.match(null, path); // Middleware has no method constraint
             if (match != null) {
-                routeMatched = true;
-
-                // Found a match! Set path parameters
-                if (!match.params().isEmpty()) {
-                    req.setParams(match.params());
-                }
-
-                // Execute the route's handler
+                middlewareMatched = true;
                 route.handler().handle(req, res, next);
-
-                // If handler sent response, stop here
-                // Otherwise continue to next route in the loop
                 if (res.isFinished()) {
                     return;
                 }
             }
         }
 
+        // Then, try tree-based route matching
+        RouteTree.MatchResult match = routeTree.match(method, path);
+        
+        if (match != null) {
+            // Found a match! Set path parameters
+            if (!match.getParams().isEmpty()) {
+                req.setParams(match.getParams());
+            }
+
+            // Execute handlers (they're already chained)
+            List<Handler> handlers = match.getHandlers();
+            if (!handlers.isEmpty()) {
+                // Handlers are already chained, execute first one
+                handlers.get(0).handle(req, res, next);
+                return;
+            }
+        }
+
         // Only call outer next() if NO routes matched (Express.js behavior)
-        // This allows outer middleware to handle 404s
-        if (!routeMatched) {
+        if (!middlewareMatched && match == null) {
             next.handle(req, res);
         }
     }
@@ -244,14 +248,16 @@ public class RouterImpl implements Router {
 
             chain = (req, res, next) -> {
                 // Create a next that invokes the next handler in chain
+                // When the chain ends, DON'T call outer next - the handler already sent response
                 Next chainNext = new Next() {
                     @Override
                     public void handle(Request r, Response s) throws Exception {
-                        nextInChain.handle(r, s, next);
+                        nextInChain.handle(r, s, this); // Pass 'this' not outer next
                     }
 
                     @Override
                     public void error(Exception error, Request r, Response s) {
+                        // Errors should propagate to outer next
                         next.error(error, r, s);
                     }
                 };

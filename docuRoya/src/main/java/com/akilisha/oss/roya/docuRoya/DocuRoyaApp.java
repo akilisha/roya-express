@@ -77,7 +77,9 @@ public class DocuRoyaApp {
         new AuthPlugin().register(services);
 
         // Metrics: Prometheus
-        new MetricsPlugin().register(services);
+        var metricsPlugin = new MetricsPlugin();
+        metricsPlugin.register(services);
+        metricsPlugin.setup(app);  // Setup HTTP metrics middleware
 
         // Cache: FFM-based caching
         new CachePlugin().register(services);
@@ -95,13 +97,6 @@ public class DocuRoyaApp {
 
         // Health endpoints (demonstrates Helidon Health)
         app.get("/health", (req, res, next) -> res.json(java.util.Map.of("status", "ok")));
-
-        // Metrics endpoint (demonstrates Metrics plugin)
-        app.get("/metrics", (req, res, next) -> {
-            var metrics = req.get(com.akilisha.oss.roya.plugins.metrics.Metrics.class);
-            res.type("text/plain");
-            res.send(metrics.prometheus());
-        });
 
         // API routes
         new AuthRouter(app).register();

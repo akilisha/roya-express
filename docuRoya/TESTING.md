@@ -432,7 +432,7 @@ You should see output like:
 ✓ EmailPlugin: Starting
 ✓ AIPlugin: Starting
 ✓ ObjectStoragePlugin: Starting
-DocuRoya running on http://localhost:3000
+DocuRoya running on http://localhost:3003
 Features: Database ✅ Auth ✅ AI ✅ Email ✅ Cache ✅ Object Storage ✅ Metrics ✅
 ```
 
@@ -441,7 +441,7 @@ Features: Database ✅ Auth ✅ AI ✅ Email ✅ Cache ✅ Object Storage ✅ Me
 ### Health Check
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:3003/health
 ```
 
 Expected: `{"status":"ok"}`
@@ -449,7 +449,7 @@ Expected: `{"status":"ok"}`
 ### Register a User
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/register \
+curl -X POST http://localhost:3003/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "alice@example.com",
@@ -463,7 +463,7 @@ Expected: JSON with `user`, `token`, and `refreshToken`.
 ### Login
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/login \
+curl -X POST http://localhost:3003/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "alice@example.com",
@@ -478,7 +478,7 @@ Save the `token` from the response.
 ```bash
 TOKEN="<token-from-login>"
 
-curl -X POST http://localhost:3000/api/articles \
+curl -X POST http://localhost:3003/api/articles \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
@@ -491,14 +491,14 @@ curl -X POST http://localhost:3000/api/articles \
 ### List Articles
 
 ```bash
-curl http://localhost:3000/api/articles
+curl http://localhost:3003/api/articles
 ```
 
 ### Get Article by ID
 
 ```bash
 ARTICLE_ID="<uuid-from-create>"
-curl http://localhost:3000/api/articles/$ARTICLE_ID
+curl http://localhost:3003/api/articles/$ARTICLE_ID
 ```
 
 ### Search (AI/RAG)
@@ -506,7 +506,7 @@ curl http://localhost:3000/api/articles/$ARTICLE_ID
 Requires `OPENAI_API_KEY` and Qdrant running:
 
 ```bash
-curl -X POST http://localhost:3000/api/search \
+curl -X POST http://localhost:3003/api/search \
   -H "Content-Type: application/json" \
   -d '{
     "query": "How does authentication work in Roya?"
@@ -522,7 +522,7 @@ TOKEN="<token-from-login>"
 echo "Hello, DocuRoya!" > test.txt
 CONTENT=$(base64 -i test.txt)
 
-curl -X POST http://localhost:3000/api/upload \
+curl -X POST http://localhost:3003/api/upload \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d "{
@@ -535,7 +535,7 @@ curl -X POST http://localhost:3000/api/upload \
 ### View Metrics
 
 ```bash
-curl http://localhost:3000/metrics
+curl http://localhost:3003/metrics
 ```
 
 Expected: Prometheus-formatted metrics.
@@ -690,6 +690,39 @@ docker exec roya-postgres psql -U postgres -d docuRoya -c '\dt'
 ./gradlew :docuRoya:run
 ```
 
+## Testing Status Summary
+
+### ✅ Fully Tested
+- **Core Framework**: Tree routing, middleware chain, body parsing
+- **Database Plugin**: Migrations, JOOQ generation, CRUD operations
+- **Auth Plugin**: Registration, login, protected routes
+- **Basic Endpoints**: Article CRUD, search
+
+### ⚠️ Partially Tested
+- **Cache Plugin**: Used in `/hot` endpoint but cache behavior not verified
+- **Email Plugin**: Registration sends email but delivery not confirmed
+- **Metrics Plugin**: Endpoint works but metrics data not verified
+- **AI Plugin**: RAG search works but chat, summarize, caching not tested
+- **Object Storage**: Upload works but presigned URLs, listing, multipart not tested
+
+### ❌ Not Yet Implemented/Tested
+- **WebSocket**: Real-time collaboration (commented as "next phase")
+- **SSE**: Live notifications stream (commented as "next phase")
+- **Client Streaming**: Progressive data loading
+- **Advanced Object Storage**: Multipart upload, presigned upload URLs
+- **Automated Tests**: Unit tests, integration tests, E2E tests
+
+### 📋 Detailed Testing Plan
+
+See `docuRoya/TESTING_PLAN.md` for comprehensive testing requirements covering:
+- Explicit cache verification
+- Email delivery confirmation
+- Metrics data validation
+- AI plugin full feature set
+- Object storage advanced operations
+- WebSocket and SSE (when implemented)
+- Load testing and benchmarking
+
 ## Next Steps
 
 Once the app is running and basic tests pass:
@@ -699,6 +732,7 @@ Once the app is running and basic tests pass:
 3. **Load Testing**: Use k6 or similar to test under load
 4. **Real-time Features**: Add WebSocket endpoints for collaborative editing
 5. **SSE**: Add server-sent events for live notifications
+6. **Complete Testing**: Follow `TESTING_PLAN.md` to verify all features
 
 ## Contributing
 
@@ -708,4 +742,5 @@ When adding new features to DocuRoya:
 2. Regenerate JOOQ classes: `./gradlew :docuRoya:jooqCodegen`
 3. Update this testing guide if setup steps change
 4. Document new endpoints in this guide
+5. Add test cases to `TESTING_PLAN.md`
 

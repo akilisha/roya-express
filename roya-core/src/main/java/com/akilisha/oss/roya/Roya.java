@@ -2,12 +2,14 @@ package com.akilisha.oss.roya;
 
 import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.api.pipeline.MiddlewarePipeline;
+import com.akilisha.oss.roya.api.plugin.Application;
 import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.core.RequestImpl;
 import com.akilisha.oss.roya.core.ResponseImpl;
 import com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.websocket.WsRouting;
 import io.helidon.websocket.WsListener;
@@ -24,11 +26,11 @@ import java.util.Map;
  * <p>
  * This is the Express-compatible API for building web applications.
  */
-public class Roya implements Handler {
+public class Roya implements Handler, Application {
 
     private final MiddlewarePipeline pipeline = new MiddlewarePipeline();
     private final Router router = RouterImpl.create();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final Services services = new ServiceRegistryImpl();
     // WebSocket registration disabled to maintain compatibility across Helidon versions
     private final Map<String, WsListener> wsRegistrations = new LinkedHashMap<>();
@@ -76,7 +78,8 @@ public class Roya implements Handler {
      * @param handler Middleware handler
      * @return this (for chaining)
      */
-    public Roya use(Handler handler) {
+    @Override
+    public Application use(Handler handler) {
         pipeline.use(handler);
         return this;
     }
@@ -194,6 +197,29 @@ public class Roya implements Handler {
      */
     public Roya all(String path, Handler... handlers) {
         router.all(path, handlers);
+        return this;
+    }
+
+    /**
+     * Add a route handler (for Application interface).
+     * <p>
+     * Application interface method: app.route(method, path, handlers)
+     *
+     * @param method   HTTP method
+     * @param path     Route path
+     * @param handlers Route handlers
+     * @return this (for chaining)
+     */
+    @Override
+    public Application route(String method, String path, Handler... handlers) {
+        switch (method.toUpperCase()) {
+            case "GET" -> get(path, handlers);
+            case "POST" -> post(path, handlers);
+            case "PUT" -> put(path, handlers);
+            case "DELETE" -> delete(path, handlers);
+            case "PATCH" -> patch(path, handlers);
+            default -> all(path, handlers);
+        }
         return this;
     }
 

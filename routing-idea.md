@@ -1,4 +1,4 @@
-So let's say you have the following paths to mao for your application:
+So let's say you have the following paths to map for your application:
 
 GET     /
 GET     /hello
