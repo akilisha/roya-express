@@ -2,7 +2,6 @@ package com.akilisha.oss.roya.core.middleware;
 
 import com.akilisha.oss.roya.api.Handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.util.Map;
@@ -19,9 +18,6 @@ import java.util.Optional;
 public final class Json {
 
     private static final String BODY_KEY = "body";
-    private static final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     /**
      * Create JSON body parser Handler.
@@ -53,6 +49,7 @@ public final class Json {
                 if (bodyText == null || bodyText.isEmpty()) {
                     req.set(BODY_KEY, Map.of());
                 } else {
+                    ObjectMapper objectMapper = req.get(ObjectMapper.class);
                     Object parsed = objectMapper.readValue(bodyText, Object.class);
                     req.set(BODY_KEY, parsed);
                 }

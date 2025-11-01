@@ -3,7 +3,6 @@ package com.akilisha.oss.roya.core;
 import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.api.plugin.Services;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.helidon.webserver.http.ServerRequest;
 
 import java.io.InputStream;
@@ -105,13 +104,9 @@ public class RequestImpl implements Request {
         return helidonRequest.content().inputStream();
     }
 
-    private static final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private static final String BODY_KEY = "body";
 
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T body(Class<T> type) {
         Object parsedBody = get(BODY_KEY);
 
@@ -121,6 +116,7 @@ public class RequestImpl implements Request {
                 String bodyText = bodyText();
                 if (bodyText != null && !bodyText.isEmpty()) {
                     try {
+                        ObjectMapper objectMapper = get(ObjectMapper.class);
                         parsedBody = objectMapper.readValue(bodyText, type);
                         set(BODY_KEY, parsedBody); // Cache it
                         return type.cast(parsedBody);
@@ -139,6 +135,7 @@ public class RequestImpl implements Request {
 
         // Try to convert using Jackson (e.g., Map -> Record/POJO)
         try {
+            ObjectMapper objectMapper = get(ObjectMapper.class);
             return objectMapper.convertValue(parsedBody, type);
         } catch (Exception e) {
             throw new ClassCastException(

@@ -4,7 +4,6 @@ import com.akilisha.oss.roya.api.Handler;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,7 +135,10 @@ public final class Morgan {
             long duration = System.currentTimeMillis() - start;
             if (structured) {
                 Map<String,Object> evt = buildStructuredEvent(req, res, duration, "x-request-id", DEFAULT_REDACT);
-                try { LOG.info(JSON.writeValueAsString(evt)); } catch (Exception ignored) {}
+                try {
+                    ObjectMapper objectMapper = req.get(ObjectMapper.class);
+                    LOG.info(objectMapper.writeValueAsString(evt));
+                } catch (Exception ignored) {}
             } else {
                 LOG.info(String.format("%s %s %s/%d %dms", req.ip(), req.method(), req.path(), res.getStatus(), duration));
             }
@@ -154,7 +156,10 @@ public final class Morgan {
             long duration = System.currentTimeMillis() - start;
             if (structured) {
                 Map<String,Object> evt = buildStructuredEvent(req, res, duration, "x-request-id", DEFAULT_REDACT);
-                try { LOG.info(JSON.writeValueAsString(evt)); } catch (Exception ignored) {}
+                try {
+                    ObjectMapper objectMapper = req.get(ObjectMapper.class);
+                    LOG.info(objectMapper.writeValueAsString(evt));
+                } catch (Exception ignored) {}
             } else {
                 int status = res.getStatus();
                 String statusColor = status >= 500 ? "🔴" : status >= 400 ? "🟡" : "🟢";
