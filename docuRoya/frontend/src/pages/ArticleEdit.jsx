@@ -8,7 +8,7 @@ export function ArticleEdit({ id, user }) {
         return null;
     }
 
-    const isNew = id === 'new';
+    const isNew = id === 'new' || !id;
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [tags, setTags] = useState('');
@@ -17,10 +17,10 @@ export function ArticleEdit({ id, user }) {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (!isNew) {
+        if (!isNew && id) {
             loadArticle();
         }
-    }, [id]);
+    }, [id, isNew]);
 
     async function loadArticle() {
         setLoading(true);

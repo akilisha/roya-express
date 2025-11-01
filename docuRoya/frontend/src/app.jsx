@@ -43,9 +43,9 @@ export function App() {
                 <Login path="/login" onLogin={handleLogin} user={user} />
                 <Register path="/register" onLogin={handleLogin} user={user} />
                 <Articles path="/articles" user={user} />
-                <ArticleView path="/articles/:id" user={user} />
-                <ArticleEdit path="/articles/:id/edit" user={user} />
                 <ArticleEdit path="/articles/new" user={user} />
+                <ArticleEdit path="/articles/:id/edit" user={user} />
+                <ArticleView path="/articles/:id" user={user} />
                 <Upload path="/upload" user={user} />
                 <Chat path="/chat" user={user} />
                 <Testing path="/testing" user={user} />
