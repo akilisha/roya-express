@@ -156,10 +156,10 @@ export const uploadAPI = {
 
 // Chat API
 export const chatAPI = {
-    async sendMessage(sessionId, message) {
+    async sendMessage(message) {
         return fetchJSON(`${API_BASE}/chat/message`, {
             method: 'POST',
-            body: JSON.stringify({ session: sessionId || 'default', message })
+            body: JSON.stringify({ message })
         });
     },
 

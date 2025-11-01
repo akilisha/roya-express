@@ -31,8 +31,8 @@ public class ResponseImpl implements Response {
     private boolean sent = false;
 
     public ResponseImpl(
-        ServerResponse helidonResponse,
-        ObjectMapper objectMapper
+            ServerResponse helidonResponse,
+            ObjectMapper objectMapper
     ) {
         this.helidonResponse = helidonResponse;
         this.objectMapper = objectMapper;
@@ -150,19 +150,19 @@ public class ResponseImpl implements Response {
             // Set cache headers if specified
             if (options.maxAge() != null) {
                 header(
-                    "Cache-Control",
-                    "public, max-age=" + options.maxAge().toSeconds()
+                        "Cache-Control",
+                        "public, max-age=" + options.maxAge().toSeconds()
                 );
             }
 
             // Set last modified
             if (options.lastModified()) {
                 ZonedDateTime lastModified = Files.getLastModifiedTime(filePath)
-                    .toInstant()
-                    .atZone(java.time.ZoneId.of("GMT"));
+                        .toInstant()
+                        .atZone(java.time.ZoneId.of("GMT"));
                 header(
-                    "Last-Modified",
-                    lastModified.format(DateTimeFormatter.RFC_1123_DATE_TIME)
+                        "Last-Modified",
+                        lastModified.format(DateTimeFormatter.RFC_1123_DATE_TIME)
                 );
             }
 
@@ -178,8 +178,8 @@ public class ResponseImpl implements Response {
         if (sent) return;
 
         header(
-            "Content-Disposition",
-            "attachment; filename=\"" + filename + "\""
+                "Content-Disposition",
+                "attachment; filename=\"" + filename + "\""
         );
         sendFile(path);
     }
@@ -221,8 +221,8 @@ public class ResponseImpl implements Response {
 
             if (opts.maxAge() != null) {
                 cookieValue
-                    .append("; Max-Age=")
-                    .append(opts.maxAge().toSeconds());
+                        .append("; Max-Age=")
+                        .append(opts.maxAge().toSeconds());
             }
 
             if (opts.domain() != null) {
@@ -243,8 +243,8 @@ public class ResponseImpl implements Response {
 
             if (opts.sameSite() != null) {
                 cookieValue
-                    .append("; SameSite=")
-                    .append(opts.sameSite().name());
+                        .append("; SameSite=")
+                        .append(opts.sameSite().name());
             }
         }
 
@@ -255,19 +255,19 @@ public class ResponseImpl implements Response {
     @Override
     public Response clearCookie(String name) {
         return cookie(
-            new Cookie(
-                name,
-                "",
-                new Cookie.Options(
-                    Duration.ZERO,
-                    null,
-                    "/",
-                    null,
-                    false,
-                    false,
-                    null
+                new Cookie(
+                        name,
+                        "",
+                        new Cookie.Options(
+                                Duration.ZERO,
+                                null,
+                                "/",
+                                null,
+                                false,
+                                false,
+                                null
+                        )
                 )
-            )
         );
     }
 
@@ -299,7 +299,7 @@ public class ResponseImpl implements Response {
     public void render(String template, Object data) {
         // TODO: Implement template rendering
         throw new UnsupportedOperationException(
-            "Template rendering not yet implemented"
+                "Template rendering not yet implemented"
         );
     }
 
@@ -311,6 +311,52 @@ public class ResponseImpl implements Response {
     @Override
     public boolean isFinished() {
         return sent;
+    }
+
+    @Override
+    public AutoCloseable sse() {
+        if (sent) {
+            throw new IllegalStateException("Response already sent");
+        }
+        sent = true;
+
+        // Set SSE headers (standard HTTP spec)
+        header("Content-Type", "text/event-stream");
+        header("Cache-Control", "no-cache");
+        header("Connection", "keep-alive");
+
+        // Return SSE emitter for writing events
+        return new SSEEmitterImpl(helidonResponse.outputStream());
+    }
+
+    /**
+     * SSE emitter implementation for writing standard SSE format.
+     */
+    private static class SSEEmitterImpl implements com.akilisha.oss.roya.api.SSEEmitter {
+        private final OutputStream out;
+
+        SSEEmitterImpl(OutputStream out) {
+            this.out = out;
+        }
+
+        @Override
+        public com.akilisha.oss.roya.api.SSEEmitter emit(String data) throws IOException {
+            out.write(("data: " + data + "\n\n").getBytes());
+            out.flush();
+            return this;
+        }
+
+        @Override
+        public com.akilisha.oss.roya.api.SSEEmitter emit(String name, String data) throws IOException {
+            out.write(("event: " + name + "\ndata: " + data + "\n\n").getBytes());
+            out.flush();
+            return this;
+        }
+
+        @Override
+        public void close() throws IOException {
+            out.close();
+        }
     }
 
     // Inner class for JsonStream implementation

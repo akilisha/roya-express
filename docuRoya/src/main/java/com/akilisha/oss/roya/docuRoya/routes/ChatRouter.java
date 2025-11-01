@@ -54,11 +54,27 @@ public class ChatRouter {
     }
 
     public void register() {
+        // SSE endpoint: Push chat message count to clients
+        app.sse("/api/chat/sse", (emitter) -> {
+            // Keep connection alive and emit message count every 2 seconds
+            // Connection closes naturally when client disconnects (IOException)
+            try {
+                while (true) {
+                    int total = totalMessages.get();
+                    emitter.emit(String.valueOf(total));
+                    Thread.sleep(2000);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (java.io.IOException e) {
+                // Client disconnected - connection closed
+            }
+        });
+
         // Send message to chat (simulates user action)
         app.post("/api/chat/message", auth.required(), (Request req, Response res, Next next) -> {
             User user = (User) req.get("user");
             Map<String, Object> body = req.body(Map.class);
-            String sessionId = (String) body.getOrDefault("session", "default");
             String message = (String) body.get("message");
 
             if (message == null) {
@@ -66,7 +82,8 @@ public class ChatRouter {
                 return;
             }
 
-            // Update session message count
+            // Create session per user (use user ID as session key)
+            String sessionId = user.id();
             ChatSession session = sessions.computeIfAbsent(sessionId, id -> new ChatSession(id, user));
             session.messageCount++;
             totalMessages.incrementAndGet();
@@ -138,6 +155,9 @@ public class ChatRouter {
         @Override
         public void onMessage(WsSession session, String text, boolean last) {
             try {
+                // Increment global message counter for SSE
+                totalMessages.incrementAndGet();
+
                 // Echo the message to all connected clients
                 String connId = String.valueOf(session.hashCode());
                 String echoMsg = String.format("{\"type\":\"echo\",\"message\":\"%s\",\"from\":\"%s\"}",

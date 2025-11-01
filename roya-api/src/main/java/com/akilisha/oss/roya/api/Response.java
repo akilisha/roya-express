@@ -423,4 +423,21 @@ public interface Response {
      * @return true if response complete, false otherwise
      */
     boolean isFinished();
+
+    // ========== SSE Streaming ==========
+
+    /**
+     * Start Server-Sent Events streaming.
+     *
+     * <p>This is a Roya extension for real-time event streaming.
+     * Sets appropriate headers and commits the response.</p>
+     *
+     * <p>The connection remains open for streaming events.</p>
+     *
+     * @return SSEEmitter for emitting SSE events
+     * @throws IllegalStateException if response already sent
+     */
+    default AutoCloseable sse() {
+        throw new UnsupportedOperationException("SSE not implemented");
+    }
 }

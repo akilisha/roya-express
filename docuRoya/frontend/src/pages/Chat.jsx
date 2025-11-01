@@ -37,7 +37,7 @@ export function Chat({ user }) {
             return;
         }
 
-        wsRef.current = chatAPI.connectWebSocket(
+        const ws = chatAPI.connectWebSocket(
             (data) => {
                 console.log('Received:', data);
                 setMessages(prev => [...prev, data]);
@@ -49,15 +49,20 @@ export function Chat({ user }) {
             }
         );
 
-        wsRef.current.onopen = () => {
+        // Override connectWebSocket's onopen and onclose
+        ws.onopen = () => {
             setConnected(true);
             setError('');
+            console.log('WebSocket connected!');
         };
 
-        wsRef.current.onclose = () => {
+        ws.onclose = () => {
             setConnected(false);
             wsRef.current = null;
+            console.log('WebSocket disconnected!');
         };
+
+        wsRef.current = ws;
     }
 
     function disconnectWebSocket() {
@@ -73,7 +78,7 @@ export function Chat({ user }) {
         if (!inputMessage.trim()) return;
 
         try {
-            await chatAPI.sendMessage('default', inputMessage);
+            await chatAPI.sendMessage(inputMessage);
             setInputMessage('');
             loadStats(); // Refresh stats after sending
         } catch (err) {
@@ -222,3 +227,4 @@ export function Chat({ user }) {
         </div>
     );
 }
+

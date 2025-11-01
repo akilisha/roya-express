@@ -59,9 +59,9 @@ router.post("/api/users/:uid/address/:aid", handler);
 1. **Parse the path** into segments: `["api", "users", "(.*?)", "address", "(.*)"]`
 2. **Extract parameter names**: `["uid", "aid"]`
 3. **Traverse/build the tree**:
-   - Start at method root (POST)
-   - For each segment: get or create child node
-   - Store param names on parameter nodes
+    - Start at method root (POST)
+    - For each segment: get or create child node
+    - Store param names on parameter nodes
 4. **Attach handler** to terminal node
 
 ## Route Matching
@@ -75,11 +75,11 @@ GET /api/users/123/address/home
 1. **Split request path** into segments: `["api", "users", "123", "address", "home"]`
 2. **Start DFS** from method root (GET) with `segmentIndex = 0`
 3. **At each node**, prioritize matching order:
-   - **Static nodes first** (more specific)
-   - **Parameter nodes second** (more flexible)
+    - **Static nodes first** (more specific)
+    - **Parameter nodes second** (more flexible)
 4. **When a match is found**:
-   - Capture param values in a map
-   - Continue to next segment (recursively)
+    - Capture param values in a map
+    - Continue to next segment (recursively)
 5. **When all segments consumed** and node is terminal → **SUCCESS**
 
 ### Special Case: Greedy Parameters
@@ -158,7 +158,7 @@ The main tree structure:
 ```java
 class RouteTree {
     Map<String, RouteNode> methodRoots;  // GET, POST, etc.
-    
+
     void addRoute(String method, String path, Handler handler);
     MatchResult match(String method, String path);
 }
@@ -176,7 +176,7 @@ class MatchResult {
 
 ```java
 private boolean dfsMatch(RouteNode node, List<String> segments, int segmentIndex,
-                        Map<String, String> params, List<Handler> handlers) {
+                         Map<String, String> params, List<Handler> handlers) {
     // Base case: consumed all segments
     if (segmentIndex >= segments.size()) {
         if (node.isTerminal()) {
@@ -185,14 +185,14 @@ private boolean dfsMatch(RouteNode node, List<String> segments, int segmentIndex
         }
         return false;  // Dead end
     }
-    
+
     String segment = segments.get(segmentIndex);
     List<RouteNode> children = node.getChildren();
-    
+
     // Separate static and param nodes
     List<RouteNode> staticNodes = ...;
     List<RouteNode> paramNodes = ...;
-    
+
     // Try static first (priority)
     for (RouteNode child : staticNodes) {
         if (child.matches(segment, params)) {
@@ -201,7 +201,7 @@ private boolean dfsMatch(RouteNode node, List<String> segments, int segmentIndex
             }
         }
     }
-    
+
     // Try params second
     for (RouteNode child : paramNodes) {
         // Special case: greedy param at end
@@ -215,14 +215,14 @@ private boolean dfsMatch(RouteNode node, List<String> segments, int segmentIndex
             handlers.addAll(child.getHandlers());
             return true;
         }
-        
+
         if (child.matches(segment, params)) {
             if (dfsMatch(child, segments, segmentIndex + 1, params, handlers)) {
                 return true;
             }
         }
     }
-    
+
     return false;  // No match
 }
 ```
@@ -365,6 +365,99 @@ See `roya-core/src/test/java/com/akilisha/oss/roya/core/routing/TreeRouterTest.j
 - Route priority
 - Method-specific routes
 - Deep nesting
+
+## Nested Routing (Mounting)
+
+Roya supports **router mounting** where you can create a separate router and mount it at a specific path. This is useful for organizing related routes.
+
+### Basic Usage
+
+```java
+// Create a nested router
+Router apiRouter = Router.create();
+
+// Add routes to nested router (paths are relative to mount point)
+apiRouter.get("/users", listUsersHandler);
+apiRouter.post("/users", createUserHandler);
+apiRouter.get("/users/:id", getUserHandler);
+
+// Mount the router at /api
+app.use("/api", apiRouter);
+```
+
+**Result**: The nested router's routes become:
+- `GET /api/users` → `listUsersHandler`
+- `POST /api/users` → `createUserHandler`
+- `GET /api/users/:id` → `getUserHandler`
+
+### How It Works
+
+1. **Path Adjustment**: When a request hits `/api/users/123`, the framework:
+    - Detects that it starts with `/api` (the mount path)
+    - Strips `/api` to get `/users/123`
+    - Wraps the request in a `PathAdjustedRequest` that exposes the adjusted path
+    - Delegates to the nested router
+
+2. **PathAdjustedRequest**: A wrapper that delegates all request operations except `path()`, which returns the adjusted path relative to the mount point.
+
+3. **Middleware Integration**: Mounted routers integrate naturally with the middleware chain.
+
+### Example: Organizing by Feature
+
+```java
+// Main app
+var app = Roya.create();
+
+// Auth router
+Router authRouter = Router.create();
+authRouter.post("/register", registerHandler);
+authRouter.post("/login", loginHandler);
+app.use("/api/auth", authRouter);
+
+// Articles router
+Router articlesRouter = Router.create();
+articlesRouter.get("/", listArticlesHandler);
+articlesRouter.post("/", createArticleHandler);  // Note: path is "/" not "/api/articles"
+articlesRouter.get("/:id", getArticleHandler);
+app.use("/api/articles", articlesRouter);
+
+// Admin router
+Router adminRouter = Router.create();
+adminRouter.use(authMiddleware);  // Middleware specific to admin routes
+adminRouter.get("/dashboard", dashboardHandler);
+adminRouter.delete("/users/:id", deleteUserHandler);
+app.use("/admin", adminRouter);
+```
+
+**Final routes:**
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/articles`
+- `POST /api/articles`
+- `GET /api/articles/:id`
+- `GET /admin/dashboard` (protected by authMiddleware)
+- `DELETE /admin/users/:id` (protected by authMiddleware)
+
+### Current Status
+
+✅ **Implemented**: The nested routing mechanism is fully implemented and tested.
+
+⚠️ **Not Yet Used**: DocuRoya currently registers all routes directly on the app instance (`app.post("/api/auth/register", ...)`) instead of using nested routers. This is perfectly valid and works fine, but nested routers provide better organization for larger applications.
+
+### When to Use Nested Routers
+
+**Use nested routers when:**
+- You want to group related routes together
+- You need feature-specific middleware (e.g., `/admin` routes need admin auth)
+- You're building a modular application where features can be mounted/unmounted
+- You want cleaner code organization
+
+**You can skip nested routers when:**
+- Your app is small (< 20 routes)
+- All routes share the same middleware
+- You prefer the simpler flat structure
+
+**Best of Both Worlds**: You can mix approaches! Mount some routers and register some routes directly on the app.
 
 ## Future Enhancements
 

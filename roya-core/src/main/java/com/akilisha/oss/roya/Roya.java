@@ -73,6 +73,37 @@ public class Roya implements Handler, Application {
         return this;
     }
 
+    // ========== SSE convenience ==========
+
+    /**
+     * Register a Server-Sent Events endpoint.
+     *
+     * <p>The listener receives write-only access via an SSE emitter.
+     * No Request/Response objects needed - just emit events.</p>
+     *
+     * <p>Example:</p>
+     * <pre>{@code
+     * app.sse("/events", emitter -> {
+     *     emitter.emit("hello")
+     *         .emit("world");
+     * });
+     * }</pre>
+     *
+     * @param path Route path
+     * @param listener SSE listener with emitter
+     * @return this (for chaining)
+     */
+    public Roya sse(String path, com.akilisha.oss.roya.api.SSEListener listener) {
+        router.get(path, (Request req, Response res, Next next) -> {
+            // Framework handles headers and connection setup
+            // User just gets the emitter for writing
+            try (var emitter = res.sse()) {
+                listener.handle((com.akilisha.oss.roya.api.SSEEmitter) emitter);
+            }
+        });
+        return this;
+    }
+
     // ========== Middleware ==========
 
     /**
