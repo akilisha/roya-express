@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.api.plugin;
 
 import com.akilisha.oss.roya.api.Handler;
+import com.akilisha.oss.roya.api.Router;
 import com.akilisha.oss.roya.api.TemplateEngine;
 import com.akilisha.oss.roya.api.ViewOptions;
 
@@ -20,6 +21,17 @@ public interface Application {
      * @return this (for chaining)
      */
     Application use(Handler handler);
+    
+    /**
+     * Mount a nested router at a specific path.
+     *
+     * Express: app.use('/api', router)
+     *
+     * @param path Mount path
+     * @param router Router to mount
+     * @return this (for chaining)
+     */
+    Application use(String path, Router router);
 
     /**
      * Add a route handler.

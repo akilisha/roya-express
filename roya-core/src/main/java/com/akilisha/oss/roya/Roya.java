@@ -245,8 +245,22 @@ public class Roya implements Handler, Application {
      * @return this (for chaining)
      */
     public Roya use(String path, Handler handler) {
-        // TODO: Implement path mounting
-        pipeline.use(handler);
+        router.use(path, handler);
+        return this;
+    }
+    
+    /**
+     * Mount a nested router at a specific path.
+     * <p>
+     * Express: app.use('/api', router)
+     *
+     * @param path   Mount path
+     * @param router Router to mount
+     * @return this (for chaining)
+     */
+    @Override
+    public Application use(String path, Router router) {
+        this.router.use(path, router);
         return this;
     }
 

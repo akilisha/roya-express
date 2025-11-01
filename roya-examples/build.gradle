@@ -76,6 +76,14 @@ tasks.register('runDocsMcp', JavaExec) {
     }
 }
 
+tasks.register('runAllMethodDemo', JavaExec) {
+    group = 'application'
+    description = 'Run All Method Demo showcasing app.all()'
+    mainClass = 'com.akilisha.oss.roya.examples.AllMethodDemo'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+}
+
 // Enable FFM features for Java 23
 tasks.withType(JavaCompile) {
     options.compilerArgs += [

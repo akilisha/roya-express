@@ -1521,6 +1521,98 @@ app.engine("myengine", new MyEngine("views"));
 
 ---
 
+## Nested Router Mounting & Method Routing - ✅ COMPLETE
+
+**Roadmap Reference**: Enhancement to Core Framework  
+**Started**: January 2025  
+**Completed**: January 2025  
+**Team**: Core team
+
+### What We Accomplished
+
+#### Nested Router Mounting
+- ✅ **Application.use(String path, Router)** - Express-compatible API for mounting routers at paths
+- ✅ **Router.use(String path, Router)** - Core mounting mechanism using PathAdjustedRequest
+- ✅ **PathAdjustedRequest** - Wrapper that strips mount path from request context
+- ✅ **Recursive nesting** - Routers can mount routers infinitely deep
+- ✅ **Express-compatible** - Mirrors Express.js `app.use('/api', router)` pattern exactly
+
+#### HTTP Method Routing
+- ✅ **GET, POST, PUT, DELETE, PATCH** - Specific method routes
+- ✅ **app.all()** - Catch-all for unsupported HTTP methods (Express parity)
+- ✅ **Method-specific matching** - Tree-based routing with method fallback
+- ✅ **RouteTree fallback** - Falls back to null method root for `all()` routes
+
+### Design Decisions
+- **PathAdjustedRequest**: Clean separation - nested router sees `/users`, not `/api/users`
+- **Method fallback**: Specific methods checked first, then `null` method routes (app.all)
+- **Express parity**: `app.all()` included for compatibility, though rarely useful in practice
+
+### How Nested Routing Works
+
+1. **Mount a router**: `app.use("/api", router)`
+2. **Request arrives**: `/api/users` 
+3. **Strip mount path**: Nested router receives `/users`
+4. **Match and execute**: Nested router handles `/users` with its routes
+
+**Example**:
+```java
+Router apiRouter = Router.create();
+apiRouter.get("/users", handler1);
+apiRouter.get("/posts", handler2);
+
+app.use("/api", apiRouter);
+// GET /api/users → nested router sees /users ✅
+```
+
+**Deep nesting**:
+```java
+Router v1Router = Router.create();
+Router usersRouter = Router.create();
+usersRouter.get("/:id", handler);
+
+v1Router.use("/users", usersRouter);
+app.use("/api/v1", v1Router);
+// GET /api/v1/users/123 → usersRouter sees /123 ✅
+```
+
+### app.all() Behavior
+
+- **Registration**: Stores routes under `null` method key in RouteTree
+- **Matching**: Used as fallback when specific method route not found
+- **Priority**: Specific routes take precedence over all()
+- **Use case**: Rare - primarily for Express.js compatibility
+
+**Example**:
+```java
+app.get("/health", specificHandler);  // GET /health → specificHandler
+app.all("/health", catchAllHandler);  // POST/PUT/DELETE /health → catchAllHandler
+app.all("/any", catchAllHandler);     // ALL methods /any → catchAllHandler
+```
+
+### Fixes Applied
+- ✅ Fixed `app.use(String path, Handler)` to delegate to router (not pipeline)
+- ✅ Added missing `Application.use(String path, Router)` method
+- ✅ Implemented `app.use(String path, Router)` in Roya class
+- ✅ AllMethodDemo created to showcase app.all() behavior
+
+### Metrics
+- **API Methods**: 2 use methods per interface (Application, Router)
+- **Demos**: 2 (AllMethodDemo, TemplateRenderingDemo)
+- **Lines of Code**: ~150 (mounting implementation + demos)
+
+### Challenges Encountered
+- **Multiple use() overloads**: Method resolution for `use(String, Handler)` vs `use(String, Router)`
+- **Path context preservation**: Needed PathAdjustedRequest to properly strip mount paths
+- **app.all() utility**: Questioned value but kept for Express compatibility
+
+### Lessons Learned
+- **Delegation pattern**: Roya delegates to internal router - clean separation
+- **Nested routers**: PathAdjustedRequest makes nested routing transparent
+- **app.all()**: Express parity vs practical utility - kept for completeness
+
+---
+
 ## Milestone Summary
 
 | Phase | Status | Start Date | Completed Date | Duration |
