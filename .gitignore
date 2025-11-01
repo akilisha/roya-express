@@ -127,3 +127,7 @@ replay_pid*
 /logs/
 /uploads/
 test.txt
+
+# node js stuff
+**/node_modules/
+**/cache/
