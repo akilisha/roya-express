@@ -20,44 +20,134 @@ This document outlines all testing required to verify DocuRoya's functionality a
 | **SSE**                   | ❌ Not Implemented | 0%       | Placeholder in code                                              |
 | **Client Streaming**      | ❌ Not Implemented | 0%       | Not yet added                                                    |
 
+## New Testing Endpoints
+
+DocuRoya now includes a comprehensive `TestingRouter` with dedicated endpoints for testing each feature. These endpoints are available under `/api/test/*` and are designed specifically for verification and benchmarking.
+
+### Cache Testing Endpoints
+
+- `POST /api/test/cache/set` - Store arbitrary data in cache with TTL
+- `GET /api/test/cache/get/:key` - Retrieve cached data (verify hit/miss)
+- `GET /api/test/cache/stats` - Get cache statistics info
+- `DELETE /api/test/cache/invalidate/:key` - Delete cache entry
+
+**Example**:
+```bash
+# Set cache entry
+curl -X POST http://localhost:3003/api/test/cache/set \
+  -H "Content-Type: application/json" \
+  -d '{"key":"test:user:123","value":{"name":"Alice","age":30},"ttl":60}'
+
+# Get cache entry (should be a hit)
+curl http://localhost:3003/api/test/cache/get/test:user:123
+
+# Invalidate cache
+curl -X DELETE http://localhost:3003/api/test/cache/invalidate/test:user:123
+```
+
+### Object Storage Testing Endpoints
+
+- `GET /api/test/storage/list?bucket=ducuroya&prefix=uploads/` - List all objects
+- `DELETE /api/test/storage/delete/:key?bucket=ducuroya` - Delete object
+- `POST /api/test/storage/presigned-put` - Generate presigned PUT URL
+- `GET /api/test/storage/get/:key?bucket=ducuroya` - Get object metadata
+
+### Metrics Testing Endpoints
+
+- `POST /api/test/metrics/counter` - Increment custom counter
+- `POST /api/test/metrics/gauge` - Set gauge value
+- `POST /api/test/metrics/timer` - Record timer duration
+
+**Example**:
+```bash
+# Record custom metric
+curl -X POST http://localhost:3003/api/test/metrics/counter \
+  -H "Content-Type: application/json" \
+  -d '{"name":"test.operations","increment":5}'
+
+# Check metrics
+curl http://localhost:3003/metrics | grep test_operations
+```
+
+### Rate Limiting Testing Endpoints
+
+- `GET /api/test/rate-limit/aggressive` - 10 requests/minute limit
+- `GET /api/test/rate-limit/moderate` - 50 requests/minute limit
+- `GET /api/test/rate-limit/per-ip` - 20 requests/minute per IP
+
+**Example** (test rate limiting):
+```bash
+# Make 11 rapid requests to aggressive endpoint
+for i in {1..11}; do curl http://localhost:3003/api/test/rate-limit/aggressive; done
+
+# Requests 1-10 should succeed (200 OK)
+# Request 11 should return 429 Too Many Requests
+```
+
+### General Testing Endpoints
+
+- `GET /api/test/cors` - Verify CORS headers
+- `GET /api/test/logging` - Verify Morgan structured logging
+- `POST /api/test/echo` - Echo request details
+- `GET /api/test/slow?delay=5000` - Simulate slow response
+- `GET /api/test/error` - Test error handling
+
 ## Detailed Testing Requirements
 
 ### 1. Cache Plugin - Explicit Testing ⚠️
 
-**Current State**: Cache is used in `/api/articles/hot` endpoint, but we haven't verified it's actually working.
+**Current State**: Cache is used in `/api/articles/hot` endpoint, and explicit testing endpoints are now available.
+
+**New Testing Endpoints Available**:
+- Use `/api/test/cache/set` and `/api/test/cache/get/:key` for manual cache operations
+- Use `/api/articles/hot` for implicit cache verification (first DB, second cache)
 
 **Missing Tests**:
 
 1. **Cache Hit Verification**:
    ```bash
-   # First request should hit database, second should hit cache
+   # Using new testing endpoints:
+   curl -X POST http://localhost:3003/api/test/cache/set \
+     -H "Content-Type: application/json" \
+     -d '{"key":"test:data","value":{"message":"Hello"},"ttl":60}'
+   
+   # First request: should be cache hit
+   curl http://localhost:3003/api/test/cache/get/test:data
+   
+   # Using hot articles endpoint:
    curl http://localhost:3003/api/articles/hot
    curl http://localhost:3003/api/articles/hot
-   # Verify cache headers in second response
+   # Second request should be faster
    ```
 
 2. **Cache Expiration**:
    ```bash
-   # Set short TTL (1 minute)
-   # Wait 61 seconds
-   # Verify third request hits database again
+   # Set short TTL (10 seconds for testing)
+   curl -X POST http://localhost:3003/api/test/cache/set \
+     -H "Content-Type: application/json" \
+     -d '{"key":"test:expire","value":"data","ttl":10}'
+   
+   # Wait 11 seconds
+   sleep 11
+   
+   # Get should return cache miss
+   curl http://localhost:3003/api/test/cache/get/test:expire
    ```
 
 3. **Cache Invalidation**:
    ```bash
-   # Add/update article
-   # Verify hot articles cache invalidated
-   # Next request should hit database
+   curl -X POST http://localhost:3003/api/test/cache/set \
+     -H "Content-Type: application/json" \
+     -d '{"key":"test:invalidate","value":"data","ttl":300}'
+   
+   # Invalidate
+   curl -X DELETE http://localhost:3003/api/test/cache/invalidate/test:invalidate
+   
+   # Should now be cache miss
+   curl http://localhost:3003/api/test/cache/get/test:invalidate
    ```
 
-4. **Manual Cache Operations**:
-   ```bash
-   # Store custom cache entry
-   # Retrieve it
-   # Verify serialization/deserialization works
-   ```
-
-5. **Cache Metrics**:
+4. **Cache Metrics**:
    ```bash
    curl http://localhost:3003/metrics | grep cache
    # Should show cache hit/miss ratios, sizes, etc.
@@ -124,7 +214,11 @@ This document outlines all testing required to verify DocuRoya's functionality a
 
 ### 3. Metrics Plugin - Full Testing ⚠️
 
-**Current State**: Metrics endpoint exists but only returns empty output initially.
+**Current State**: Metrics endpoint exists and explicit testing endpoints are now available.
+
+**New Testing Endpoints Available**:
+- Use `/api/test/metrics/counter`, `/api/test/metrics/gauge`, and `/api/test/metrics/timer` for custom metrics
+- Use `/metrics` for Prometheus scraping
 
 **Missing Tests**:
 
@@ -144,16 +238,30 @@ This document outlines all testing required to verify DocuRoya's functionality a
    # - http_request_duration_seconds (histogram with percentiles)
    ```
 
-2. **Custom Metrics**:
+2. **Custom Metrics** (using new testing endpoints):
    ```bash
+   # Record custom counter
+   curl -X POST http://localhost:3003/api/test/metrics/counter \
+     -H "Content-Type: application/json" \
+     -d '{"name":"test.operations","increment":5}'
+   
+   # Record gauge
+   curl -X POST http://localhost:3003/api/test/metrics/gauge \
+     -H "Content-Type: application/json" \
+     -d '{"name":"test.active_users","value":42}'
+   
+   # Record timer
+   curl -X POST http://localhost:3003/api/test/metrics/timer \
+     -H "Content-Type: application/json" \
+     -d '{"name":"test.processing_time","durationMs":150}'
+   
+   # Verify metrics:
+   curl http://localhost:3003/metrics | grep test_
+   
+   # Also test article metrics:
    # Create article (tracks article.created counter)
    # Get article (tracks article.views counter)
-   
    curl http://localhost:3003/metrics | grep article
-   
-   # Should show:
-   # - article_created_total
-   # - article_views_total
    ```
 
 3. **Prometheus Scraping**:
@@ -181,11 +289,17 @@ This document outlines all testing required to verify DocuRoya's functionality a
 
 ### 4. Object Storage Plugin - Full Testing ⚠️
 
-**Current State**: Basic upload works, but presigned URLs, multipart upload, and listing are untested.
+**Current State**: Basic upload works, and explicit testing endpoints are now available.
+
+**New Testing Endpoints Available**:
+- Use `/api/test/storage/list` for file listing
+- Use `/api/test/storage/delete/:key` for deletion
+- Use `/api/test/storage/presigned-put` for presigned PUT URLs
+- Use `/api/test/storage/get/:key` for object metadata
 
 **Missing Tests**:
 
-1. **Presigned URL Generation**:
+1. **Presigned URL Generation** (existing endpoint):
    ```bash
    # Get presigned download URL
    curl http://localhost:3003/api/upload/test.txt/presigned
@@ -197,24 +311,36 @@ This document outlines all testing required to verify DocuRoya's functionality a
    curl "http://localhost:9000/ducuroya/uploads/..."
    ```
 
-2. **Presigned Upload URL**:
+2. **Presigned Upload URL** (new endpoint):
    ```bash
-   # If implemented, test presigned PUT URL
-   # Generate URL
-   # Upload directly to MinIO
-   # Verify file appears in bucket
+   # Generate presigned PUT URL using new testing endpoint
+   curl -X POST http://localhost:3003/api/test/storage/presigned-put \
+     -H "Content-Type: application/json" \
+     -d '{"key":"test/direct-upload.txt","contentType":"text/plain","ttl":3600,"bucket":"ducuroya"}'
+   
+   # Should return:
+   # {"url": "http://localhost:9000/ducuroya/test/direct-upload.txt?...", "ttl": 3600}
+   
+   # Upload directly to MinIO using the URL
+   curl -X PUT "http://localhost:9000/ducuroya/test/direct-upload.txt?<query_string>" \
+     -H "Content-Type: text/plain" \
+     -d "Hello from direct upload"
    ```
 
-3. **File Listing**:
+3. **File Listing** (new endpoint):
    ```bash
    # List all files in bucket
-   curl http://localhost:3003/api/upload
+   curl http://localhost:3003/api/test/storage/list?bucket=ducuroya
+   
+   # List with prefix
+   curl http://localhost:3003/api/test/storage/list?bucket=ducuroya&prefix=uploads/
    
    # Should return JSON with:
-   # - file keys
-   # - sizes
-   # - timestamps
-   # - metadata
+   # {"bucket":"ducuroya","prefix":"uploads/","count":N,"objects":[...]}
+   # - objects[].key
+   # - objects[].size
+   # - objects[].lastModified
+   # - objects[].etag
    ```
 
 4. **Multipart Upload**:
@@ -225,13 +351,14 @@ This document outlines all testing required to verify DocuRoya's functionality a
    # Verify final file is complete
    ```
 
-5. **File Deletion**:
+5. **File Deletion** (new endpoint):
    ```bash
-   # Delete uploaded file
-   curl -X DELETE http://localhost:3003/api/upload/test.txt
+   # Delete uploaded file using new testing endpoint
+   curl -X DELETE http://localhost:3003/api/test/storage/delete/uploads%2Ftest.txt?bucket=ducuroya
    
    # Verify 204 response
    # Verify file gone from bucket
+   curl http://localhost:3003/api/test/storage/list?bucket=ducuroya&prefix=uploads/
    ```
 
 6. **MinIO Integration**:
@@ -458,37 +585,50 @@ This document outlines all testing required to verify DocuRoya's functionality a
 
 ### 10. Middleware - Comprehensive Testing ⚠️
 
+**New Testing Endpoints Available**:
+- Use `/api/test/cors` for CORS testing
+- Use `/api/test/logging` for Morgan testing
+- Use `/api/test/rate-limit/*` endpoints for rate limiting tests
+
 **Missing Tests**:
 
-1. **Morgan Structured Logging**:
+1. **Morgan Structured Logging** (new endpoint):
    ```bash
-   # Make several requests
-   # Check console output
-   # Verify logs are JSON formatted
+   # Make requests and check console output
+   curl http://localhost:3003/api/test/logging
+   curl http://localhost:3003/api/articles
+   curl http://localhost:3003/health
+   
+   # Check console output - logs should be JSON formatted
    # Verify trace IDs present
    # Verify redacted headers (authorization, cookie)
    ```
 
-2. **CORS**:
+2. **CORS** (new endpoint):
    ```bash
-   # Request from different origin
-   curl -H "Origin: http://localhost:3000" http://localhost:3003/api/articles
+   # Request from different origin using new endpoint
+   curl -H "Origin: http://localhost:3000" http://localhost:3003/api/test/cors
    
-   # Verify CORS headers:
-   # - Access-Control-Allow-Origin
-   # - Access-Control-Allow-Methods
-   # - Access-Control-Allow-Headers
+   # Verify CORS headers present in response:
+   # - Access-Control-Allow-Origin: http://localhost:3000
+   # - Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+   # - Access-Control-Allow-Headers: Content-Type, Authorization
    ```
 
-3. **Rate Limiting**:
+3. **Rate Limiting** (new endpoints):
    ```bash
-   # Make 150 requests quickly
-   # Verify first 100 succeed
-   # Verify 101-150 return 429
+   # Test aggressive rate limiting (10/min)
+   for i in {1..12}; do 
+     curl http://localhost:3003/api/test/rate-limit/aggressive
+     echo ""
+   done
+   # Requests 1-10 should return 200 OK
+   # Requests 11-12 should return 429 Too Many Requests
    # Verify Retry-After header present
    
-   # Wait for window reset
-   # Verify requests succeed again
+   # Test per-IP rate limiting
+   # Open two terminals with different IPs (or use curl --interface)
+   # Each should get 20 requests/minute independently
    ```
 
 4. **Body Parser**:
@@ -633,8 +773,8 @@ TRUNCATE TABLE auth_users CASCADE;
 
 -- Create test users
 INSERT INTO auth_users (id, email, password_hash, provider) VALUES
-  ('11111111-1111-1111-1111-111111111111', 'alice@example.com', '$2a$10$...', 'email'),
-  ('22222222-2222-2222-2222-222222222222', 'bob@example.com', '$2a$10$...', 'email');
+                                                                ('11111111-1111-1111-1111-111111111111', 'alice@example.com', '$2a$10$...', 'email'),
+                                                                ('22222222-2222-2222-2222-222222222222', 'bob@example.com', '$2a$10$...', 'email');
 ```
 
 ## Expected Test Results

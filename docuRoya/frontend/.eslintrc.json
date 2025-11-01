@@ -1,0 +1,7 @@
+{
+  "extends": ["preact"],
+  "rules": {
+    "react-hooks/exhaustive-deps": "warn",
+    "react/no-unknown-property": ["error", { "ignore": ["class"] }]
+  }
+}

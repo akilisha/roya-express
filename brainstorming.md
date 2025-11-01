@@ -90,3 +90,11 @@ denotes a router in the three. In doing so, we are untethered from the routing o
    - ".param(Class)" => return named param converted into specified Class type. This implies that there should be a type conversion factory for path params with default done by the framework, but the user has options to define concrete converters, and getting them registered perhaps through the help of a plugin
 
 Are you able to follow my router search algorithm? How does this compare to how you are currently implementing path search? 
+
+
+Nested routing
+Earlier we were able to figure out how to implement regex parts in the request path - by using path segments and segment matchers. While this was a great milestone, 
+there was one thing that kept gnawing at my mind. And this is about the ".any(...)" method. I have been wondering why on earth that method would be useful. 
+Which use-case would possibly need this capability? I then it hit me. Aha! There is one such use-case after all.
+This use-case if for handling nested routers, which I've been racking my brain about how to implement. So this is the algorithm, and tell me what you think.
+

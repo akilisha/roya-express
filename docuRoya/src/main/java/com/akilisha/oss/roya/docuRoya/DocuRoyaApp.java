@@ -9,6 +9,7 @@ import com.akilisha.oss.roya.core.middleware.RateLimit;
 import com.akilisha.oss.roya.docuRoya.routes.ArticlesRouter;
 import com.akilisha.oss.roya.docuRoya.routes.AuthRouter;
 import com.akilisha.oss.roya.docuRoya.routes.SearchRouter;
+import com.akilisha.oss.roya.docuRoya.routes.TestingRouter;
 import com.akilisha.oss.roya.docuRoya.routes.UploadRouter;
 import com.akilisha.oss.roya.plugins.ai.AIPlugin;
 import com.akilisha.oss.roya.plugins.auth.AuthPlugin;
@@ -103,6 +104,7 @@ public class DocuRoyaApp {
         new ArticlesRouter(app).register();
         new SearchRouter(app).register();
         new UploadRouter(app).register();
+        new TestingRouter(app).register();
 
         // ========== WEBSOCKET ==========
         // Real-time collaborative editing (demonstrates WebSocket)
