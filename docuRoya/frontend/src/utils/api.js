@@ -149,8 +149,35 @@ export const uploadAPI = {
         return fetchJSON(`${API_BASE}/upload/${key}/presigned`);
     },
 
-    async listFiles(bucket, prefix) {
-        return fetchJSON(`${API_BASE}/test/storage/list?bucket=${bucket}&prefix=${prefix || ''}`);
+    async listFiles(prefix) {
+        return fetchJSON(`${API_BASE}/files?prefix=${prefix || 'uploads/'}`);
+    }
+};
+
+// Chat API
+export const chatAPI = {
+    async sendMessage(sessionId, message) {
+        return fetchJSON(`${API_BASE}/chat/message`, {
+            method: 'POST',
+            body: JSON.stringify({ session: sessionId || 'default', message })
+        });
+    },
+
+    async getStats() {
+        return fetchJSON(`${API_BASE}/chat/stats`);
+    },
+
+    // WebSocket helper
+    connectWebSocket(onMessage, onError) {
+        const wsUrl = `ws://localhost:3003/ws/chat`;
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => console.log('WebSocket connected');
+        ws.onmessage = (event) => onMessage(JSON.parse(event.data));
+        ws.onerror = (error) => onError(error);
+        ws.onclose = () => console.log('WebSocket disconnected');
+
+        return ws;
     }
 };
 
@@ -204,3 +231,4 @@ export async function getMetrics() {
     const response = await fetch('/metrics');
     return response.text();
 }
+

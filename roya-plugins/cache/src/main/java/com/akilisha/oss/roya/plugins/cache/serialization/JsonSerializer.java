@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.cache.serialization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 
@@ -13,8 +14,19 @@ public class JsonSerializer implements Serializer {
 
     private final ObjectMapper objectMapper;
 
+    /**
+     * Default constructor - creates a basic ObjectMapper.
+     * WARNING: This should only be used as a fallback.
+     * Prefer passing ObjectMapper from services for consistency.
+     */
     public JsonSerializer() {
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
+
+    public JsonSerializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     @Override

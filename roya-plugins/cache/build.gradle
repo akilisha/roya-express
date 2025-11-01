@@ -8,6 +8,7 @@ dependencies {
 
     // Jackson for JSON serialization (cache values)
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
 
     // Logging
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
@@ -20,7 +21,7 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += [
-        '--enable-preview',
+            '--enable-preview',
     ]
 }
 

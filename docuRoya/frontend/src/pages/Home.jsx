@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { articlesAPI } from '../utils/api';
 import { format } from 'date-fns';
+import { parseDate } from '../utils/date';
 
 export function Home({ user }) {
     const [articles, setArticles] = useState([]);
@@ -86,7 +87,7 @@ export function Home({ user }) {
                                     </div>
                                 )}
                                 <p class="text-xs text-gray-500">
-                                    {format(new Date(article.created_at), 'MMM d, yyyy')}
+                                    {format(parseDate(article.createdAt || article.created_at), 'MMM d, yyyy')}
                                 </p>
                             </div>
                         ))}
@@ -121,3 +122,4 @@ export function Home({ user }) {
         </div>
     );
 }
+

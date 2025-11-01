@@ -30,13 +30,18 @@ public class Roya implements Handler, Application {
 
     private final MiddlewarePipeline pipeline = new MiddlewarePipeline();
     private final Router router = RouterImpl.create();
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private final Services services = new ServiceRegistryImpl();
     // WebSocket registration disabled to maintain compatibility across Helidon versions
     private final Map<String, WsListener> wsRegistrations = new LinkedHashMap<>();
     private WebServer server;
 
-    private Roya() {}
+    private Roya() {
+        // Register ObjectMapper as singleton service
+        services.singleton(ObjectMapper.class, () -> objectMapper);
+    }
 
     /**
      * Create a new Roya application.

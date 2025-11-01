@@ -50,15 +50,54 @@ public class UploadRouter {
 
             var storage = req.get(ObjectStorage.class);
             String etag = storage.put("ducuroya", key, content, contentType, Map.of(
-                "uploadedBy", user.id()
+                    "uploadedBy", user.id()
             ));
 
             res.status(201).json(Map.of(
-                "key", key,
-                "etag", etag,
-                "size", content.length,
-                "contentType", contentType
+                    "key", key,
+                    "etag", etag,
+                    "size", content.length,
+                    "contentType", contentType
             ));
+        });
+
+        // List files in bucket (demonstrates Object Storage plugin)
+        app.get("/api/files", auth.required(), (Request req, Response res, Next next) -> {
+            String prefix = req.query().get("prefix").orElse("uploads/");
+            var storage = req.get(ObjectStorage.class);
+            var files = storage.list("ducuroya", prefix);
+
+            res.json(files.stream().map(f -> Map.of(
+                    "key", f.key(),
+                    "size", f.size(),
+                    "lastModified", f.lastModified().toString(),
+                    "etag", f.etag()
+            )).toList());
+        });
+
+        // Download file (demonstrates Object Storage plugin)
+        app.get("/api/files/:key", (Request req, Response res, Next next) -> {
+            String key = req.params().get("key").orElse("");
+            var storage = req.get(ObjectStorage.class);
+            var data = storage.get("ducuroya", key);
+
+            if (data.isEmpty()) {
+                res.status(404).json(Map.of("error", "File not found"));
+                return;
+            }
+
+            var fileData = data.get();
+            res.type(fileData.contentType());
+
+            // Stream the file content
+            try {
+                var inputStream = fileData.stream();
+                var outputStream = res.stream();
+                inputStream.transferTo(outputStream);
+                outputStream.close();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to stream file", e);
+            }
         });
 
         // Get presigned download URL (demonstrates Object Storage plugin)
@@ -70,8 +109,8 @@ public class UploadRouter {
             URL url = storage.presignedGet("ducuroya", key, Duration.ofSeconds(ttl));
 
             res.json(Map.of(
-                "url", url.toString(),
-                "ttl", ttl
+                    "url", url.toString(),
+                    "ttl", ttl
             ));
         });
 
@@ -89,14 +128,14 @@ public class UploadRouter {
 
             var storage = req.get(ObjectStorage.class);
             storage.put("ducuroya", key, content, contentType, Map.of(
-                "articleId", articleId,
-                "uploadedBy", user.id()
+                    "articleId", articleId,
+                    "uploadedBy", user.id()
             ));
 
             res.status(201).json(Map.of(
-                "key", key,
-                "articleId", articleId,
-                "size", content.length
+                    "key", key,
+                    "articleId", articleId,
+                    "size", content.length
             ));
         });
     }

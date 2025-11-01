@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { route } from 'preact-router';
 import { articlesAPI } from '../utils/api';
 import { format } from 'date-fns';
+import { parseDate } from '../utils/date';
 
 export function Articles({ user }) {
     if (!user) {
@@ -69,7 +70,7 @@ export function Articles({ user }) {
                                         </div>
                                     )}
                                     <p class="text-sm text-gray-500">
-                                        {format(new Date(article.created_at), 'MMMM d, yyyy')}
+                                        {format(parseDate(article.createdAt || article.created_at), 'MMMM d, yyyy')}
                                     </p>
                                 </div>
                                 <a href={`/articles/${article.id}/edit`} class="btn btn-secondary text-sm ml-4">
@@ -83,3 +84,4 @@ export function Articles({ user }) {
         </div>
     );
 }
+

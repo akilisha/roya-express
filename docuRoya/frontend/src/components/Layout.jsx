@@ -23,6 +23,9 @@ export function Layout({ children, user, onLogout }) {
                                         <Link activeClassName="nav-link-active" className="nav-link" href="/upload">
                                             Upload
                                         </Link>
+                                        <Link activeClassName="nav-link-active" className="nav-link" href="/chat">
+                                            Chat
+                                        </Link>
                                         <Link activeClassName="nav-link-active" className="nav-link" href="/testing">
                                             Testing
                                         </Link>
@@ -69,3 +72,4 @@ export function Layout({ children, user, onLogout }) {
         </div>
     );
 }
+

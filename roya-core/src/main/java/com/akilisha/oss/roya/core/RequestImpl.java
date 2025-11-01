@@ -3,6 +3,7 @@ package com.akilisha.oss.roya.core;
 import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.api.plugin.Services;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.helidon.webserver.http.ServerRequest;
 
 import java.io.InputStream;
@@ -104,14 +105,16 @@ public class RequestImpl implements Request {
         return helidonRequest.content().inputStream();
     }
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private static final String BODY_KEY = "body";
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T body(Class<T> type) {
         Object parsedBody = get(BODY_KEY);
-        
+
         if (parsedBody == null) {
             // Body not parsed yet - try to parse it now if it's JSON
             if (headers().contentType().map(ct -> ct.contains("application/json")).orElse(false)) {
@@ -128,18 +131,18 @@ public class RequestImpl implements Request {
             }
             return null;
         }
-        
+
         // Body was already parsed by middleware - convert it
         if (type.isInstance(parsedBody)) {
             return type.cast(parsedBody);
         }
-        
+
         // Try to convert using Jackson (e.g., Map -> Record/POJO)
         try {
             return objectMapper.convertValue(parsedBody, type);
         } catch (Exception e) {
             throw new ClassCastException(
-                "Cannot convert body from " + parsedBody.getClass().getName() + " to " + type.getName() + ": " + e.getMessage()
+                    "Cannot convert body from " + parsedBody.getClass().getName() + " to " + type.getName() + ": " + e.getMessage()
             );
         }
     }
@@ -165,10 +168,10 @@ public class RequestImpl implements Request {
     @Override
     public boolean accepts(String contentType) {
         return helidonRequest
-            .headers()
-            .acceptedTypes()
-            .stream()
-            .anyMatch(type -> type.text().contains(contentType));
+                .headers()
+                .acceptedTypes()
+                .stream()
+                .anyMatch(type -> type.text().contains(contentType));
     }
 
     @Override

@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { uploadAPI } from '../utils/api';
 
@@ -13,6 +13,8 @@ export function Upload({ user }) {
     const [uploaded, setUploaded] = useState(null);
     const [error, setError] = useState('');
     const [dragActive, setDragActive] = useState(false);
+    const [files, setFiles] = useState([]);
+    const [loadingFiles, setLoadingFiles] = useState(false);
 
     function handleDrag(e) {
         e.preventDefault();
@@ -45,11 +47,34 @@ export function Upload({ user }) {
         try {
             const data = await uploadAPI.uploadFile(file);
             setUploaded(data);
+            // Refresh file list
+            loadFiles();
         } catch (err) {
             setError(err.message || 'Upload failed');
         } finally {
             setUploading(false);
         }
+    }
+
+    async function loadFiles() {
+        setLoadingFiles(true);
+        try {
+            const fileList = await uploadAPI.listFiles('uploads/');
+            setFiles(fileList);
+        } catch (err) {
+            console.error('Failed to load files:', err);
+        } finally {
+            setLoadingFiles(false);
+        }
+    }
+
+    useEffect(() => {
+        loadFiles();
+    }, []);
+
+    function handleDownload(key) {
+        const url = `http://localhost:3003/api/files/${encodeURIComponent(key)}`;
+        window.open(url, '_blank');
     }
 
     return (
@@ -133,6 +158,36 @@ export function Upload({ user }) {
                     </button>
                 </form>
             </div>
+
+            {/* File List */}
+            <div class="card">
+                <h2 class="text-2xl font-bold mb-4">Uploaded Files</h2>
+                {loadingFiles ? (
+                    <p class="text-gray-500">Loading files...</p>
+                ) : files.length === 0 ? (
+                    <p class="text-gray-500">No files uploaded yet.</p>
+                ) : (
+                    <div class="space-y-2">
+                        {files.map((f) => (
+                            <div key={f.key} class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-700">{f.key.split('/').pop()}</p>
+                                    <p class="text-sm text-gray-500">
+                                        {(f.size / 1024).toFixed(2)} KB
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleDownload(f.key)}
+                                    class="btn btn-sm btn-secondary"
+                                >
+                                    Download
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
+

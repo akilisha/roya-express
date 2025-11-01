@@ -1,5 +1,7 @@
 package com.akilisha.oss.roya.plugins.cache;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -19,6 +21,11 @@ public class CacheServiceImpl implements Cache {
 
     public CacheServiceImpl(Path cacheDir, EvictionConfig config) throws IOException {
         this.backend = new FFMCacheBackend(cacheDir, config);
+        this.defaultTtl = config.defaultTtl();
+    }
+
+    public CacheServiceImpl(Path cacheDir, EvictionConfig config, ObjectMapper objectMapper) throws IOException {
+        this.backend = new FFMCacheBackend(cacheDir, config, objectMapper);
         this.defaultTtl = config.defaultTtl();
     }
 

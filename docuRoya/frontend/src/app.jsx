@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Router } from 'preact-router';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
@@ -8,6 +8,7 @@ import { Articles } from './pages/Articles';
 import { ArticleView } from './pages/ArticleView';
 import { ArticleEdit } from './pages/ArticleEdit';
 import { Upload } from './pages/Upload';
+import { Chat } from './pages/Chat';
 import { Testing } from './pages/Testing';
 import './app.css';
 
@@ -15,7 +16,7 @@ export function App() {
     const [user, setUser] = useState(null);
 
     // Load user from localStorage on mount
-    useState(() => {
+    useEffect(() => {
         const storedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('token');
         if (storedUser && storedToken) {
@@ -46,8 +47,10 @@ export function App() {
                 <ArticleEdit path="/articles/:id/edit" user={user} />
                 <ArticleEdit path="/articles/new" user={user} />
                 <Upload path="/upload" user={user} />
+                <Chat path="/chat" user={user} />
                 <Testing path="/testing" user={user} />
             </Router>
         </Layout>
     );
 }
+

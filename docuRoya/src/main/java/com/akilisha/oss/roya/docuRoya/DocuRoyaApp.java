@@ -8,12 +8,14 @@ import com.akilisha.oss.roya.core.middleware.Morgan;
 import com.akilisha.oss.roya.core.middleware.RateLimit;
 import com.akilisha.oss.roya.docuRoya.routes.ArticlesRouter;
 import com.akilisha.oss.roya.docuRoya.routes.AuthRouter;
+import com.akilisha.oss.roya.docuRoya.routes.ChatRouter;
 import com.akilisha.oss.roya.docuRoya.routes.SearchRouter;
 import com.akilisha.oss.roya.docuRoya.routes.TestingRouter;
 import com.akilisha.oss.roya.docuRoya.routes.UploadRouter;
 import com.akilisha.oss.roya.plugins.ai.AIPlugin;
 import com.akilisha.oss.roya.plugins.auth.AuthPlugin;
 import com.akilisha.oss.roya.plugins.cache.CachePlugin;
+import com.akilisha.oss.roya.plugins.database.Database;
 import com.akilisha.oss.roya.plugins.database.DatabasePlugin;
 import com.akilisha.oss.roya.plugins.email.EmailPlugin;
 import com.akilisha.oss.roya.plugins.metrics.MetricsPlugin;
@@ -47,9 +49,9 @@ public class DocuRoyaApp {
 
         // Structured logging (demonstrates Morgan)
         app.use(Morgan.builder()
-            .structured(true)
-            .redactHeaders(Set.of("authorization", "cookie", "set-cookie"))
-            .build());
+                .structured(true)
+                .redactHeaders(Set.of("authorization", "cookie", "set-cookie"))
+                .build());
 
         // CORS (for React frontend)
         app.use(Cors.cors());
@@ -59,9 +61,9 @@ public class DocuRoyaApp {
 
         // Rate limiting (protect expensive endpoints)
         app.use(RateLimit.builder()
-            .max(100)
-            .window(Duration.ofMinutes(15))
-            .build());
+                .max(100)
+                .window(Duration.ofMinutes(15))
+                .build());
 
         // ========== PLUGINS ==========
 
@@ -70,7 +72,7 @@ public class DocuRoyaApp {
 
         // Database: JOOQ + Flyway migrations
         new DatabasePlugin().register(services);
-        var db = services.get(com.akilisha.oss.roya.plugins.database.Database.class);
+        var db = services.get(Database.class);
         db.migrate(); // Run migrations
         db.generateModel(); // Generate JOOQ classes
 
@@ -105,17 +107,10 @@ public class DocuRoyaApp {
         new SearchRouter(app).register();
         new UploadRouter(app).register();
         new TestingRouter(app).register();
-
-        // ========== WEBSOCKET ==========
-        // Real-time collaborative editing (demonstrates WebSocket)
-        // Will be added in next phase
-
-        // ========== SSE ==========
-        // Live notifications stream (demonstrates SSE)
-        // Will be added in next phase
+        new ChatRouter(app).register();  // Chat with WebSocket and SSE support
 
         // Start server
-        int port = Integer.parseInt(System.getProperty("port", "3000"));
+        int port = Integer.parseInt(System.getProperty("port", "3003"));
         app.listen(port, () -> {
             System.out.printf("DocuRoya running on http://localhost:%d%n", port);
 
@@ -130,7 +125,7 @@ public class DocuRoyaApp {
             String metrics = s.has(com.akilisha.oss.roya.plugins.metrics.Metrics.class) ? "✅" : "❌";
 
             System.out.printf("Features: Database %s Auth %s AI %s Email %s Cache %s Object Storage %s Metrics %s%n",
-                dbClass, auth, ai, email, cache, storage, metrics);
+                    dbClass, auth, ai, email, cache, storage, metrics);
         });
     }
 }

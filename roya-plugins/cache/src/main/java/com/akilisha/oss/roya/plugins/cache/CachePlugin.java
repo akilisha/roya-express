@@ -2,6 +2,7 @@ package com.akilisha.oss.roya.plugins.cache;
 
 import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
 import com.akilisha.oss.roya.api.plugin.Services;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,22 +40,27 @@ public class CachePlugin implements RoyaPlugin {
                 // Configuration from environment variables
                 String cacheDir = System.getProperty("cache.dir", "./cache");
                 long maxSizeBytes = Long.parseLong(
-                    System.getProperty("cache.maxSize", "1073741824")); // 1GB default
+                        System.getProperty("cache.maxSize", "1073741824")); // 1GB default
                 EvictionStrategy strategy = EvictionStrategy.parse(
-                    System.getProperty("cache.eviction", "LRU"));
+                        System.getProperty("cache.eviction", "LRU"));
                 Duration defaultTtl = Duration.ofSeconds(
-                    Long.parseLong(System.getProperty("cache.ttl", "86400"))); // 24 hours
+                        Long.parseLong(System.getProperty("cache.ttl", "86400"))); // 24 hours
 
                 EvictionConfig config = new EvictionConfig(
-                    maxSizeBytes,
-                    strategy,
-                    defaultTtl
+                        maxSizeBytes,
+                        strategy,
+                        defaultTtl
                 );
 
                 Path cachePath = Paths.get(cacheDir);
                 Files.createDirectories(cachePath);
 
-                return new CacheServiceImpl(cachePath, config);
+                // Get ObjectMapper from services (to ensure consistent JSON serialization)
+                ObjectMapper objectMapper = services.has(ObjectMapper.class)
+                        ? services.get(ObjectMapper.class)
+                        : new ObjectMapper(); // Fallback if not registered (shouldn't happen)
+
+                return new CacheServiceImpl(cachePath, config, objectMapper);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to initialize cache", e);
             }

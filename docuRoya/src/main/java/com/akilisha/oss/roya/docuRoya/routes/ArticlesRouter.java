@@ -4,6 +4,7 @@ import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
+import com.akilisha.oss.roya.docuRoya.jooq.tables.pojos.Articles;
 import com.akilisha.oss.roya.docuRoya.services.ArticleService;
 import com.akilisha.oss.roya.plugins.auth.Auth;
 import com.akilisha.oss.roya.plugins.auth.User;
@@ -66,7 +67,7 @@ public class ArticlesRouter {
             }
 
             // Fetch from DB
-            List<com.akilisha.oss.roya.docuRoya.jooq.tables.pojos.Articles> articles = articleService.list(100, 0);
+            List<Articles> articles = articleService.list(100, 0);
             Map<String, Object> result = Map.of("articles", articles, "cached", false);
 
             // Cache for 1 hour - Cache.set() takes Duration, not int seconds
