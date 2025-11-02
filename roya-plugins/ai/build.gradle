@@ -13,7 +13,10 @@ dependencies {
     // OpenAI Java SDK (unofficial but popular)
     implementation 'com.theokanning.openai-gpt3-java:service:0.18.2'
 
-    // Langchain4j temporarily removed; using OpenAI SDK + Qdrant REST directly for MVP
+    // AI Library Adapters
+    implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
+    implementation "org.bsc.langgraph4j:langgraph4j-core:${langgraph4jVersion}"
+    implementation "com.google.adk:google-adk:${googleadkVersion}"
 
     // JSON for structured outputs
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"

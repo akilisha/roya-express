@@ -11,13 +11,13 @@ This document outlines a comprehensive load testing strategy to validate Roya fr
 
 **Key Performance Targets (from WHITEPAPER.md):**
 
-| Metric | Target | Benchmark |
-|--------|--------|-----------|
-| Requests/sec | 50,000+ RPS | vs Express (5K), Spring (15K) |
-| Latency p99 | <20ms | vs Express (250ms), Spring (100ms) |
-| Memory baseline | <50MB | vs Express (400MB), Spring (250MB) |
-| Concurrent connections | 1M+ | vs Express (1K), Spring (10K) |
-| Cold start | <100ms | vs Express (500ms), Spring (5s) |
+| Metric                 | Target      | Benchmark                          |
+|------------------------|-------------|------------------------------------|
+| Requests/sec           | 50,000+ RPS | vs Express (5K), Spring (15K)      |
+| Latency p99            | <20ms       | vs Express (250ms), Spring (100ms) |
+| Memory baseline        | <50MB       | vs Express (400MB), Spring (250MB) |
+| Concurrent connections | 1M+         | vs Express (1K), Spring (10K)      |
+| Cold start             | <100ms      | vs Express (500ms), Spring (5s)    |
 
 ---
 
@@ -54,34 +54,34 @@ This document outlines a comprehensive load testing strategy to validate Roya fr
 ### 2.1 Test Environment Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                    Load Test Infrastructure                  │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌─────────────┐      ┌──────────────┐   ┌──────────────┐  │
-│  │   k6 Cloud  │ ──── │  Prometheus  │   │   Grafana    │  │
-│  │  (Load Gen) │      │  (Metrics)   │   │  (Dashboards)│  │
-│  └─────────────┘      └──────────────┘   └──────────────┘  │
-│         │                                                     │
-│         │ HTTP                                                │
-│         │                                                     │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌─────────────┐      ┌──────────────┐   ┌──────────────┐    │
+│  │   k6 Cloud  │ ──── │  Prometheus  │   │   Grafana    │    │
+│  │  (Load Gen) │      │  (Metrics)   │   │  (Dashboards)│    │
+│  └─────────────┘      └──────────────┘   └──────────────┘    │
+│         │                                                    │
+│         │ HTTP                                               │
+│         │                                                    │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │          Target Application (Docker Container)         │  │
 │  │  ┌──────────────────────────────────────────────────┐  │  │
 │  │  │  Roya App / Express App / Spring Boot App        │  │  │
 │  │  └──────────────────────────────────────────────────┘  │  │
-│  │                                                          │  │
+│  │                                                        │  │
 │  │  ┌──────────────────────────────────────────────────┐  │  │
 │  │  │  Application Metrics (JVM/Node.js native)        │  │  │
-│  │  │  - CPU, Memory, GC pauses                         │  │  │
+│  │  │  - CPU, Memory, GC pauses                        │  │  │
 │  │  └──────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────┘  │
-│                                                               │
+│                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  System Metrics (cAdvisor / node_exporter)             │  │
 │  │  - CPU cores, memory pressure, network I/O             │  │
 │  └────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ### 2.2 Hardware Requirements
