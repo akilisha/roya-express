@@ -2,14 +2,18 @@ package com.akilisha.oss.roya.plugins.ai.langchain;
 
 import com.akilisha.oss.roya.plugins.ai.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.Response;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * LangChain adapter implementation of Roya's AI interface.
@@ -72,14 +76,34 @@ public class LangChainAdapter implements AI {
         return new Embeddings() {
             @Override
             public float[] embed(String text) {
-                // TODO: Implement LangChain4j embedding
-                throw new UnsupportedOperationException("Embeddings not yet implemented in LangChain adapter");
+                try {
+                    Response<Embedding> response = embeddingModel.embed(text);
+                    Embedding embedding = response.content();
+                    return embedding.vector();
+                } catch (Exception e) {
+                    throw new AIException("LangChain embedding failed: " + e.getMessage(), e);
+                }
             }
             
             @Override
             public List<float[]> embed(List<String> texts) {
-                // TODO: Implement LangChain4j batch embeddings
-                throw new UnsupportedOperationException("Embeddings not yet implemented in LangChain adapter");
+                try {
+                    // Convert List<String> to List<TextSegment> for batch embedding
+                    List<dev.langchain4j.data.segment.TextSegment> segments = texts.stream()
+                        .map(dev.langchain4j.data.segment.TextSegment::from)
+                        .collect(Collectors.toList());
+                    
+                    // Perform batch embedding
+                    Response<List<Embedding>> response = embeddingModel.embedAll(segments);
+                    List<Embedding> embeddings = response.content();
+                    
+                    // Convert List<Embedding> to List<float[]>
+                    return embeddings.stream()
+                        .map(Embedding::vector)
+                        .collect(Collectors.toList());
+                } catch (Exception e) {
+                    throw new AIException("LangChain batch embedding failed: " + e.getMessage(), e);
+                }
             }
         };
     }
@@ -112,13 +136,12 @@ public class LangChainAdapter implements AI {
     @Override
     public String ask(String systemPrompt, String userMessage, AIOptions options) {
         try {
-            // TODO: Use ChatModel API - need to check actual method signatures
-            // This is a placeholder until we verify the ChatModel interface
-            String fullPrompt = systemPrompt + "\n\nUser: " + userMessage + "\nAssistant:";
-            
-            // TODO: Replace with actual ChatModel.generate() or similar
-            // For now just concatenate to trigger the UnsupportedOperationException in LangChainLibrary
-            throw new UnsupportedOperationException("ChatModel.generate() signature not yet verified");
+            // For now, just use simple chat(String) - no system message support yet
+            // TODO: Support system messages via chat(ChatMessage...) or ChatRequest
+            if (systemPrompt != null && !systemPrompt.isBlank()) {
+                userMessage = systemPrompt + "\n\nUser: " + userMessage;
+            }
+            return chatModel.chat(userMessage);
         } catch (Exception e) {
             throw new AIException("LangChain chat completion failed: " + e.getMessage(), e);
         }
@@ -134,9 +157,10 @@ public class LangChainAdapter implements AI {
         try {
             // Request JSON output
             String jsonPrompt = "Extract information from the following text into JSON format matching this schema: " + type.getSimpleName() + "\n\n" + prompt + "\n\nRespond with JSON only.";
+            String response = chatModel.chat(jsonPrompt);
             
-            // TODO: Replace with actual ChatModel.generate() or similar
-            throw new UnsupportedOperationException("ChatModel.generate() signature not yet verified");
+            // Parse JSON response
+            return objectMapper.readValue(response, type);
         } catch (Exception e) {
             throw new AIException("LangChain extraction failed: " + e.getMessage(), e);
         }
@@ -153,8 +177,28 @@ public class LangChainAdapter implements AI {
             if (streamingChatModel == null) {
                 throw new AIException("Streaming not supported - no StreamingChatModel configured");
             }
-            // TODO: Use StreamingChatModel.stream() with callback - need to verify API
-            throw new UnsupportedOperationException("StreamingChatModel.stream() signature not yet verified");
+            // Handle system message prefix if provided
+            if (systemPrompt != null && !systemPrompt.isBlank()) {
+                userMessage = systemPrompt + "\n\nUser: " + userMessage;
+            }
+            
+            // Use StreamingChatModel.chat(String, StreamingChatResponseHandler)
+            streamingChatModel.chat(userMessage, new StreamingChatResponseHandler() {
+                @Override
+                public void onPartialResponse(String partialResponse) {
+                    onToken.accept(partialResponse);
+                }
+                
+                @Override
+                public void onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse completeResponse) {
+                    // Streaming complete, no action needed
+                }
+                
+                @Override
+                public void onError(Throwable error) {
+                    throw new AIException("LangChain streaming error: " + error.getMessage(), error);
+                }
+            });
         } catch (Exception e) {
             throw new AIException("LangChain streaming failed: " + e.getMessage(), e);
         }
