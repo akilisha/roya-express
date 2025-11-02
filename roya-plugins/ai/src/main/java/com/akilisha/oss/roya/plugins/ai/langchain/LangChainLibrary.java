@@ -9,8 +9,11 @@ import com.akilisha.oss.roya.plugins.ai.library.AILibraryConfig;
  *
  * Bridges LangChain4j to Roya's unified AI interface.
  * 
- * Status: Placeholder implementation - actual LangChain4j integration pending
- * Will implement once we verify available LangChain4j APIs and patterns.
+ * Status: Placeholder - waiting for LangChain4j API documentation/examples
+ * to implement actual integration.
+ * 
+ * Dependencies are configured but API classes need to be verified.
+ * Will implement once we have confirmed package paths and API patterns.
  */
 public class LangChainLibrary implements AILibrary {
     @Override
