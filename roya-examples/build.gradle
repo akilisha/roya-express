@@ -37,7 +37,7 @@ application {
 // Allow running different examples
 tasks.register('runAIShowcase', JavaExec) {
     group = 'application'
-    description = 'Run AI Showcase demo'
+    description = 'Run AI Showcase demo (legacy)'
     mainClass = 'com.akilisha.oss.roya.examples.AIShowcase'
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = ['--enable-preview']
@@ -64,6 +64,20 @@ tasks.register('runAIShowcase', JavaExec) {
     }
 }
 
+tasks.register('runWorkflowShowcase', JavaExec) {
+    group = 'application'
+    description = 'Run AI Workflow Showcase - Receipt Processing Workflow'
+    mainClass = 'com.akilisha.oss.roya.examples.AIShowcaseDemo'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+    String apiKey = System.getenv('AI_OPENAI_API_KEY') ?: System.getenv('OPENAI_API_KEY')
+    if (apiKey) {
+        environment 'AI_OPENAI_API_KEY', apiKey
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
 tasks.register('runDocsMcp', JavaExec) {
     group = 'application'
     description = 'Run Docs MCP demo server'
@@ -85,6 +99,8 @@ tasks.register('runAllMethodDemo', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = ['--enable-preview']
 }
+
+
 
 // Enable FFM features for Java 23
 tasks.withType(JavaCompile) {

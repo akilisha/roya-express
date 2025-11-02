@@ -1,5 +1,6 @@
 package com.akilisha.oss.roya.plugins.ai;
 
+import com.akilisha.oss.roya.api.WorkflowBuilder;
 import com.akilisha.oss.roya.plugins.ai.providers.LLMProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theokanning.openai.embedding.EmbeddingRequest;
@@ -240,6 +241,13 @@ public class AIServiceImpl implements AI {
                 java.util.List.of()
             );
         };
+    }
+
+    @Override
+    public WorkflowBuilder workflow(String name) {
+        throw new UnsupportedOperationException(
+            "Workflow API not supported in legacy AIServiceImpl. Use UnifiedAIService instead."
+        );
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.akilisha.oss.roya.plugins.ai;
 
+import com.akilisha.oss.roya.api.WorkflowBuilder;
 import java.util.function.Consumer;
 
 /**
@@ -27,6 +28,14 @@ import java.util.function.Consumer;
  *     // Handle each token as it arrives
  *     res.write(token);
  * });
+ *
+ * // Multi-node workflows
+ * Workflow workflow = ai.workflow("receipt-processor")
+ *     .node("extract", node -> node.llm()
+ *         .input("${receiptText}")
+ *         .output("${structuredData}")
+ *     )
+ *     .build();
  * </pre>
  */
 public interface AI {
@@ -59,6 +68,17 @@ public interface AI {
      * Power-users can still access provider primitives via {@link #provider(Class)}.
      */
     Agents agents();
+    /**
+     * Create a workflow builder for multi-node, stateful AI workflows.
+     *
+     * Workflows enable complex AI operations with automatic state management,
+     * conditional logic, and plugin integrations.
+     *
+     * @param name Workflow name
+     * @return Workflow builder
+     */
+    WorkflowBuilder workflow(String name);
+
     /**
      * Ask the AI a question (chat completion).
      *
