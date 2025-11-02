@@ -24,6 +24,9 @@ allprojects {
         langchain4jVersion = "1.7.1"
         langgraph4jVersion = "1.7.1"
         googleadkVersion = "0.3.0"
+        
+        // OpenAI SDK (legacy - for backward compatibility)
+        theokanningOpenAIVersion = "0.18.2"
     }
 }
 

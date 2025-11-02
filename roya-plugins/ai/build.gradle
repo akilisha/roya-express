@@ -16,7 +16,7 @@ dependencies {
     // AI Library Adapters
     implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
     implementation "org.bsc.langgraph4j:langgraph4j-core:${langgraph4jVersion}"
-    implementation "com.google.adk:google-adk:${googleadkVersion}"
+    implementation "com.google.adk:google-adk-dev:${googleadkVersion}"
 
     // JSON for structured outputs
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
