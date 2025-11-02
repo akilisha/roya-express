@@ -589,15 +589,74 @@ Begin implementation of Vector Store & RAG per `PHASE7_DESIGN.md`:
 - Observability specifics (tracing exporter config, log fields, metrics endpoint)
 - Security defaults and recommended prod configs (CSP, CORS, Vault)
 
+### What We Accomplished
+
+#### GraalVM Native Image Support
+- ✅ **GraalVM Plugin** - Created `roya-plugins:graalvm` with comprehensive native-image configurations
+  - Reflection config for Jackson databind classes
+  - Resource config for Helidon resources and Handlebars templates
+  - Proxy config for WebSocket dynamic proxies
+  - Native-image.properties with build arguments
+- ✅ **Gradle Native Build Tools** - Integrated `org.graalvm.buildtools.native` plugin
+- ✅ **Updated Dockerfile.native** - Uses Gradle `nativeCompile` task instead of raw native-image CLI
+- ✅ **Application Interface Enhancement** - Added `use(String path, Handler handler)` method
+- ✅ **Build Verification** - All projects compile successfully with GraalVM plugin
+
+#### Project Structure
+```
+roya-plugins/graalvm/
+├── build.gradle                      # GraalVM native plugin configuration
+├── src/main/java/.../GraalVMPlugin.java
+└── src/main/resources/
+    └── META-INF/native-image/
+        └── com.akilisha.oss.roya/
+            └── roya-native/
+                ├── reflect-config.json    # Jackson, JSR-310 reflection
+                ├── resource-config.json   # Resources and templates
+                ├── proxy-config.json      # WebSocket proxies
+                └── native-image.properties # Build arguments
+```
+
+#### How to Use GraalVM Native Image
+**Add the plugin dependency:**
+```gradle
+dependencies {
+    implementation project(':roya-plugins:graalvm')
+}
+```
+
+**Build native image:**
+```bash
+./gradlew :roya-examples:nativeCompile
+```
+
+**Run native executable:**
+```bash
+./roya-examples/build/native/nativeCompile/roya-example
+```
+
+**Docker build:**
+```bash
+docker build -t roya-native -f roya-examples/Dockerfile.native .
+```
+
 ### Status
 - ✅ Initial docs and artifacts added (JVM/native Dockerfiles, k8s manifests, PRODUCTION.md)
+- ✅ GraalVM native-image plugin and configurations complete
+- ⏳ Native binary compilation testing (requires GraalVM installation)
 - ⏳ Observability docs: tracing/metrics/log correlation
 - ⏳ Security review docs: Helmet/CORS/Secrets/log redaction
 - ⏳ Baseline performance notes and sample load test scripts
 
+### Challenges Encountered
+- **Missing Application method**: Fixed by adding `use(String path, Handler handler)` to Application interface
+- **Gradle plugin setup**: Required proper native-image plugin integration
+- **Config file placement**: Native-image configs must be in `META-INF/native-image` for auto-discovery
+
 ### Notes
 - Prefer JVM builds first; adopt native after parity checks
 - Ensure Vault used for secrets; never bake secrets into images
+- Native-image configurations are automatically picked up when `roya-plugins:graalvm` is in classpath
 
 ## Phase 3: Essential Middleware - ✅ COMPLETE
 

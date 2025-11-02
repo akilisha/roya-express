@@ -1,5 +1,6 @@
 plugins {
     id 'application'
+    id 'org.graalvm.buildtools.native' version '0.10.3'
 }
 
 dependencies {
@@ -10,6 +11,7 @@ dependencies {
     implementation project(":roya-plugins:metrics")
     implementation project(":roya-plugins:cache")
     implementation project(":roya-plugins:email")
+    implementation project(":roya-plugins:graalvm")
     // JSON parsing for examples (request body parsing in demos)
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation project(":roya-plugins:ai")
@@ -101,4 +103,21 @@ tasks.named('run') {
     jvmArgs += [
             '--enable-preview'
     ]
+}
+
+// GraalVM Native Image Configuration
+// The native-image configurations are provided by :roya-plugins:graalvm
+graalvmNative {
+    binaries {
+        main {
+            mainClass = 'com.akilisha.oss.roya.examples.HelloWorld'
+            imageName = 'roya-example'
+            buildArgs.addAll([
+                    '--enable-preview',
+                    '-H:+StaticExecutableWithDynamicLibC',
+                    '--no-fallback',
+                    '-H:+ReportExceptionStackTraces'
+            ])
+        }
+    }
 }

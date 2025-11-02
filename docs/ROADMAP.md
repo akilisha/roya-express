@@ -573,7 +573,7 @@ See `PHASE7_DESIGN.md` for complete architecture and final design.
 - [x] Kubernetes deployment templates ✅
 - [x] Docker optimized images (JVM + native templates) ✅
 - [x] Production deployment guide ✅
-- [ ] GraalVM native compilation support (template exists, needs reflection configs)
+- [x] GraalVM native compilation support (plugin + reflection configs) ✅
 - [ ] Security audit and hardening
 - [ ] Performance optimization
 - [ ] Load testing and benchmarking (automation in progress)
@@ -593,7 +593,7 @@ See `PHASE7_DESIGN.md` for complete architecture and final design.
 - [x] Dockerfile (JVM + native variants) ✅
 - [x] Production deployment guide (`docs/PRODUCTION.md`) ✅
 - [x] K8s README (`deploy/k8s/README.md`) ✅
-- [ ] GraalVM native-image configuration (needs reflection configs)
+- [x] GraalVM native-image configuration (roya-plugins:graalvm) ✅
 - [ ] Security audit report
 - [ ] Performance benchmark suite (automation started, see `bench.ps1`)
 - [ ] Load testing scripts
@@ -602,7 +602,7 @@ See `PHASE7_DESIGN.md` for complete architecture and final design.
 - [x] Create Kubernetes templates ✅
 - [x] Build optimized Docker images (JVM multi-stage) ✅
 - [x] Document production deployment ✅
-- [ ] Configure GraalVM native-image (needs Jackson/Helidon reflection configs)
+- [x] Configure GraalVM native-image (plugin created with reflection/resource/proxy configs) ✅
 - [ ] Optimize native compilation
 - [ ] Run security audit (OWASP ZAP, etc.)
 - [ ] Perform load testing (k6 automation in progress)

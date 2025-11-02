@@ -48,6 +48,18 @@ public class MetricsDemo {
             }
 
             @Override
+            public com.akilisha.oss.roya.api.plugin.Application use(String path, Handler handler) {
+                app.use(path, handler);
+                return this;
+            }
+
+            @Override
+            public com.akilisha.oss.roya.api.plugin.Application use(String path, com.akilisha.oss.roya.api.Router router) {
+                app.use(path, router);
+                return this;
+            }
+
+            @Override
             public com.akilisha.oss.roya.api.plugin.Application route(String method, String path, Handler... handlers) {
                 switch (method.toUpperCase()) {
                     case "GET" -> app.get(path, handlers);

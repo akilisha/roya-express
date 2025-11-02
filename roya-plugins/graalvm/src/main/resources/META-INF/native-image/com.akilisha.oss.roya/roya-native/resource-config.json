@@ -1,0 +1,29 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": ".*\\.json$"
+      },
+      {
+        "pattern": ".*\\.properties$"
+      },
+      {
+        "pattern": ".*\\.xml$"
+      },
+      {
+        "pattern": "META-INF/services/.*"
+      },
+      {
+        "pattern": "META-INF/helidon/.*"
+      },
+      {
+        "pattern": "templates/.*\\.hbs$"
+      },
+      {
+        "pattern": "views/.*\\.hbs$"
+      }
+    ]
+  },
+  "bundles": []
+}
+

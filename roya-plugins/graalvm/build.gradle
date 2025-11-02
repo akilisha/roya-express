@@ -1,0 +1,46 @@
+plugins {
+    id 'java-library'
+    id 'org.graalvm.buildtools.native' version '0.10.3'
+}
+
+dependencies {
+    // Core dependencies
+    implementation project(':roya-api')
+    
+    // No external dependencies for the plugin itself
+    // The native-image configurations are the main deliverable
+}
+
+// Enable Java 23 preview features
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+            '--enable-preview',
+    ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs += ['--enable-preview']
+}
+
+// Native image configuration
+graalvmNative {
+    binaries {
+        main {
+            // Main binary configuration
+            mainClass.set('com.akilisha.oss.roya.examples.HelloWorld')
+            
+            // Build options
+            buildArgs.add('--enable-preview')
+            buildArgs.add('--no-fallback')
+            buildArgs.add('-H:+StaticExecutableWithDynamicLibC')
+            
+            // Resource configuration
+            buildArgs.add('-H:IncludeResources=".*"')
+            
+            // Enable verbose output for debugging
+            verbose.set(true)
+        }
+    }
+}
+

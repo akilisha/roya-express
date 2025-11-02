@@ -244,7 +244,8 @@ public class Roya implements Handler, Application {
      * @param handler Middleware handler
      * @return this (for chaining)
      */
-    public Roya use(String path, Handler handler) {
+    @Override
+    public Application use(String path, Handler handler) {
         router.use(path, handler);
         return this;
     }

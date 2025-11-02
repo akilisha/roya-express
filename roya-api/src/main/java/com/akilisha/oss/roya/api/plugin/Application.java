@@ -23,6 +23,15 @@ public interface Application {
     Application use(Handler handler);
     
     /**
+     * Add middleware at a specific path.
+     *
+     * @param path Mount path
+     * @param handler Middleware handler
+     * @return this (for chaining)
+     */
+    Application use(String path, Handler handler);
+    
+    /**
      * Mount a nested router at a specific path.
      *
      * Express: app.use('/api', router)
