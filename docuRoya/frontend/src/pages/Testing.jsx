@@ -1,6 +1,6 @@
-import { useState } from 'preact/hooks';
-import { route } from 'preact-router';
-import { testingAPI } from '../utils/api';
+import {useState} from 'preact/hooks';
+import {route} from 'preact-router';
+import {testingAPI} from '../utils/api';
 
 export function Testing({ user }) {
     if (!user) {

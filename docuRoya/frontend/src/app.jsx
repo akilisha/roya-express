@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'preact/hooks';
-import { Router } from 'preact-router';
-import { Layout } from './components/Layout';
-import { Home } from './pages/Home';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Articles } from './pages/Articles';
-import { ArticleView } from './pages/ArticleView';
-import { ArticleEdit } from './pages/ArticleEdit';
-import { Upload } from './pages/Upload';
-import { Chat } from './pages/Chat';
-import { Testing } from './pages/Testing';
+import {useEffect, useState} from 'preact/hooks';
+import {Router} from 'preact-router';
+import {Layout} from './components/Layout';
+import {Home} from './pages/Home';
+import {Login} from './pages/Login';
+import {Register} from './pages/Register';
+import {Articles} from './pages/Articles';
+import {ArticleView} from './pages/ArticleView';
+import {ArticleEdit} from './pages/ArticleEdit';
+import {Upload} from './pages/Upload';
+import {Chat} from './pages/Chat';
+import {Testing} from './pages/Testing';
 import './app.css';
 
 export function App() {

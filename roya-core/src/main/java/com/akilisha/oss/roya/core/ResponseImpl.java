@@ -1,12 +1,7 @@
 package com.akilisha.oss.roya.core;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.api.Cookie;
-import com.akilisha.oss.roya.api.FileSendOptions;
-import com.akilisha.oss.roya.api.JsonStream;
-import com.akilisha.oss.roya.api.Request;
-import com.akilisha.oss.roya.api.Response;
-import com.akilisha.oss.roya.api.TemplateEngine;
+import com.akilisha.oss.roya.api.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.helidon.http.HeaderNames;
 import io.helidon.http.Status;
@@ -42,14 +37,14 @@ public class ResponseImpl implements Response {
         this.helidonResponse = helidonResponse;
         this.objectMapper = objectMapper;
     }
-    
+
     /**
      * Set the current request (called by framework when pairing request/response).
      */
     public void setRequest(Request req) {
         this.currentRequest = req;
     }
-    
+
     /**
      * Set the app instance (called by framework for template engine access).
      */
@@ -319,11 +314,11 @@ public class ResponseImpl implements Response {
         if (sent) {
             throw new IllegalStateException("Response already sent");
         }
-        
+
         if (app == null || app.getTemplateEngine() == null) {
             throw new IllegalStateException("No template engine configured. Call app.engine() or app.useHandlebars() first.");
         }
-        
+
         try {
             sent = true;
             app.getTemplateEngine().render(template, data, currentRequest, this);

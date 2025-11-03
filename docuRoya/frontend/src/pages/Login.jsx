@@ -1,6 +1,6 @@
-import { useState } from 'preact/hooks';
-import { route } from 'preact-router';
-import { authAPI } from '../utils/api';
+import {useState} from 'preact/hooks';
+import {route} from 'preact-router';
+import {authAPI} from '../utils/api';
 
 export function Login({ onLogin, user }) {
     // Redirect if already logged in

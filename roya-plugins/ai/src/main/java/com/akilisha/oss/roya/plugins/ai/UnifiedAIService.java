@@ -1,11 +1,10 @@
 package com.akilisha.oss.roya.plugins.ai;
 
 import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
+import com.akilisha.oss.roya.plugins.ai.googleadk.GoogleADKAdapter;
 import com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter;
 import com.akilisha.oss.roya.plugins.ai.langgraph.LangGraphAdapter;
-import com.akilisha.oss.roya.plugins.ai.googleadk.GoogleADKAdapter;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -46,7 +45,7 @@ public class UnifiedAIService implements AI {
     public AIWorkflowBuilder workflow(String name) {
         return AIWorkflowBuilder.create(this, name);
     }
-    
+
     @Override
     public LangGraphService langGraph() {
         if (langGraph == null) {
@@ -54,7 +53,7 @@ public class UnifiedAIService implements AI {
         }
         return new LangGraphServiceImpl(langGraph);
     }
-    
+
     @Override
     public GoogleADKService googleADK() {
         if (googleADK == null) {
@@ -167,15 +166,15 @@ public class UnifiedAIService implements AI {
         // Developers can access underlying libraries directly
         T provider = langChain.provider(providerType);
         if (provider != null) return provider;
-        
+
         provider = langGraph.provider(providerType);
         if (provider != null) return provider;
-        
+
         if (googleADK != null) {
             provider = googleADK.provider(providerType);
             if (provider != null) return provider;
         }
-        
+
         return null;
     }
 

@@ -9,12 +9,8 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
-// LangGraph4j imports - will add as needed
-// import org.bsc.langgraph4j.StateGraph;
-// import org.bsc.langgraph4j.agent.executor.AgentExecutor;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -25,7 +21,7 @@ import java.util.stream.Collectors;
  * This adapter leverages:
  * - LangChain4j for LLM primitives (chat, embeddings)
  * - LangGraph4j for agent orchestration and state management
- * 
+ *
  * Key features:
  * - Stateful agents with context across multiple nodes
  * - Multi-agent workflows and coordination
@@ -142,25 +138,25 @@ public class LangGraphAdapter implements AI {
                 // Full LangGraph integration requires StateGraph setup
                 AgentBuilderImpl builder = new AgentBuilderImpl();
                 config.accept(builder);
-                
+
                 // Use ChatModel directly for now until we have StateGraph integration
                 // TODO: Replace with AgentExecutor or StateGraph-based agent
-                ChatModel agentModel = builder.chatLanguageModel != null 
-                    ? (ChatModel) builder.chatLanguageModel 
+                ChatModel agentModel = builder.chatLanguageModel != null
+                    ? (ChatModel) builder.chatLanguageModel
                     : chatModel;
-                
+
                 return new Agent() {
                     @Override
                     public AgentResult run(String input) {
                         try {
                             // Build prompt with system message if provided
-                            String prompt = builder.systemPrompt != null 
+                            String prompt = builder.systemPrompt != null
                                 ? builder.systemPrompt + "\n\nUser: " + input
                                 : input;
-                            
+
                             // Execute using ChatModel
                             String response = agentModel.chat(prompt);
-                            
+
                             // TODO: Extract trace/step information from LangGraph execution
                             // When using StateGraph, we'll have node execution traces
                             return new AgentResult(response, List.of());
@@ -200,8 +196,8 @@ public class LangGraphAdapter implements AI {
     @Override
     public <T> T extract(Class<T> type, String prompt, AIOptions options) {
         try {
-            String jsonPrompt = "Extract information from the following text into JSON format matching this schema: " 
-                + type.getSimpleName() + "\n\n" + prompt 
+            String jsonPrompt = "Extract information from the following text into JSON format matching this schema: "
+                + type.getSimpleName() + "\n\n" + prompt
                 + "\n\nRespond with JSON only.";
             String response = chatModel.chat(jsonPrompt);
 
@@ -292,13 +288,13 @@ public class LangGraphAdapter implements AI {
             "Workflow API not available in LangGraphAdapter. Use UnifiedAIService for workflows."
         );
     }
-    
+
     @Override
     public LangGraphService langGraph() {
         // Return self wrapped in service
         return new LangGraphServiceImpl(this);
     }
-    
+
     @Override
     public GoogleADKService googleADK() {
         return null; // Not available in LangGraphAdapter

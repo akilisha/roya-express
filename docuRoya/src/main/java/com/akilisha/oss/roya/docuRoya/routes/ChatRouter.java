@@ -9,7 +9,6 @@ import com.akilisha.oss.roya.plugins.auth.User;
 import io.helidon.websocket.WsListener;
 import io.helidon.websocket.WsSession;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

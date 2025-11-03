@@ -1,4 +1,4 @@
-import { Link } from 'preact-router/match';
+import {Link} from 'preact-router/match';
 
 export function Layout({ children, user, onLogout }) {
     return (

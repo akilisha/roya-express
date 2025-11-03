@@ -10,25 +10,23 @@ import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
  * LangChain adapter implementation of Roya's AI interface.
- * 
+ *
  * Bridges LangChain4j models to Roya's unified API.
  * Currently implements LLM, Embeddings. Vectors/RAG/Agents/NLP/Vision/Audio coming soon.
  */
 public class LangChainAdapter implements AI {
-    
+
     private final ChatModel chatModel;
     private final StreamingChatModel streamingChatModel;
     private final EmbeddingModel embeddingModel;
     private final ObjectMapper objectMapper;
-    
+
     public LangChainAdapter(ChatModel chatModel, StreamingChatModel streamingChatModel, EmbeddingModel embeddingModel) {
         this.chatModel = chatModel;
         this.streamingChatModel = streamingChatModel;
@@ -36,7 +34,7 @@ public class LangChainAdapter implements AI {
         this.objectMapper = new ObjectMapper()
             .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-    
+
     @Override
     public LLM llm() {
         return new LLM() {
@@ -44,34 +42,34 @@ public class LangChainAdapter implements AI {
             public String ask(String systemPrompt, String userMessage) {
                 return LangChainAdapter.this.ask(systemPrompt, userMessage);
             }
-            
+
             @Override
             public String ask(String systemPrompt, String userMessage, AIOptions options) {
                 return LangChainAdapter.this.ask(systemPrompt, userMessage, options);
             }
-            
+
             @Override
             public <T> T extract(Class<T> type, String prompt) {
                 return LangChainAdapter.this.extract(type, prompt);
             }
-            
+
             @Override
             public <T> T extract(Class<T> type, String prompt, AIOptions options) {
                 return LangChainAdapter.this.extract(type, prompt, options);
             }
-            
+
             @Override
             public void stream(String systemPrompt, String userMessage, Consumer<String> onToken) {
                 LangChainAdapter.this.stream(systemPrompt, userMessage, onToken);
             }
-            
+
             @Override
             public void stream(String systemPrompt, String userMessage, AIOptions options, Consumer<String> onToken) {
                 LangChainAdapter.this.stream(systemPrompt, userMessage, options, onToken);
             }
         };
     }
-    
+
     @Override
     public Embeddings embeddings() {
         return new Embeddings() {
@@ -85,7 +83,7 @@ public class LangChainAdapter implements AI {
                     throw new AIException("LangChain embedding failed: " + e.getMessage(), e);
                 }
             }
-            
+
             @Override
             public List<float[]> embed(List<String> texts) {
                 try {
@@ -93,11 +91,11 @@ public class LangChainAdapter implements AI {
                     List<dev.langchain4j.data.segment.TextSegment> segments = texts.stream()
                         .map(dev.langchain4j.data.segment.TextSegment::from)
                         .collect(Collectors.toList());
-                    
+
                     // Perform batch embedding
                     Response<List<Embedding>> response = embeddingModel.embedAll(segments);
                     List<Embedding> embeddings = response.content();
-                    
+
                     // Convert List<Embedding> to List<float[]>
                     return embeddings.stream()
                         .map(Embedding::vector)
@@ -108,32 +106,32 @@ public class LangChainAdapter implements AI {
             }
         };
     }
-    
+
     @Override
     public Vectors vectors() {
         // TODO: Implement vector operations
         throw new UnsupportedOperationException("Vectors not yet implemented in LangChain adapter");
     }
-    
+
     @Override
     public RAGApi ragApi() {
         // TODO: Implement RAG
         throw new UnsupportedOperationException("RAG not yet implemented in LangChain adapter");
     }
-    
+
     @Override
     public Agents agents() {
         // TODO: Implement agents
         throw new UnsupportedOperationException("Agents not yet implemented in LangChain adapter");
     }
-    
+
     // Convenience methods - delegate to llm()
-    
+
     @Override
     public String ask(String systemPrompt, String userMessage) {
         return ask(systemPrompt, userMessage, AIOptions.defaults());
     }
-    
+
     @Override
     public String ask(String systemPrompt, String userMessage, AIOptions options) {
         try {
@@ -147,31 +145,31 @@ public class LangChainAdapter implements AI {
             throw new AIException("LangChain chat completion failed: " + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public <T> T extract(Class<T> type, String prompt) {
         return extract(type, prompt, AIOptions.defaults());
     }
-    
+
     @Override
     public <T> T extract(Class<T> type, String prompt, AIOptions options) {
         try {
             // Request JSON output
             String jsonPrompt = "Extract information from the following text into JSON format matching this schema: " + type.getSimpleName() + "\n\n" + prompt + "\n\nRespond with JSON only.";
             String response = chatModel.chat(jsonPrompt);
-            
+
             // Parse JSON response
             return objectMapper.readValue(response, type);
         } catch (Exception e) {
             throw new AIException("LangChain extraction failed: " + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public void stream(String systemPrompt, String userMessage, Consumer<String> onToken) {
         stream(systemPrompt, userMessage, AIOptions.defaults(), onToken);
     }
-    
+
     @Override
     public void stream(String systemPrompt, String userMessage, AIOptions options, Consumer<String> onToken) {
         try {
@@ -182,19 +180,19 @@ public class LangChainAdapter implements AI {
             if (systemPrompt != null && !systemPrompt.isBlank()) {
                 userMessage = systemPrompt + "\n\nUser: " + userMessage;
             }
-            
+
             // Use StreamingChatModel.chat(String, StreamingChatResponseHandler)
             streamingChatModel.chat(userMessage, new StreamingChatResponseHandler() {
                 @Override
                 public void onPartialResponse(String partialResponse) {
                     onToken.accept(partialResponse);
                 }
-                
+
                 @Override
                 public void onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse completeResponse) {
                     // Streaming complete, no action needed
                 }
-                
+
                 @Override
                 public void onError(Throwable error) {
                     throw new AIException("LangChain streaming error: " + error.getMessage(), error);
@@ -204,18 +202,18 @@ public class LangChainAdapter implements AI {
             throw new AIException("LangChain streaming failed: " + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public RAGResponse rag(String question) {
         return rag(question, RAGOptions.builder().build());
     }
-    
+
     @Override
     public RAGResponse rag(String question, RAGOptions options) {
         // TODO: Implement RAG
         throw new UnsupportedOperationException("RAG not yet implemented in LangChain adapter");
     }
-    
+
     @Override
     public <T> T provider(Class<T> providerType) {
         // Return the underlying models if requested
@@ -230,14 +228,14 @@ public class LangChainAdapter implements AI {
         }
         return null;
     }
-    
+
     @Override
     public AIResponse<String> askWithMetadata(String systemPrompt, String userMessage, AIOptions options) {
         String answer = ask(systemPrompt, userMessage, options);
         // TODO: Extract token usage from LangChain4j response
         return new AIResponse<>(answer, options.model(), 0, 0, 0, 0.0, false);
     }
-    
+
     @Override
     public <T> AIResponse<T> extractWithMetadata(Class<T> type, String prompt, AIOptions options) {
         T data = extract(type, prompt, options);
@@ -251,12 +249,12 @@ public class LangChainAdapter implements AI {
             "Workflow API not available in LangChainAdapter. Use UnifiedAIService for workflows."
         );
     }
-    
+
     @Override
     public LangGraphService langGraph() {
         return null; // Not available in LangChainAdapter
     }
-    
+
     @Override
     public GoogleADKService googleADK() {
         return null; // Not available in LangChainAdapter

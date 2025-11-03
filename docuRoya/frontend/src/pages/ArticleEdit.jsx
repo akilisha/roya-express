@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'preact/hooks';
-import { route } from 'preact-router';
-import { articlesAPI } from '../utils/api';
+import {useEffect, useState} from 'preact/hooks';
+import {route} from 'preact-router';
+import {articlesAPI} from '../utils/api';
 
 export function ArticleEdit({ id, user }) {
     if (!user) {

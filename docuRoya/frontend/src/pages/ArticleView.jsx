@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'preact/hooks';
-import { route } from 'preact-router';
-import { articlesAPI } from '../utils/api';
-import { format } from 'date-fns';
-import { parseDate } from '../utils/date';
+import {useEffect, useState} from 'preact/hooks';
+import {articlesAPI} from '../utils/api';
+import {format} from 'date-fns';
+import {parseDate} from '../utils/date';
 
 export function ArticleView({ id, user }) {
     const [article, setArticle] = useState(null);

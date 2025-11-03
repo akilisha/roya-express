@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'preact/hooks';
-import { articlesAPI } from '../utils/api';
-import { format } from 'date-fns';
-import { parseDate } from '../utils/date';
+import {useEffect, useState} from 'preact/hooks';
+import {articlesAPI} from '../utils/api';
+import {format} from 'date-fns';
+import {parseDate} from '../utils/date';
 
 export function Home({ user }) {
     const [articles, setArticles] = useState([]);

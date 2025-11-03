@@ -1,7 +1,6 @@
 package com.akilisha.oss.roya.examples;
 
 import com.akilisha.oss.roya.Roya;
-import com.akilisha.oss.roya.core.HandlebarsViewOptions;
 
 import java.util.Map;
 
@@ -52,7 +51,7 @@ public class TemplateRenderingDemo {
                 Map.of("id", 2, "name", "Bob", "email", "bob@example.com"),
                 Map.of("id", 3, "name", "Charlie", "email", "charlie@example.com")
             );
-            
+
             res.render("users.hbs", Map.of(
                 "title", "User Directory",
                 "users", users
@@ -69,7 +68,7 @@ public class TemplateRenderingDemo {
                 "description", "This is an amazing product with lots of features!",
                 "inStock", true
             );
-            
+
             res.render("product.hbs", Map.of(
                 "title", "Product Details",
                 "product", product

@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
-import { route } from 'preact-router';
-import { chatAPI } from '../utils/api';
+import {useEffect, useRef, useState} from 'preact/hooks';
+import {route} from 'preact-router';
+import {chatAPI} from '../utils/api';
 
 export function Chat({ user }) {
     if (!user) {

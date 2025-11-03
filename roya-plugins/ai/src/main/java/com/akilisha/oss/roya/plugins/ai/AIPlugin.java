@@ -2,9 +2,9 @@ package com.akilisha.oss.roya.plugins.ai;
 
 import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
 import com.akilisha.oss.roya.api.plugin.Services;
+import com.akilisha.oss.roya.plugins.ai.googleadk.GoogleADKAdapter;
 import com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter;
 import com.akilisha.oss.roya.plugins.ai.langgraph.LangGraphAdapter;
-import com.akilisha.oss.roya.plugins.ai.googleadk.GoogleADKAdapter;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryConfig;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryFactory;
 
@@ -63,10 +63,10 @@ public class AIPlugin implements RoyaPlugin {
             // Create all three library adapters (they work together!)
             // LangChain4j: Best for LLM primitives (chat, embeddings, tools)
             LangChainAdapter langChain = createLangChain(config);
-            
+
             // LangGraph4j: Best for stateful agent workflows (StateGraph, multi-node)
             LangGraphAdapter langGraph = createLangGraph(config);
-            
+
             // Google ADK: Best for high-level agent orchestration (when available)
             GoogleADKAdapter googleADK = createGoogleADK(config);
 

@@ -5,7 +5,6 @@ import com.akilisha.oss.roya.api.pipeline.MiddlewarePipeline;
 import com.akilisha.oss.roya.api.plugin.Application;
 import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.core.HandlebarsEngine;
-import com.akilisha.oss.roya.core.HandlebarsViewOptions;
 import com.akilisha.oss.roya.core.RequestImpl;
 import com.akilisha.oss.roya.core.ResponseImpl;
 import com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl;
@@ -29,7 +28,7 @@ import java.util.Map;
  * This is the Express-compatible API for building web applications.
  */
 public class Roya implements Handler, Application {
-    
+
     static {
         // Register built-in template engine factories
         TemplateEngineFactory.register("hbs", HandlebarsEngine::new);
@@ -75,15 +74,15 @@ public class Roya implements Handler, Application {
     public Services services() {
         return services;
     }
-    
+
     // ========== Template Engine ==========
-    
+
     /**
      * Register a template engine.
      * <p>
      * Express: app.engine('hbs', hbs.engine)
      * Roya:    app.engine("hbs", engine)
-     * 
+     *
      * @param viewEngineName View engine name
      * @param engine Template engine implementation
      * @return this (for chaining)
@@ -94,27 +93,27 @@ public class Roya implements Handler, Application {
         this.templateEngine = engine;
         return this;
     }
-    
+
     /**
      * Get the current view engine name.
      */
     public String getViewEngine() {
         return viewEngine;
     }
-    
+
     /**
      * Get the current template engine.
      */
     public TemplateEngine getTemplateEngine() {
         return templateEngine;
     }
-    
+
     /**
      * Configure view engine using options.
      * <p>
      * Express: app.set('view engine', 'hbs'); app.set('views', './views')
      * Roya:    app.view(HandlebarsViewOptions.create("views"))
-     * 
+     *
      * @param options View engine configuration options
      * @return this (for chaining)
      */
@@ -123,18 +122,18 @@ public class Roya implements Handler, Application {
         engine(options.engine(), options.templateEngine());
         return this;
     }
-    
+
     // ========== Application Settings (Express app.set/get) ==========
-    
+
     /**
      * Set application setting.
      * <p>
      * Express: app.set('view engine', 'hbs')
-     * 
+     *
      * Special cases:
      * - "view engine" sets the template engine name
      * - "views" sets the views path and creates the engine
-     * 
+     *
      * @param setting Setting name (e.g., "view engine", "views")
      * @param value Setting value
      * @return this (for chaining)
@@ -161,12 +160,12 @@ public class Roya implements Handler, Application {
         }
         return this;
     }
-    
+
     /**
      * Get application setting.
      * <p>
      * Express: app.get('view engine')
-     * 
+     *
      * @param setting Setting name
      * @return Setting value (empty if not set)
      */
@@ -177,7 +176,7 @@ public class Roya implements Handler, Application {
         }
         return java.util.Optional.ofNullable(settings.get(setting));
     }
-    
+
     // ========== WebSocket convenience ==========
 
     /**
@@ -249,7 +248,7 @@ public class Roya implements Handler, Application {
         router.use(path, handler);
         return this;
     }
-    
+
     /**
      * Mount a nested router at a specific path.
      * <p>

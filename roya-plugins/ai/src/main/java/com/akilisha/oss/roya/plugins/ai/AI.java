@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.ai;
 
 import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
+
 import java.util.function.Consumer;
 
 /**
@@ -95,25 +96,25 @@ public interface AI {
      * @return AI workflow builder
      */
     AIWorkflowBuilder workflow(String name);
-    
+
     /**
      * Get direct access to LangGraph4j service.
-     * 
+     *
      * For developers already proficient with LangGraph, this provides
      * direct access to LangGraph4j's StateGraph and orchestration APIs.
      * Roya framework is the "backend vehicle" - use LangGraph's own patterns.
-     * 
+     *
      * @return LangGraph service (null if not available)
      */
     LangGraphService langGraph();
-    
+
     /**
      * Get direct access to Google ADK service.
-     * 
+     *
      * For developers familiar with Google ADK, this provides
      * direct access to ADK's agent orchestration APIs.
      * Roya framework provides the runtime environment.
-     * 
+     *
      * @return Google ADK service (null if not available)
      */
     GoogleADKService googleADK();

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'preact/hooks';
-import { route } from 'preact-router';
-import { uploadAPI } from '../utils/api';
+import {useEffect, useState} from 'preact/hooks';
+import {route} from 'preact-router';
+import {uploadAPI} from '../utils/api';
 
 export function Upload({ user }) {
     if (!user) {
