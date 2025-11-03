@@ -1,0 +1,33 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    // Core dependencies
+    implementation project(':roya-api')
+    implementation project(':roya-workflow')
+    implementation project(':roya-plugins:cache')
+
+    // Jackson for JSON serialization (workflow state, configuration)
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
+
+    // Logging
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+
+    // Test dependencies
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoJunitVersion}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${mockitoJunitVersion}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+            '--enable-preview',
+    ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs += ['--enable-preview']
+}
