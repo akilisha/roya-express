@@ -1,7 +1,10 @@
 package com.akilisha.oss.roya.plugins.ai.builder;
 
 import com.akilisha.oss.roya.plugins.ai.AI;
-import com.akilisha.oss.roya.plugins.ai.nodes.ai.*;
+import com.akilisha.oss.roya.plugins.ai.nodes.EmbeddingNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.ExtractNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.LLMActionNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.StreamingLLMNode;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.edges.Edge;
 
@@ -9,11 +12,11 @@ import java.util.function.Consumer;
 
 /**
  * Fluent builder specifically for AI workflows.
- * 
+ *
  * Wraps roya-workflow's Workflow builder with AI-specific convenience methods.
  * Provides semantic clarity: `.llm()`, `.extract()`, `.embeddings()` instead of
  * generic `.action()` calls.
- * 
+ *
  * Example:
  * <pre>
  * Workflow workflow = AIWorkflowBuilder.create(ai, "receipt-processor")
@@ -39,12 +42,12 @@ import java.util.function.Consumer;
 public class AIWorkflowBuilder {
     private final AI ai;
     private final Workflow.WorkflowBuilder workflowBuilder;
-    
+
     private AIWorkflowBuilder(AI ai, String workflowName) {
         this.ai = ai;
         this.workflowBuilder = Workflow.create();
     }
-    
+
     /**
      * Create a new AI workflow builder.
      *
@@ -55,9 +58,9 @@ public class AIWorkflowBuilder {
     public static AIWorkflowBuilder create(AI ai, String name) {
         return new AIWorkflowBuilder(ai, name);
     }
-    
+
     // ========== AI Node Convenience Methods ==========
-    
+
     /**
      * Add an LLM action node.
      *
@@ -71,7 +74,7 @@ public class AIWorkflowBuilder {
         workflowBuilder.action(nodeId, builder.build());
         return this;
     }
-    
+
     /**
      * Add a type-safe extraction node.
      *
@@ -80,14 +83,14 @@ public class AIWorkflowBuilder {
      * @param config Node configuration
      * @return This builder
      */
-    public <T> AIWorkflowBuilder extract(String nodeId, Class<T> extractType, 
+    public <T> AIWorkflowBuilder extract(String nodeId, Class<T> extractType,
                                         Consumer<ExtractNode.Builder<T>> config) {
         ExtractNode.Builder<T> builder = ExtractNode.builder(ai, extractType);
         config.accept(builder);
         workflowBuilder.action(nodeId, builder.build());
         return this;
     }
-    
+
     /**
      * Add an embeddings node.
      *
@@ -101,15 +104,21 @@ public class AIWorkflowBuilder {
         workflowBuilder.action(nodeId, builder.build());
         return this;
     }
-    
-    // TODO: Implement streaming LLM node
-    // public AIWorkflowBuilder stream(String nodeId, Consumer<StreamingLLMNode.Builder> config) {
-    //     StreamingLLMNode.Builder builder = StreamingLLMNode.builder(ai);
-    //     config.accept(builder);
-    //     workflowBuilder.action(nodeId, builder.build());
-    //     return this;
-    // }
-    
+
+    /**
+     * Add a streaming LLM node that streams tokens as they arrive.
+     *
+     * @param nodeId Node identifier
+     * @param config Node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder stream(String nodeId, Consumer<StreamingLLMNode.Builder> config) {
+        StreamingLLMNode.Builder builder = StreamingLLMNode.builder(ai);
+        config.accept(builder);
+        workflowBuilder.action(nodeId, builder.build());
+        return this;
+    }
+
     // TODO: Add more convenience methods as we implement more node types:
     // - .rag()
     // - .vision()
@@ -117,9 +126,9 @@ public class AIWorkflowBuilder {
     // - .agent()
     // - .mcp()
     // - .vectors()
-    
+
     // ========== Edge Delegation ==========
-    
+
     /**
      * Add a sequential edge (default).
      */
@@ -127,7 +136,7 @@ public class AIWorkflowBuilder {
         workflowBuilder.edge(from, to);
         return this;
     }
-    
+
     /**
      * Add an edge with configuration.
      */
@@ -135,16 +144,16 @@ public class AIWorkflowBuilder {
         workflowBuilder.edge(from, to, edge);
         return this;
     }
-    
+
     /**
      * Add a conditional edge.
      */
-    public AIWorkflowBuilder edge(String from, String to, 
+    public AIWorkflowBuilder edge(String from, String to,
                                   java.util.function.Predicate<com.akilisha.oss.roya.workflow.core.ExecutionContext> condition) {
         workflowBuilder.edge(from, to, Edge.when(condition));
         return this;
     }
-    
+
     /**
      * Add a parallel edge.
      */
@@ -152,7 +161,7 @@ public class AIWorkflowBuilder {
         workflowBuilder.edge(from, to, Edge.parallel());
         return this;
     }
-    
+
     /**
      * Build the workflow.
      *
@@ -161,9 +170,9 @@ public class AIWorkflowBuilder {
     public Workflow build() {
         return workflowBuilder.build();
     }
-    
+
     // ========== Direct Access (for advanced use) ==========
-    
+
     /**
      * Get the underlying Workflow builder for direct access.
      * Use this when you need roya-workflow features not exposed by AIWorkflowBuilder.
