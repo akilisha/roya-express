@@ -1,4 +1,4 @@
-package com.akilisha.oss.roya.plugins.ai.nodes;
+package com.akilisha.oss.roya.plugins.ai.nodes.actions;
 
 import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.workflow.core.NodeInput;

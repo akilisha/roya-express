@@ -3,6 +3,7 @@ package com.akilisha.oss.roya.examples;
 import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.AIPlugin;
+import com.akilisha.oss.roya.plugins.ai.nodes.triggers.ManualTrigger;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.edges.Edge;
 import com.akilisha.oss.roya.workflow.execution.WorkflowExecutor;
@@ -48,9 +49,9 @@ public class AIShowcaseDemo {
         WorkflowExecutor executor = new WorkflowExecutor(workflow)
             .addVisitor(new LoggingVisitor());
         
-        // Start from extract-details node (first node in workflow)
+        // Start from trigger node (workflows must start from a trigger)
         WorkflowResult result = executor.executeFrom(
-            "extract-details",  // Trigger node
+            "start",  // Trigger node
             Map.of("receiptText", getMockReceiptText())
         ).join();
         
@@ -78,6 +79,9 @@ public class AIShowcaseDemo {
      */
     private static Workflow buildReceiptWorkflow(AI ai) {
         return ai.workflow("receipt-processor")
+            // Trigger: Manual trigger for programmatic execution
+            .trigger("start", ManualTrigger.create())
+            
             // Step 1: Extract structured data from receipt text
             .extract("extract-details", ReceiptDetails.class, builder -> builder
                 .systemPrompt("Extract receipt information into structured format. Include vendor, date, items, totals, payment method, and receipt ID.")
@@ -114,6 +118,7 @@ public class AIShowcaseDemo {
             )
             
             // Define workflow edges
+            .edge("start", "extract-details")  // Trigger -> Extract
             .edge("extract-details", "embed-items")
             .edge("extract-details", "analyze-spending", Edge.parallel())  // Parallel execution
             .edge("extract-details", "generate-summary", Edge.parallel())  // Parallel execution

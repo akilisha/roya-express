@@ -621,6 +621,57 @@ MVP has per-request tracking. This enhancement adds budget management layer. Con
 
 ---
 
+### AI Workflow Trigger Nodes Implementation
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 40-80 hours (varies by trigger)  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for the 9 placeholder trigger nodes in the AI plugin. Currently, only ManualTrigger and CustomTrigger are fully functional. The remaining triggers need integration with external systems and scheduling mechanisms.
+
+**Trigger Nodes Requiring Implementation**:
+
+1. **WebhookTrigger** - Integrate with Roya HTTP routing, webhook signature verification, support multiple HTTP methods
+2. **CronJobTrigger** - Integrate with scheduling library (Quartz), parse cron expressions, register scheduled tasks
+3. **FileWatchTrigger** - Integrate with Java NIO WatchService, support recursive watching, file filters, event types
+4. **PollingTrigger** - Implement polling mechanism with ScheduledExecutorService, support conditional polling, backoff strategies
+5. **SubscriptionTrigger** - Integrate with Roya WebSocket/SSE, support connection events, subscription filters
+6. **ChatTrigger** - Integrate with Slack/Discord/Teams APIs, support message events, authentication
+7. **EmailTrigger** - Integrate with email plugins (IMAP/POP3), support filtering, parsing, attachment handling
+8. **AppEventTrigger** - Integrate with application event bus, support event filtering, subscription mechanism
+9. **WorkflowTrigger** - Implement workflow execution tracking, support workflow chaining, result passing
+
+**Motivation**:
+Workflows need entry points (triggers) to start execution. Currently, only manual and custom triggers work. Full implementation of these triggers enables automated, event-driven AI workflows.
+
+**Acceptance Criteria**:
+- WebhookTrigger: Auto-register webhook endpoints, signature verification, multiple HTTP methods
+- CronJobTrigger: Schedule parsing, task registration, timezone support, persistence
+- FileWatchTrigger: Directory watching, file filters, event handling, recursive watching
+- PollingTrigger: Scheduled polling, conditional execution, backoff strategies
+- SubscriptionTrigger: WebSocket/SSE integration, connection lifecycle, subscription management
+- ChatTrigger: Platform integration (Slack/Discord/Teams), message events, authentication
+- EmailTrigger: IMAP/POP3 integration, email filtering, parsing, attachment support
+- AppEventTrigger: Event bus integration, event filtering, subscription mechanism
+- WorkflowTrigger: Workflow tracking, chaining support, context passing
+
+**Dependencies**:
+- Roya HTTP routing (for WebhookTrigger)
+- Scheduling library like Quartz (for CronJobTrigger)
+- Java NIO WatchService (for FileWatchTrigger)
+- Roya WebSocket/SSE infrastructure (for SubscriptionTrigger)
+- External SDKs for chat platforms (for ChatTrigger)
+- JavaMail API (for EmailTrigger)
+- Event bus system (for AppEventTrigger)
+- Workflow execution tracking (for WorkflowTrigger)
+
+**Notes**:
+Placeholder implementations exist at `roya-plugins/ai/src/main/java/com/akilisha/oss/roya/plugins/ai/nodes/triggers/`. Each trigger has detailed TODOs in source code comments. Implementation priority: WebhookTrigger and CronJobTrigger (high priority), then FileWatchTrigger and PollingTrigger (medium priority), then platform-specific triggers (lower priority).
+
+---
+
 ## Infrastructure & DevOps Enhancements
 
 ### Health Check Endpoints

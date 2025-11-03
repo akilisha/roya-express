@@ -1,13 +1,15 @@
 package com.akilisha.oss.roya.plugins.ai.builder;
 
 import com.akilisha.oss.roya.plugins.ai.AI;
-import com.akilisha.oss.roya.plugins.ai.nodes.EmbeddingNode;
-import com.akilisha.oss.roya.plugins.ai.nodes.ExtractNode;
-import com.akilisha.oss.roya.plugins.ai.nodes.LLMActionNode;
-import com.akilisha.oss.roya.plugins.ai.nodes.StreamingLLMNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.actions.EmbeddingNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.actions.ExtractNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.actions.LLMActionNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.actions.StreamingLLMNode;
 import com.akilisha.oss.roya.workflow.core.Workflow;
+import com.akilisha.oss.roya.workflow.core.WorkflowNode;
 import com.akilisha.oss.roya.workflow.edges.Edge;
 
+import java.time.Duration;
 import java.util.function.Consumer;
 
 /**
@@ -57,6 +59,33 @@ public class AIWorkflowBuilder {
      */
     public static AIWorkflowBuilder create(AI ai, String name) {
         return new AIWorkflowBuilder(ai, name);
+    }
+
+    // ========== Trigger Node Methods ==========
+
+    /**
+     * Add a manual trigger node (for programmatically started workflows).
+     *
+     * @param nodeId Node identifier
+     * @param triggerNode The trigger node implementation
+     * @return This builder
+     */
+    public AIWorkflowBuilder trigger(String nodeId, WorkflowNode triggerNode) {
+        workflowBuilder.trigger(nodeId, triggerNode);
+        return this;
+    }
+
+    /**
+     * Add a manual trigger node with timeout.
+     *
+     * @param nodeId Node identifier
+     * @param triggerNode The trigger node implementation
+     * @param timeout Timeout for the trigger
+     * @return This builder
+     */
+    public AIWorkflowBuilder trigger(String nodeId, WorkflowNode triggerNode, Duration timeout) {
+        workflowBuilder.trigger(nodeId, triggerNode, timeout);
+        return this;
     }
 
     // ========== AI Node Convenience Methods ==========
