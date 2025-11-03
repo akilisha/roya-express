@@ -15,8 +15,8 @@ dependencies {
     // JSON parsing for examples (request body parsing in demos)
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation project(":roya-plugins:ai")
+    implementation project(":roya-workflow")
     implementation project(":roya-plugins:object-storage")
-    implementation project(":roya-plugins:agentic")
     implementation "io.helidon.webserver:helidon-webserver-websocket:${helidonVersion}"
     implementation "io.helidon.common:helidon-common-reactive:${helidonVersion}"
 

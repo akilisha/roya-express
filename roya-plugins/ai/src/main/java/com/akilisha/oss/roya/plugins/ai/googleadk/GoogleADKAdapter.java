@@ -1,7 +1,7 @@
 package com.akilisha.oss.roya.plugins.ai.googleadk;
 
-import com.akilisha.oss.roya.api.WorkflowBuilder;
 import com.akilisha.oss.roya.plugins.ai.*;
+import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
 
 /**
  * Placeholder Google ADK adapter.
@@ -97,8 +97,21 @@ public class GoogleADKAdapter implements AI {
     }
 
     @Override
-    public WorkflowBuilder workflow(String name) {
+    public AIWorkflowBuilder workflow(String name) {
         throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
     }
+    
+    @Override
+    public LangGraphService langGraph() {
+        return null; // Not available in GoogleADKAdapter
+    }
+    
+    @Override
+    public GoogleADKService googleADK() {
+        // Return self wrapped in service
+        return new GoogleADKServiceImpl(this);
+    }
 }
+
+
 

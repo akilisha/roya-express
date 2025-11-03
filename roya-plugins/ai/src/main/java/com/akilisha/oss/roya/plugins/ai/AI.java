@@ -1,6 +1,6 @@
 package com.akilisha.oss.roya.plugins.ai;
 
-import com.akilisha.oss.roya.api.WorkflowBuilder;
+import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
 import java.util.function.Consumer;
 
 /**
@@ -69,15 +69,54 @@ public interface AI {
      */
     Agents agents();
     /**
-     * Create a workflow builder for multi-node, stateful AI workflows.
+     * Create an AI workflow builder for multi-node, stateful AI workflows.
      *
-     * Workflows enable complex AI operations with automatic state management,
-     * conditional logic, and plugin integrations.
+     * Uses roya-workflow framework for graph-based orchestration.
+     * Provides semantic convenience methods: .llm(), .extract(), .embeddings(), etc.
+     *
+     * Example:
+     * <pre>
+     * Workflow workflow = ai.workflow("receipt-processor")
+     *     .llm("classify", builder -> builder
+     *         .systemPrompt("Classify intent")
+     *         .inputKey("message")
+     *         .outputKey("intent")
+     *     )
+     *     .extract("extractDetails", ReceiptDetails.class, builder -> builder
+     *         .systemPrompt("Extract receipt details")
+     *         .inputKey("receiptText")
+     *         .outputKey("details")
+     *     )
+     *     .edge("classify", "extract")
+     *     .build();
+     * </pre>
      *
      * @param name Workflow name
-     * @return Workflow builder
+     * @return AI workflow builder
      */
-    WorkflowBuilder workflow(String name);
+    AIWorkflowBuilder workflow(String name);
+    
+    /**
+     * Get direct access to LangGraph4j service.
+     * 
+     * For developers already proficient with LangGraph, this provides
+     * direct access to LangGraph4j's StateGraph and orchestration APIs.
+     * Roya framework is the "backend vehicle" - use LangGraph's own patterns.
+     * 
+     * @return LangGraph service (null if not available)
+     */
+    LangGraphService langGraph();
+    
+    /**
+     * Get direct access to Google ADK service.
+     * 
+     * For developers familiar with Google ADK, this provides
+     * direct access to ADK's agent orchestration APIs.
+     * Roya framework provides the runtime environment.
+     * 
+     * @return Google ADK service (null if not available)
+     */
+    GoogleADKService googleADK();
 
     /**
      * Ask the AI a question (chat completion).
@@ -280,4 +319,6 @@ public interface AI {
     /** Agent run result and optional step trace. */
     record AgentResult(String text, java.util.List<java.util.Map<String, Object>> trace) {}
 }
+
+
 

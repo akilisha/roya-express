@@ -115,14 +115,6 @@ public class AIPlugin implements RoyaPlugin {
         }
     }
 
-    private AI createLegacyAI(String openaiKey, com.akilisha.oss.roya.plugins.cache.Cache cache) {
-        if (openaiKey == null || openaiKey.isBlank()) {
-            throw new IllegalArgumentException(
-                "ai.openai.apiKey is required. Set via -Dai.openai.apiKey=key or OPENAI_API_KEY env var"
-            );
-        }
-        return new AIServiceImpl(new com.akilisha.oss.roya.plugins.ai.providers.OpenAIClient(openaiKey), cache);
-    }
 
     private String getConfigValue(String systemProp, String... envVars) {
         String value = System.getProperty(systemProp);
@@ -167,4 +159,6 @@ public class AIPlugin implements RoyaPlugin {
         // No cleanup needed
     }
 }
+
+
 

@@ -1,7 +1,7 @@
 package com.akilisha.oss.roya.plugins.ai.langgraph;
 
-import com.akilisha.oss.roya.api.WorkflowBuilder;
 import com.akilisha.oss.roya.plugins.ai.*;
+import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.chat.ChatModel;
@@ -287,10 +287,21 @@ public class LangGraphAdapter implements AI {
     }
 
     @Override
-    public WorkflowBuilder workflow(String name) {
+    public AIWorkflowBuilder workflow(String name) {
         throw new UnsupportedOperationException(
             "Workflow API not available in LangGraphAdapter. Use UnifiedAIService for workflows."
         );
+    }
+    
+    @Override
+    public LangGraphService langGraph() {
+        // Return self wrapped in service
+        return new LangGraphServiceImpl(this);
+    }
+    
+    @Override
+    public GoogleADKService googleADK() {
+        return null; // Not available in LangGraphAdapter
     }
 
     /**
@@ -320,4 +331,6 @@ public class LangGraphAdapter implements AI {
         }
     }
 }
+
+
 

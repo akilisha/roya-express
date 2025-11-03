@@ -1,11 +1,9 @@
 package com.akilisha.oss.roya.plugins.ai;
 
-import com.akilisha.oss.roya.api.WorkflowBuilder;
+import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
 import com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter;
 import com.akilisha.oss.roya.plugins.ai.langgraph.LangGraphAdapter;
 import com.akilisha.oss.roya.plugins.ai.googleadk.GoogleADKAdapter;
-import com.akilisha.oss.roya.plugins.ai.workflow.WorkflowBuilderImpl;
-import com.akilisha.oss.roya.plugins.ai.workflow.NodeExecutorFactory;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,8 +33,6 @@ public class UnifiedAIService implements AI {
         this.langChain = langChain;
         this.langGraph = langGraph;
         this.googleADK = googleADK;
-        // Initialize workflow executor with this service
-        NodeExecutorFactory.setAIService(this);
     }
 
     /**
@@ -47,8 +43,24 @@ public class UnifiedAIService implements AI {
     }
 
     @Override
-    public WorkflowBuilder workflow(String name) {
-        return new WorkflowBuilderImpl(name);
+    public AIWorkflowBuilder workflow(String name) {
+        return AIWorkflowBuilder.create(this, name);
+    }
+    
+    @Override
+    public LangGraphService langGraph() {
+        if (langGraph == null) {
+            return null;
+        }
+        return new LangGraphServiceImpl(langGraph);
+    }
+    
+    @Override
+    public GoogleADKService googleADK() {
+        if (googleADK == null) {
+            return null;
+        }
+        return new GoogleADKServiceImpl(googleADK);
     }
 
     @Override
@@ -183,16 +195,7 @@ public class UnifiedAIService implements AI {
     public LangChainAdapter langChain() {
         return langChain;
     }
-
-    public LangGraphAdapter langGraph() {
-        return langGraph;
-    }
-
-    public GoogleADKAdapter googleADK() {
-        if (googleADK == null) {
-            throw new UnsupportedOperationException("Google ADK adapter not available");
-        }
-        return googleADK;
-    }
 }
+
+
 

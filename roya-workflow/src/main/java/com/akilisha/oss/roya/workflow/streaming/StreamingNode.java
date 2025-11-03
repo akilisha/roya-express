@@ -34,11 +34,9 @@ public interface StreamingNode extends WorkflowNode {
         StringBuilder accumulated = new StringBuilder();
 
         publisher.subscribe(new Flow.Subscriber<>() {
-            private Flow.Subscription subscription;
 
             @Override
             public void onSubscribe(Flow.Subscription subscription) {
-                this.subscription = subscription;
                 subscription.request(Long.MAX_VALUE);
             }
 
