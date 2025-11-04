@@ -61,6 +61,16 @@ public class UnifiedAIService implements AI {
         }
         return new GoogleADKServiceImpl(googleADK);
     }
+    
+    @Override
+    public <T> T aiService(Class<T> serviceClass) {
+        // Delegate to LangChain adapter (primary implementation)
+        // LangChain4j's AI Services will be used here
+        if (langChain != null) {
+            return langChain.aiService(serviceClass);
+        }
+        throw new UnsupportedOperationException("AI Services require LangChain adapter");
+    }
 
     @Override
     public LLM llm() {

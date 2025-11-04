@@ -6,7 +6,7 @@
 
 ```bash
 # Option A: Environment variable
-export AI_OPENAI_API_KEY=your-api-key-here
+export OPENAI_API_KEY=your-api-key-here
 
 # Option B: System property (for Java)
 -Dai.openai.apiKey=your-api-key-here

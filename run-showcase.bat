@@ -5,18 +5,18 @@ REM Usage: run-showcase.bat [your-openai-api-key]
 setlocal
 
 if "%~1"=="" (
-    if "%AI_OPENAI_API_KEY%"=="" (
+    if "%OPENAI_API_KEY%"=="" (
         echo ❌ Error: OpenAI API key required
         echo.
         echo Usage:
         echo   run-showcase.bat YOUR_API_KEY
         echo   OR
-        echo   set AI_OPENAI_API_KEY=your-key
+        echo   set OPENAI_API_KEY=your-key
         echo   run-showcase.bat
         echo.
         exit /b 1
     )
-    set API_KEY=%AI_OPENAI_API_KEY%
+    set API_KEY=%OPENAI_API_KEY%
 ) else (
     set API_KEY=%~1
 )

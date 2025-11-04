@@ -45,14 +45,10 @@ tasks.register('runAIShowcase', JavaExec) {
 
     // Pass environment variables to the Java process
     // Check if env vars exist and pass them
-    String apiKey = System.getenv('AI_OPENAI_API_KEY')
-    if (apiKey == null || apiKey.isEmpty()) {
-        apiKey = System.getenv('OPENAI_API_KEY')
-    }
+    String apiKey = System.getenv('OPENAI_API_KEY')
 
     if (apiKey != null && !apiKey.isEmpty()) {
         // Pass as environment variable (preferred)
-        environment 'AI_OPENAI_API_KEY', apiKey
         environment 'OPENAI_API_KEY', apiKey
         // Also pass as system property as backup
         systemProperty 'ai.openai.apiKey', apiKey
@@ -61,7 +57,7 @@ tasks.register('runAIShowcase', JavaExec) {
     // Also allow system property from command line
     if (project.hasProperty('ai.openai.apiKey')) {
         systemProperty('ai.openai.apiKey', project.findProperty('ai.openai.apiKey'))
-        environment 'AI_OPENAI_API_KEY', project.findProperty('ai.openai.apiKey')
+        environment 'OPENAI_API_KEY', project.findProperty('ai.openai.apiKey')
     }
 }
 
@@ -71,9 +67,8 @@ tasks.register('runWorkflowShowcase', JavaExec) {
     mainClass = 'com.akilisha.oss.roya.examples.AIShowcaseDemo'
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = ['--enable-preview']
-    String apiKey = System.getenv('AI_OPENAI_API_KEY') ?: System.getenv('OPENAI_API_KEY')
+    String apiKey = System.getenv('OPENAI_API_KEY')
     if (apiKey) {
-        environment 'AI_OPENAI_API_KEY', apiKey
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
     }
@@ -85,9 +80,8 @@ tasks.register('runDocsMcp', JavaExec) {
     mainClass = 'com.akilisha.oss.roya.examples.mcp.DocsMcpServer'
     classpath = sourceSets.main.runtimeClasspath
     jvmArgs = ['--enable-preview']
-    String apiKey = System.getenv('AI_OPENAI_API_KEY') ?: System.getenv('OPENAI_API_KEY')
+    String apiKey = System.getenv('OPENAI_API_KEY')
     if (apiKey) {
-        environment 'AI_OPENAI_API_KEY', apiKey
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
     }

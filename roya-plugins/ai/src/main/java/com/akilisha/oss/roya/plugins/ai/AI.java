@@ -206,6 +206,42 @@ public interface AI {
      * @return Provider instance or null if not available
      */
     <T> T provider(Class<T> providerType);
+    
+    /**
+     * Create an AI Service using LangChain4j's AI Services pattern.
+     * 
+     * This is the recommended way to use LangChain4j - declarative interfaces
+     * that handle all the low-level plumbing automatically.
+     * 
+     * Features enabled automatically:
+     * - System messages via @SystemMessage
+     * - User messages via @UserMessage
+     * - Type-safe structured outputs (no manual JSON parsing!)
+     * - Built-in RAG support via ContentRetriever
+     * - Built-in tools support via ToolSpecification
+     * - Built-in memory support via ChatMemory
+     * - Streaming via TokenStream
+     * 
+     * Example:
+     * <pre>
+     * interface Assistant {
+     *     @SystemMessage("You are a helpful assistant")
+     *     String chat(String userMessage);
+     *     
+     *     @SystemMessage("Extract product information")
+     *     ProductInfo extract(String productDescription);
+     * }
+     * 
+     * AI ai = req.get(AI.class);
+     * Assistant assistant = ai.aiService(Assistant.class);
+     * String response = assistant.chat("Hello");
+     * </pre>
+     * 
+     * @param serviceClass AI Service interface class
+     * @return AI Service instance (proxy)
+     * @param <T> Service interface type
+     */
+    <T> T aiService(Class<T> serviceClass);
 
     /**
      * Ask with metadata (tokens, cost, caching info).

@@ -111,6 +111,11 @@ public class GoogleADKAdapter implements AI {
         // Return self wrapped in service
         return new GoogleADKServiceImpl(this);
     }
+    
+    @Override
+    public <T> T aiService(Class<T> serviceClass) {
+        throw new UnsupportedOperationException("AI Services implementation coming soon - use AiServices.create() directly for now");
+    }
 }
 
 

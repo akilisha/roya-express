@@ -561,32 +561,623 @@ Postmark is excellent for transactional emails. Follow the same thin wrapper pat
 
 ## AI Plugin Enhancements
 
-### Function Calling for Structured Outputs
-**Category**: Enhancement  
+### Token Usage Extraction in LangChainAdapter
+**Category**: Bug Fix / Feature Completion  
+**Priority**: P0-Critical  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Currently, `askWithMetadata()` and `extractWithMetadata()` methods in `LangChainAdapter` return zero values for token usage. Need to extract actual token usage from LangChain4j's `Result<T>` wrapper.
+
+**Location**: `LangChainAdapter.java:765, 772`
+
+**Motivation**:
+Metadata methods are returning incorrect token counts (all zeros), which affects cost tracking accuracy. This is a critical bug that needs immediate fixing.
+
+**Acceptance Criteria**:
+- Wrap `LLMService.ask()` calls to use `Result<String>` instead of `String`
+- Extract `TokenUsage` from `Result` and populate `AIResponse` with actual values
+- Same for `extractWithMetadata()` method
+- Verify token usage matches actual API calls
+
+**Dependencies**:
+- LangChain4j `Result<T>` wrapper support
+- `TokenUsage` extraction from AI Services responses
+
+**Notes**:
+LangChain4j AI Services support `Result<T>` wrapper which provides `tokenUsage()`. Need to change return types from `String` to `Result<String>` and extract metadata.
+
+---
+
+### Streaming Support in LLMService
+**Category**: Feature Completion  
+**Priority**: P0-Critical  
+**Estimated Effort**: 6 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Add streaming support to `LLMService` interface using LangChain4j's `TokenStream` return type. Currently streaming uses low-level `StreamingChatModel` API instead of AI Services pattern.
+
+**Location**: `LLMService.java:58`
+
+**Motivation**:
+Streaming currently uses low-level API. Should use AI Services for consistency and to leverage LangChain4j's built-in streaming capabilities.
+
+**Acceptance Criteria**:
+- Add `TokenStream` return type method to `LLMService`
+- Example signature: `TokenStream stream(@V("systemPrompt") String systemPrompt, @V("userMessage") String userMessage)`
+- Update `LangChainAdapter.stream()` to use AI Services instead of direct `StreamingChatModel` calls
+- Handle `TokenStream` callbacks (onPartialResponse, onComplete, onError)
+- Maintain backward compatibility with existing `stream()` API
+
+**Dependencies**:
+- LangChain4j `TokenStream` support
+- AI Services streaming pattern
+
+**Notes**:
+LangChain4j AI Services support `TokenStream` return type. Need to add streaming methods to `LLMService` interface and update adapter implementation.
+
+---
+
+### Metadata Support in LLMService
+**Category**: Feature Completion  
+**Priority**: P0-Critical  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Add metadata support to `LLMService` interface using LangChain4j's `Result<T>` wrapper to get token usage, finish reason, sources, and other metadata.
+
+**Location**: `LLMService.java:61`
+
+**Motivation**:
+Complete metadata support for AI operations. Currently metadata methods exist but don't extract actual values from LangChain4j responses.
+
+**Acceptance Criteria**:
+- Add `Result<T>` return type methods to `LLMService`
+- Example signature: `Result<String> askWithMetadata(@V("systemPrompt") String systemPrompt, @V("userMessage") String userMessage)`
+- Extract `TokenUsage`, `FinishReason`, `Sources` from `Result`
+- Update `LangChainAdapter` to use these methods
+- Ensure `AIResponse` is populated with actual metadata values
+
+**Dependencies**:
+- Related to Token Usage Extraction (can be done together)
+- LangChain4j `Result<T>` wrapper support
+
+**Notes**:
+This completes the metadata feature. Can be implemented alongside Token Usage Extraction as they're related.
+
+---
+
+### Audio & Video Capabilities Integration ⭐ USER REQUESTED
+**Category**: Feature  
+**Priority**: P1-High  
+**Estimated Effort**: 16 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Add multimodal support (audio, video, images) to the AI plugin. LangChain4j supports multimodal content via `Content` interface: `TextContent`, `ImageContent`, `AudioContent`, `VideoContent`, `PdfFileContent`.
+
+**Motivation**:
+User specifically requested audio and visual capabilities integration. This enables image analysis, audio transcription, video description, and PDF processing within workflows.
+
+**Acceptance Criteria**:
+- Add multimodal support to `LLMService`:
+  - `String askWithContent(@V("systemPrompt") String systemPrompt, @V("userMessage") String userMessage, Content... contents)`
+- Add convenience methods to `AI` interface:
+  - `Vision vision()` method returning `Vision` interface
+  - `Vision` interface with methods: `analyzeImage(String imageUrl, String prompt)`, `transcribeAudio(String audioUrl)`, `describeVideo(String videoUrl)`
+- Create `VisionNode` workflow node for multimodal operations
+- Update `AIWorkflowBuilder` with `.vision()` method
+- Support image URLs, base64, and file paths
+- Support audio/video URLs and file paths
+- Example usage: `ai.vision().analyzeImage("https://example.com/image.jpg", "What's in this image?")`
+
+**Dependencies**:
+- LangChain4j multimodal support (`Content` interface)
+- Provider support for multimodal models (OpenAI GPT-4 Vision, Whisper, etc.)
+
+**Notes**:
+LangChain4j supports `UserMessage.from(TextContent.from("..."), ImageContent.from("..."))`. Need to wrap this in a clean API and integrate with workflow system.
+
+---
+
+### WebhookTrigger Implementation
+**Category**: Feature  
+**Priority**: P1-High  
+**Estimated Effort**: 8 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `WebhookTrigger` to enable HTTP-triggered workflows. Currently placeholder implementation exists.
+
+**Location**: `WebhookTrigger.java`
+
+**Motivation**:
+WebhookTrigger is foundational for automated workflows. Enables external systems to trigger AI workflows via HTTP requests.
+
+**Acceptance Criteria**:
+- Integrate with Roya's HTTP routing to auto-register webhook endpoints
+- Support webhook signature verification (HMAC, JWT, etc.)
+- Support different HTTP methods (GET, POST, PUT, etc.)
+- Support webhook path configuration
+- Parse webhook payloads (JSON, form-data, etc.)
+- Trigger workflow execution on webhook receipt
+- Pass webhook data (headers, body, query params) to workflow context
+
+**Dependencies**:
+- Roya HTTP routing system
+- Webhook signature verification libraries
+
+**Notes**:
+Placeholder implementation exists at `roya-plugins/ai/src/main/java/com/akilisha/oss/roya/plugins/ai/nodes/triggers/WebhookTrigger.java`. Detailed TODOs in source code comments.
+
+---
+
+### CronJobTrigger Implementation
+**Category**: Feature  
+**Priority**: P1-High  
+**Estimated Effort**: 10 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `CronJobTrigger` to enable time-based workflow triggers. Currently placeholder implementation exists.
+
+**Location**: `CronJobTrigger.java`
+
+**Motivation**:
+CronJobTrigger is foundational for scheduled workflows. Enables workflows to run on schedules (daily reports, periodic indexing, etc.).
+
+**Acceptance Criteria**:
+- Integrate with scheduling library (Quartz recommended)
+- Parse and validate cron expressions (5-field or 6-field with seconds)
+- Register scheduled tasks with the workflow executor
+- Support timezone configuration
+- Support one-time execution vs recurring schedules
+- Handle task registration errors gracefully
+- Support task cancellation and rescheduling
+
+**Dependencies**:
+- Scheduling library (Quartz or similar)
+- Cron expression parser
+
+**Notes**:
+Placeholder implementation exists at `roya-plugins/ai/src/main/java/com/akilisha/oss/roya/plugins/ai/nodes/triggers/CronJobTrigger.java`. Detailed TODOs in source code comments.
+
+---
+
+### FileWatchTrigger Implementation
+**Category**: Feature  
 **Priority**: P2-Medium  
 **Estimated Effort**: 8 hours  
 **Proposed For**: Phase 6 (AI Integration)  
 **Status**: New
 
 **Description**:
-Add function calling support (OpenAI-style) for structured outputs, in addition to JSON mode. Function calling is more reliable for complex schemas and provider-specific optimizations.
+Implement full functionality for `FileWatchTrigger` to enable file system event-triggered workflows.
+
+**Location**: `FileWatchTrigger.java`
 
 **Motivation**:
-While JSON mode works well, function calling provides more reliable structured outputs, especially for nested/complex record structures. It's also provider-specific optimization (OpenAI supports this natively).
+Enables workflows to trigger when files are created, modified, or deleted. Useful for document processing, backup workflows, etc.
 
 **Acceptance Criteria**:
-- Function calling implementation alongside JSON mode
-- Automatic function schema generation from Java records
-- Provider-aware: Use function calling for OpenAI, JSON mode for others
-- Fallback to JSON mode if function calling fails
-- Performance comparison: function calling vs JSON mode
+- Integrate with Java NIO WatchService
+- Support recursive directory watching
+- Support file filters (by extension, pattern, etc.)
+- Support event types (CREATE, MODIFY, DELETE)
+- Handle file locking and partial writes
+- Support multiple watch directories
+- Pass file path and event type to workflow context
 
 **Dependencies**:
-- OpenAI function calling API
-- Ability to generate JSON Schema from Java records
+- Java NIO WatchService (built-in)
+- Optional: Apache Commons VFS for advanced watching
 
 **Notes**:
-This is an enhancement on top of MVP JSON mode implementation. JSON mode is simpler and works across providers, function calling is provider-specific but more reliable.
+Placeholder implementation exists with detailed TODOs in source code comments.
+
+---
+
+### PollingTrigger Implementation
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 8 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `PollingTrigger` to enable polling-based workflow triggers.
+
+**Location**: `PollingTrigger.java`
+
+**Motivation**:
+Enables workflows to trigger based on polling conditions (database changes, API responses, etc.).
+
+**Acceptance Criteria**:
+- Implement polling mechanism with ScheduledExecutorService
+- Support custom polling interval
+- Support conditional polling (only trigger if condition is true)
+- Support backoff strategies when condition is false
+- Support max polling attempts or infinite polling
+- Support polling data source (database query, API call, etc.)
+- Pass polling results to workflow context
+
+**Dependencies**:
+- Java ScheduledExecutorService (built-in)
+- Optional: Database or HTTP client for polling sources
+
+**Notes**:
+Placeholder implementation exists with detailed TODOs in source code comments.
+
+---
+
+### SubscriptionTrigger Implementation
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 10 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `SubscriptionTrigger` to enable WebSocket/SSE-triggered workflows.
+
+**Location**: `SubscriptionTrigger.java`
+
+**Motivation**:
+Enables workflows to trigger on real-time events via WebSocket or Server-Sent Events.
+
+**Acceptance Criteria**:
+- Integrate with Roya's WebSocket/SSE support
+- Support WebSocket connection events (connect, disconnect, message)
+- Support SSE event streams
+- Support subscription filters/topics
+- Handle connection lifecycle (reconnect, heartbeat, etc.)
+- Support multiple subscription types (pub/sub, topics, etc.)
+- Pass subscription events to workflow context
+
+**Dependencies**:
+- Roya WebSocket/SSE infrastructure
+- Event subscription system
+
+**Notes**:
+Placeholder implementation exists with detailed TODOs in source code comments.
+
+---
+
+### ChatTrigger Implementation
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 12 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `ChatTrigger` to enable chat platform-triggered workflows (Slack, Discord, Teams, etc.).
+
+**Location**: `ChatTrigger.java`
+
+**Motivation**:
+Enables workflows to trigger on chat platform events (messages, mentions, user events, etc.).
+
+**Acceptance Criteria**:
+- Integrate with chat platforms (Slack, Discord, Teams, etc.)
+- Support message events (new message, reply, mention)
+- Support user events (user joined, left)
+- Support channel/room filtering
+- Handle platform-specific authentication
+- Support webhook-style integration vs polling
+- Pass chat events to workflow context
+
+**Dependencies**:
+- External SDKs for chat platforms (Slack SDK, Discord API, Teams SDK)
+- Authentication/authorization system
+
+**Notes**:
+Placeholder implementation exists with detailed TODOs in source code comments.
+
+---
+
+### EmailTrigger Implementation
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 10 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `EmailTrigger` to enable email-triggered workflows.
+
+**Location**: `EmailTrigger.java`
+
+**Motivation**:
+Enables workflows to trigger on email events (new emails, replies, attachments, etc.).
+
+**Acceptance Criteria**:
+- Integrate with email plugins (IMAP, POP3, Exchange, etc.)
+- Support email filtering (sender, subject, attachments, etc.)
+- Support email parsing (body, attachments, headers)
+- Handle email authentication/authorization
+- Support multiple email providers
+- Support polling vs push (webhook) email delivery
+- Pass email content to workflow context
+
+**Dependencies**:
+- Email plugin (IMAP/POP3 support)
+- JavaMail API or similar
+
+**Notes**:
+Placeholder implementation exists with detailed TODOs in source code comments.
+
+---
+
+### AppEventTrigger Implementation
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 8 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `AppEventTrigger` to enable application event-triggered workflows.
+
+**Location**: `AppEventTrigger.java`
+
+**Motivation**:
+Enables workflows to trigger on internal application events (user registration, order placed, etc.).
+
+**Acceptance Criteria**:
+- Integrate with application event bus/event system
+- Support event filtering by type, source, etc.
+- Support event subscription/registration
+- Handle event payload passing
+- Support async event processing
+- Integrate with Roya's event system if one exists
+- Pass event data to workflow context
+
+**Dependencies**:
+- Application event bus system
+- Event filtering/subscription mechanism
+
+**Notes**:
+Placeholder implementation exists with detailed TODOs in source code comments.
+
+---
+
+### WorkflowTrigger Implementation
+**Category**: Feature  
+**Priority**: P2-Medium  
+**Estimated Effort**: 10 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Implement full functionality for `WorkflowTrigger` to enable workflow-triggered workflows (workflow chaining).
+
+**Location**: `WorkflowTrigger.java`
+
+**Motivation**:
+Enables workflows to trigger other workflows, enabling complex orchestration and workflow chaining.
+
+**Acceptance Criteria**:
+- Implement workflow execution tracking
+- Support workflow completion event subscription
+- Support workflow result filtering (only trigger on success/failure)
+- Support workflow context/data passing between workflows
+- Handle workflow dependencies and orchestration
+- Support workflow result aggregation
+
+**Dependencies**:
+- Workflow execution tracking system
+- Workflow context/data passing mechanism
+
+**Notes**:
+Placeholder implementation exists with detailed TODOs in source code comments.
+
+---
+
+### Streaming Model Access in AI Interface
+**Category**: Enhancement  
+**Priority**: P1-High  
+**Estimated Effort**: 2 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Currently `StreamingLLMNode` needs to access underlying adapter to get streaming model. Should expose proper API or complete streaming via AI Services.
+
+**Location**: `StreamingLLMNode.java:126`
+
+**Motivation**:
+Cleaner API for streaming operations. Currently uses hacky workaround to access adapter.
+
+**Acceptance Criteria**:
+- Option A: Add `StreamingChatModel streamingModel()` method to `AI` interface
+- Option B: Complete streaming via AI Services (preferred - see Streaming Support in LLMService)
+- Update `StreamingLLMNode` to use proper API
+- Remove hacky workaround
+
+**Dependencies**:
+- Related to Streaming Support in LLMService (TODO #2)
+
+**Notes**:
+This TODO may be resolved by completing Streaming Support in LLMService. Check if AI Services streaming eliminates the need for direct model access.
+
+---
+
+### LangGraph Integration Completion
+**Category**: Feature Completion  
+**Priority**: P2-Medium  
+**Estimated Effort**: 20 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Complete LangGraph adapter implementation with vector operations, RAG, agents, and token usage extraction.
+
+**Location**: `LangGraphAdapter.java`
+
+**Current TODOs**:
+- Implement vector operations
+- Implement RAG using adaptive-rag module
+- Implement LangGraph agent creation
+- Replace with AgentExecutor or StateGraph-based agent
+- Extract trace/step information from LangGraph execution
+- Extract token usage from response
+
+**Acceptance Criteria**:
+- Complete LangGraph adapter implementation
+- Integrate LangGraph's adaptive RAG
+- Implement stateful workflow support
+- Add agent orchestration via LangGraph
+- Extract execution traces and metrics
+- Token usage extraction from LangGraph responses
+
+**Dependencies**:
+- LangGraph4j library
+- Adaptive RAG module
+
+**Notes**:
+Current implementation has placeholder methods. Need to complete full LangGraph integration.
+
+---
+
+### Google ADK Integration Completion
+**Category**: Feature Implementation  
+**Priority**: P2-Medium  
+**Estimated Effort**: 32 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Complete Google ADK (Agent Development Kit) integration for multi-agent orchestration.
+
+**Location**: `GoogleADKAdapter.java`, `GoogleADKLibrary.java`
+
+**Current TODOs**:
+- Implement Google ADK integration
+- Implement full Google ADK integration
+
+**Acceptance Criteria**:
+- Research Google ADK (Agent Development Kit) APIs
+- Implement `GoogleADKAdapter` similar to `LangChainAdapter`
+- Create `GoogleADKService` interface
+- Integrate with workflow system
+- Add examples and documentation
+- Support multi-agent orchestration
+
+**Dependencies**:
+- Google ADK Java SDK
+- Documentation and examples
+
+**Notes**:
+Placeholder implementations exist. Need to research Google ADK APIs and complete implementation.
+
+---
+
+### UnifiedAIService Library Selection Logic
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Add intelligent library selection logic to choose between LangChain, LangGraph, and Google ADK based on agent configuration complexity.
+
+**Location**: `UnifiedAIService.java:122`
+
+**Current State**:
+```java
+// TODO: Add logic to choose library based on config complexity
+// Simple agent → LangChain
+// Stateful/multi-node → LangGraph
+// Multi-agent orchestration → Google ADK
+```
+
+**Acceptance Criteria**:
+- Analyze `AgentBuilder` configuration to determine complexity
+- Route simple agents to LangChain
+- Route stateful workflows to LangGraph
+- Route multi-agent scenarios to Google ADK
+- Add configuration hints for manual selection
+- Fallback to LangChain if analysis fails
+
+**Dependencies**:
+- Complete LangGraph and Google ADK implementations
+- Agent configuration analysis logic
+
+**Notes**:
+Current implementation defaults to LangGraph. Need to add intelligent routing based on agent requirements.
+
+---
+
+### StreamingChatModel Lazy Creation
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Lazy-create `StreamingChatModel` instances when streaming is requested, rather than creating them upfront.
+
+**Location**: `LangChainLibrary.java:38`, `LangGraphLibrary.java:41`
+
+**Current State**:
+```java
+// TODO: Create StreamingChatModel when needed
+```
+
+**Acceptance Criteria**:
+- Lazy-create `StreamingChatModel` when streaming is requested
+- Reuse same configuration as `ChatModel`
+- Handle provider-specific streaming support
+- Graceful fallback if streaming not supported
+
+**Dependencies**:
+- Provider streaming support detection
+
+**Notes**:
+Better resource management - only create streaming models when actually needed.
+
+---
+
+### AIWorkflowBuilder Convenience Methods
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 4 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: New
+
+**Description**:
+Add convenience methods to `AIWorkflowBuilder` for new node types as they're created.
+
+**Location**: `AIWorkflowBuilder.java:329`
+
+**Current State**:
+```java
+// TODO: Add more convenience methods as we implement more node types:
+```
+
+**Acceptance Criteria**:
+- Add convenience methods for new node types as they're created
+- Keep API consistent and discoverable
+- Document all available methods
+- Ensure fluent builder pattern consistency
+
+**Dependencies**:
+- New node types (VisionNode, etc.)
+
+**Notes**:
+Keep API consistent as new node types are added. Ensure fluent builder pattern.
 
 ---
 
@@ -621,54 +1212,6 @@ MVP has per-request tracking. This enhancement adds budget management layer. Con
 
 ---
 
-### AI Workflow Trigger Nodes Implementation
-**Category**: Feature  
-**Priority**: P2-Medium  
-**Estimated Effort**: 40-80 hours (varies by trigger)  
-**Proposed For**: Phase 6 (AI Integration)  
-**Status**: New
-
-**Description**:
-Implement full functionality for the 9 placeholder trigger nodes in the AI plugin. Currently, only ManualTrigger and CustomTrigger are fully functional. The remaining triggers need integration with external systems and scheduling mechanisms.
-
-**Trigger Nodes Requiring Implementation**:
-
-1. **WebhookTrigger** - Integrate with Roya HTTP routing, webhook signature verification, support multiple HTTP methods
-2. **CronJobTrigger** - Integrate with scheduling library (Quartz), parse cron expressions, register scheduled tasks
-3. **FileWatchTrigger** - Integrate with Java NIO WatchService, support recursive watching, file filters, event types
-4. **PollingTrigger** - Implement polling mechanism with ScheduledExecutorService, support conditional polling, backoff strategies
-5. **SubscriptionTrigger** - Integrate with Roya WebSocket/SSE, support connection events, subscription filters
-6. **ChatTrigger** - Integrate with Slack/Discord/Teams APIs, support message events, authentication
-7. **EmailTrigger** - Integrate with email plugins (IMAP/POP3), support filtering, parsing, attachment handling
-8. **AppEventTrigger** - Integrate with application event bus, support event filtering, subscription mechanism
-9. **WorkflowTrigger** - Implement workflow execution tracking, support workflow chaining, result passing
-
-**Motivation**:
-Workflows need entry points (triggers) to start execution. Currently, only manual and custom triggers work. Full implementation of these triggers enables automated, event-driven AI workflows.
-
-**Acceptance Criteria**:
-- WebhookTrigger: Auto-register webhook endpoints, signature verification, multiple HTTP methods
-- CronJobTrigger: Schedule parsing, task registration, timezone support, persistence
-- FileWatchTrigger: Directory watching, file filters, event handling, recursive watching
-- PollingTrigger: Scheduled polling, conditional execution, backoff strategies
-- SubscriptionTrigger: WebSocket/SSE integration, connection lifecycle, subscription management
-- ChatTrigger: Platform integration (Slack/Discord/Teams), message events, authentication
-- EmailTrigger: IMAP/POP3 integration, email filtering, parsing, attachment support
-- AppEventTrigger: Event bus integration, event filtering, subscription mechanism
-- WorkflowTrigger: Workflow tracking, chaining support, context passing
-
-**Dependencies**:
-- Roya HTTP routing (for WebhookTrigger)
-- Scheduling library like Quartz (for CronJobTrigger)
-- Java NIO WatchService (for FileWatchTrigger)
-- Roya WebSocket/SSE infrastructure (for SubscriptionTrigger)
-- External SDKs for chat platforms (for ChatTrigger)
-- JavaMail API (for EmailTrigger)
-- Event bus system (for AppEventTrigger)
-- Workflow execution tracking (for WorkflowTrigger)
-
-**Notes**:
-Placeholder implementations exist at `roya-plugins/ai/src/main/java/com/akilisha/oss/roya/plugins/ai/nodes/triggers/`. Each trigger has detailed TODOs in source code comments. Implementation priority: WebhookTrigger and CronJobTrigger (high priority), then FileWatchTrigger and PollingTrigger (medium priority), then platform-specific triggers (lower priority).
 
 ---
 

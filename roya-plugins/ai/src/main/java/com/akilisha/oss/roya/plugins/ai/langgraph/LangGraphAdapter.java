@@ -299,6 +299,11 @@ public class LangGraphAdapter implements AI {
     public GoogleADKService googleADK() {
         return null; // Not available in LangGraphAdapter
     }
+    
+    @Override
+    public <T> T aiService(Class<T> serviceClass) {
+        throw new UnsupportedOperationException("AI Services implementation coming soon - use AiServices.create() directly for now");
+    }
 
     /**
      * Internal AgentBuilder implementation.
