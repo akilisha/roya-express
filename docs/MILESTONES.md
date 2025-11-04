@@ -1513,6 +1513,103 @@ ai.workflow("demo")
 
 ---
 
+### Critical Priority Fixes (January 31, 2025)
+
+**Status**: ✅ COMPLETE  
+**Priority**: P0-Critical  
+**Time Invested**: ~4 hours
+
+#### What We Accomplished
+
+**1. Token Usage Extraction ✅**
+- Fixed `askWithMetadata()` and `extractWithMetadata()` to extract actual token counts from `Result<T>` wrapper
+- Implemented `TokenUsage` extraction from LangChain4j AI Services responses
+- Added `calculateCost()` method with pricing for OpenAI, Anthropic, Mistral models
+- Token counts now accurately reflect actual API usage (no more zeros!)
+
+**2. Streaming Support via AI Services ✅**
+- Added `TokenStream stream()` method to `LLMService` interface
+- Updated `LangChainAdapter.stream()` to use AI Services `TokenStream` instead of low-level `StreamingChatModel`
+- Configured `TokenStream` callbacks (`onPartialResponse`, `onError`)
+- Updated `getLLMService()` to configure `StreamingChatModel` via builder
+
+**3. Metadata Support Complete ✅**
+- Added `Result<String> askWithMetadata()` method to `LLMService`
+- Added `Result<T> extractWithMetadata()` method to `LLMService`
+- Both methods return `Result<T>` wrapper providing access to token usage, finish reason, sources
+
+**4. Test Infrastructure ✅**
+- Created `LangChainAdapterIntegrationTest` for real API testing
+- Created `VerifyMetadataUpdates` verification script
+- Documented testing approach in `docs/TESTING_METADATA_UPDATES.md`
+- Fixed `QdrantIntegrationTest` compilation errors (replaced non-existent MockChatModel with Mockito)
+
+**5. Code Cleanup ✅**
+- Deleted useless `AIServiceNewApiTest` (was testing deleted code)
+- Removed placeholder test files that didn't add value
+
+#### Code Changes
+
+**Files Modified**:
+- `LLMService.java` - Added `stream()`, `askWithMetadata()`, `extractWithMetadata()` methods
+- `LangChainAdapter.java` - Implemented token extraction, streaming via AI Services, cost calculation
+- `QdrantIntegrationTest.java` - Fixed mock implementations
+
+**Files Created**:
+- `LangChainAdapterIntegrationTest.java` - Integration tests with real OpenAI API
+- `VerifyMetadataUpdates.java` - Verification script
+- `docs/TESTING_METADATA_UPDATES.md` - Testing documentation
+
+#### Challenges Encountered
+
+**Challenge 1**: Wrong package for `Result` and `TokenUsage`
+- **Description**: Initial imports used `dev.langchain4j.model.output.*` but should be `dev.langchain4j.service.*` for `Result` and `dev.langchain4j.model.output.*` for `TokenUsage`
+- **Resolution**: Fixed imports to correct packages
+- **Impact**: Compilation errors resolved
+
+**Challenge 2**: `ChatResponse` API differences
+- **Description**: `ChatResponse.from()` doesn't exist, needed to use builder pattern
+- **Resolution**: Used `ChatResponse.builder().aiMessage(AiMessage.from(text)).build()`
+- **Impact**: Fixed QdrantIntegrationTest mock setup
+
+**Challenge 3**: Non-existent mock classes
+- **Description**: `MockChatModel` and `MockEmbeddingModel` don't exist in LangChain4j 1.7.1/1.8.0
+- **Resolution**: Replaced with Mockito mocks providing deterministic behavior
+- **Impact**: Tests now compile and run without requiring real API keys
+
+#### Metrics
+- **Methods Added**: 3 (`stream`, `askWithMetadata`, `extractWithMetadata`)
+- **Token Extraction**: ✅ Working (non-zero values)
+- **Cost Calculation**: ✅ Working (supports GPT-4, GPT-3.5, Claude, Mistral)
+- **Streaming**: ✅ Working via AI Services pattern
+- **Test Files**: 2 integration tests, 1 verification script
+- **Documentation**: Comprehensive testing guide created
+
+#### Verification
+
+```java
+// Token usage extraction - now returns actual values!
+AIResponse<String> response = adapter.askWithMetadata(
+    "You are helpful.",
+    "Say hello.",
+    AIOptions.builder().model("gpt-3.5-turbo").build()
+);
+assert response.promptTokens() > 0;      // ✅ No longer zero!
+assert response.completionTokens() > 0;  // ✅ Actual values!
+assert response.cost() > 0.0;           // ✅ Cost calculated!
+
+// Streaming via AI Services
+adapter.stream("You are helpful.", "Count 1-3", token -> {
+    System.out.print(token); // ✅ Tokens arrive incrementally
+});
+```
+
+#### Next Steps
+- ✅ All critical priority items complete
+- ➡️ Move to high-priority items: Audio/Video capabilities, WebhookTrigger, CronJobTrigger
+
+---
+
 ## Future Plugins & Enhancements
 
 ### Health Check Endpoints

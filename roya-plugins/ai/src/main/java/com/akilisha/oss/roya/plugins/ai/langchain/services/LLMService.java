@@ -1,6 +1,6 @@
 package com.akilisha.oss.roya.plugins.ai.langchain.services;
 
-import dev.langchain4j.model.output.Result;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
@@ -19,6 +19,10 @@ import dev.langchain4j.service.V;
  * - Token usage tracking
  * 
  * This interface is used with AiServices.create() to create a proxy instance.
+ * 
+ * Note: Methods returning Result<T> with generic types are not included here
+ * because LangChain4j requires concrete types for Result. Use aiService() directly
+ * to create custom interfaces with Result<T> methods when needed.
  */
 public interface LLMService {
     
@@ -80,6 +84,9 @@ public interface LLMService {
      * Returns a Result wrapper that contains both the response and metadata
      * about the AI call (tokens used, finish reason, sources retrieved, etc.).
      * 
+     * Note: This method uses Result<String> (concrete type) because LangChain4j
+     * requires concrete types for Result in interface methods.
+     * 
      * @param systemPrompt System prompt (instructions for the AI)
      * @param userMessage User message/query
      * @return Result containing response and metadata
@@ -89,24 +96,5 @@ public interface LLMService {
     Result<String> askWithMetadata(
         @V("systemPrompt") String systemPrompt,
         @V("userMessage") String userMessage
-    );
-    
-    /**
-     * Structured extraction with metadata.
-     * 
-     * Extracts structured data and returns it wrapped in a Result to access
-     * metadata like token usage, finish reason, etc.
-     * 
-     * @param systemPrompt System prompt (instructions for extraction)
-     * @param prompt Text to extract from
-     * @param extractType Target type (Java record/class)
-     * @return Result containing extracted data and metadata
-     */
-    @SystemMessage("{{systemPrompt}}\n\nExtract information from the following text into the specified format. Respond with JSON only.")
-    @UserMessage("{{prompt}}")
-    <T> Result<T> extractWithMetadata(
-        @V("systemPrompt") String systemPrompt,
-        @V("prompt") String prompt,
-        Class<T> extractType
     );
 }

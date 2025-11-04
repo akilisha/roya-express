@@ -1,5 +1,6 @@
 package com.akilisha.oss.roya.plugins.ai;
 
+import com.akilisha.oss.roya.api.plugin.Application;
 import com.akilisha.oss.roya.api.plugin.RoyaPlugin;
 import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.plugins.ai.googleadk.GoogleADKAdapter;
@@ -7,6 +8,10 @@ import com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter;
 import com.akilisha.oss.roya.plugins.ai.langgraph.LangGraphAdapter;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryConfig;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryFactory;
+import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookManagementAPI;
+import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookPersistenceService;
+import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookRegistry;
+import com.akilisha.oss.roya.plugins.database.Database;
 
 /**
  * AI plugin - unified AI/LLM integration orchestrating multiple libraries.
@@ -21,6 +26,9 @@ import com.akilisha.oss.roya.plugins.ai.library.AILibraryFactory;
  * access libraries directly for advanced use cases.
  */
 public class AIPlugin implements RoyaPlugin {
+
+    private Services services; // Store for use in setup()
+    private WebhookPersistenceService webhookPersistenceService; // Store for API access
 
     @Override
     public String id() {
@@ -39,6 +47,7 @@ public class AIPlugin implements RoyaPlugin {
 
     @Override
     public void register(Services services) {
+        this.services = services; // Store for later use
         services.singleton(AI.class, () -> {
             boolean enableCache = Boolean.parseBoolean(
                 System.getProperty("ai.cache.enabled", "true"));
@@ -128,6 +137,52 @@ public class AIPlugin implements RoyaPlugin {
             }
         }
         return null;
+    }
+
+    @Override
+    public void setup(Application app) {
+        // Register webhook routes with the Roya application
+        WebhookRegistry.getInstance().registerRoutes(app);
+        
+        // Initialize webhook persistence (if Database plugin is available)
+        if (services.has(Database.class)) {
+            try {
+                Database db = services.get(Database.class);
+                webhookPersistenceService = new WebhookPersistenceService(
+                    new WebhookPersistenceService.DatabaseWebhookStore(db)
+                );
+                webhookPersistenceService.initialize(app);
+                webhookPersistenceService.loadAndRegisterAll();
+                System.out.println("✓ Webhook persistence enabled (Database)");
+                
+                // Register webhook management API endpoints
+                WebhookManagementAPI managementAPI = new WebhookManagementAPI(webhookPersistenceService);
+                managementAPI.registerRoutes(app);
+                System.out.println("✓ Webhook Management API registered at /api/webhooks");
+            } catch (Exception e) {
+                // Error initializing persistence - use in-memory
+                System.out.println("⚠️  Webhook persistence initialization failed: " + e.getMessage());
+                System.out.println("   Using in-memory webhook storage (no persistence)");
+                
+                // Still register API with in-memory store
+                webhookPersistenceService = new WebhookPersistenceService(
+                    new WebhookPersistenceService.InMemoryWebhookStore()
+                );
+                webhookPersistenceService.initialize(app);
+                WebhookManagementAPI managementAPI = new WebhookManagementAPI(webhookPersistenceService);
+                managementAPI.registerRoutes(app);
+            }
+        } else {
+            // Fallback to in-memory (no persistence across restarts)
+            System.out.println("⚠️  Database plugin not found - webhooks will not persist across restarts");
+            webhookPersistenceService = new WebhookPersistenceService(
+                new WebhookPersistenceService.InMemoryWebhookStore()
+            );
+            webhookPersistenceService.initialize(app);
+            WebhookManagementAPI managementAPI = new WebhookManagementAPI(webhookPersistenceService);
+            managementAPI.registerRoutes(app);
+            System.out.println("✓ Webhook Management API registered at /api/webhooks (in-memory)");
+        }
     }
 
     @Override

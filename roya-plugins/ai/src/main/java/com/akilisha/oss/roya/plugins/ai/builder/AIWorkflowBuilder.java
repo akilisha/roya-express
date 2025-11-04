@@ -8,6 +8,7 @@ import com.akilisha.oss.roya.plugins.ai.nodes.actions.LLMActionNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.RAGNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.StreamingLLMNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.VectorNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.triggers.WebhookTrigger;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.core.WorkflowNode;
 import com.akilisha.oss.roya.workflow.edges.Edge;
@@ -47,9 +48,11 @@ import java.util.function.Consumer;
 public class AIWorkflowBuilder {
     private final AI ai;
     private final Workflow.WorkflowBuilder workflowBuilder;
-
+    private final String workflowName;
+    
     private AIWorkflowBuilder(AI ai, String workflowName) {
         this.ai = ai;
+        this.workflowName = workflowName;
         this.workflowBuilder = Workflow.create();
     }
 
@@ -67,19 +70,29 @@ public class AIWorkflowBuilder {
     // ========== Trigger Node Methods ==========
 
     /**
-     * Add a manual trigger node (for programmatically started workflows).
+     * Add a trigger node (initiates workflow).
+     * 
+     * Automatically registers WebhookTrigger nodes with HTTP routing.
      *
      * @param nodeId Node identifier
      * @param triggerNode The trigger node implementation
      * @return This builder
      */
     public AIWorkflowBuilder trigger(String nodeId, WorkflowNode triggerNode) {
+        // If it's a WebhookTrigger, register it with workflow metadata
+        if (triggerNode instanceof WebhookTrigger) {
+            WebhookTrigger webhookTrigger = (WebhookTrigger) triggerNode;
+            webhookTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
         workflowBuilder.trigger(nodeId, triggerNode);
         return this;
     }
-
+    
     /**
-     * Add a manual trigger node with timeout.
+     * Add a trigger node with timeout.
+     * 
+     * Automatically registers WebhookTrigger nodes with HTTP routing.
      *
      * @param nodeId Node identifier
      * @param triggerNode The trigger node implementation
@@ -87,6 +100,12 @@ public class AIWorkflowBuilder {
      * @return This builder
      */
     public AIWorkflowBuilder trigger(String nodeId, WorkflowNode triggerNode, Duration timeout) {
+        // If it's a WebhookTrigger, register it with workflow metadata
+        if (triggerNode instanceof WebhookTrigger) {
+            WebhookTrigger webhookTrigger = (WebhookTrigger) triggerNode;
+            webhookTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
         workflowBuilder.trigger(nodeId, triggerNode, timeout);
         return this;
     }
@@ -369,11 +388,29 @@ public class AIWorkflowBuilder {
 
     /**
      * Build the workflow.
+     * 
+     * Automatically registers any WebhookTrigger nodes with the webhook registry.
+     * Also registers the workflow with WorkflowRegistry for persistence.
      *
      * @return Compiled workflow
      */
     public Workflow build() {
-        return workflowBuilder.build();
+        Workflow workflow = workflowBuilder.build();
+        
+        // Register workflow with WorkflowRegistry (for webhook persistence)
+        com.akilisha.oss.roya.plugins.ai.workflow.WorkflowRegistry.getInstance()
+            .register(workflowName, workflow);
+        
+        // Register any WebhookTrigger nodes with the registry
+        workflow.getTriggerNodes().forEach(nodeId -> {
+            WorkflowNode node = workflow.getNode(nodeId);
+            if (node instanceof WebhookTrigger) {
+                WebhookTrigger webhookTrigger = (WebhookTrigger) node;
+                webhookTrigger.register(workflow);
+            }
+        });
+        
+        return workflow;
     }
 
     // ========== Direct Access (for advanced use) ==========

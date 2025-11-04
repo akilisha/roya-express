@@ -1,13 +1,21 @@
 package com.akilisha.oss.roya.plugins.ai.langchain;
 
 import com.akilisha.oss.roya.plugins.ai.*;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.mock.MockChatModel;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.mock.MockEmbeddingModel;
+import dev.langchain4j.model.output.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive integration tests for Qdrant vector store and RAG functionality.
- * 
+ *
  * These tests verify the COMPLETE integration flow:
  * 1. Connectivity to Qdrant (gRPC)
  * 2. Vector indexing (documents → embeddings → storage)
@@ -25,15 +33,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * 4. RAG queries (retrieval + generation)
  * 5. Metadata handling
  * 6. Error handling
- * 
+ *
  * Prerequisites:
  * - Qdrant must be running (docker compose up -d qdrant)
- * - Set QDRANT_URL environment variable if different from default (http://localhost:6333)
- * 
+ * - Set QDRANT_URL environment variable if different from default (<a href="http://localhost:6333">...</a>)
+ *
  * To run against a real Qdrant instance:
  * - Start Qdrant: docker compose up -d qdrant
  * - Run tests: ./gradlew :roya-plugins:ai:test --tests QdrantIntegrationTest
- * 
+ *
  * To skip tests when Qdrant is not available:
  * - Set SKIP_QDRANT_TESTS=true
  */
@@ -47,16 +55,56 @@ class QdrantIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // Use mock models for testing (they don't require API keys)
-        // Mock models provide deterministic results for testing
-        chatModel = new MockChatModel();
-        embeddingModel = new MockEmbeddingModel();
-        
+        // Create mock ChatModel for testing (doesn't require API keys)
+        // Mock returns a simple response when asked
+        chatModel = mock(ChatModel.class);
+        when(chatModel.chat(anyString())).thenAnswer(invocation -> {
+            String prompt = invocation.getArgument(0);
+            // Return a simple response based on the prompt
+            String responseText = "Based on the context: " + prompt.substring(0, Math.min(50, prompt.length()));
+            // Create ChatResponse with AiMessage
+            AiMessage aiMessage = AiMessage.from(responseText);
+            return ChatResponse.builder()
+                .aiMessage(aiMessage)
+                .build();
+        });
+
+        // Create mock EmbeddingModel that returns deterministic embeddings
+        // This provides consistent vector dimensions for testing
+        embeddingModel = mock(EmbeddingModel.class);
+        when(embeddingModel.embed(any(TextSegment.class))).thenAnswer(invocation -> {
+            // Return a simple deterministic embedding (384 dimensions for all-minilm-l6-v2)
+            float[] embedding = new float[384];
+            String text = ((TextSegment) invocation.getArgument(0)).text();
+            // Fill with deterministic values based on text hash
+            int hash = text.hashCode();
+            for (int i = 0; i < embedding.length; i++) {
+                embedding[i] = (float) ((hash + i) % 100) / 100.0f;
+            }
+            return Response.from(new Embedding(embedding));
+        });
+
+        // Mock embedAll for batch operations
+        when(embeddingModel.embedAll(any(java.util.List.class))).thenAnswer(invocation -> {
+            @SuppressWarnings("unchecked")
+            java.util.List<TextSegment> segments = invocation.getArgument(0);
+            java.util.List<Embedding> embeddings = new java.util.ArrayList<>();
+            for (TextSegment segment : segments) {
+                float[] embedding = new float[384];
+                int hash = segment.text().hashCode();
+                for (int i = 0; i < embedding.length; i++) {
+                    embedding[i] = (float) ((hash + i) % 100) / 100.0f;
+                }
+                embeddings.add(new Embedding(embedding));
+            }
+            return Response.from(embeddings);
+        });
+
         adapter = new LangChainAdapter(chatModel, null, embeddingModel);
-        
+
         // Create temporary directory for test documents
         tempDir = Files.createTempDirectory("qdrant-test-");
-        
+
         // Use unique collection name for each test run
         testCollection = "test-collection-" + System.currentTimeMillis();
     }
@@ -83,11 +131,11 @@ class QdrantIntegrationTest {
     void testVectorIndexing() throws Exception {
         // Create test documents with metadata
         List<AI.VectorDoc> documents = Arrays.asList(
-            new AI.VectorDoc("doc1", "Java is a programming language", 
+            new AI.VectorDoc("doc1", "Java is a programming language",
                 Map.of("category", "programming", "lang", "java", "id", "doc1")),
-            new AI.VectorDoc("doc2", "Python is also a programming language", 
+            new AI.VectorDoc("doc2", "Python is also a programming language",
                 Map.of("category", "programming", "lang", "python", "id", "doc2")),
-            new AI.VectorDoc("doc3", "The weather is sunny today", 
+            new AI.VectorDoc("doc3", "The weather is sunny today",
                 Map.of("category", "weather", "id", "doc3"))
         );
 
@@ -100,9 +148,9 @@ class QdrantIntegrationTest {
         Thread.sleep(500);
 
         // Verify we can query them back (via RAG)
-        RAGResponse response = adapter.ragApi().ask("What is Java?", 
+        RAGResponse response = adapter.ragApi().ask("What is Java?",
             RAGOptions.builder().topK(1).build());
-        
+
         assertNotNull(response, "RAG response should not be null");
         assertNotNull(response.answer(), "Answer should not be null");
         assertFalse(response.answer().isEmpty(), "Answer should not be empty");
@@ -117,11 +165,11 @@ class QdrantIntegrationTest {
     void testRAGEndToEnd() throws Exception {
         // Step 1: Index documents
         List<AI.VectorDoc> documents = Arrays.asList(
-            new AI.VectorDoc("doc1", "Roya is a Java web framework inspired by Express.js", 
+            new AI.VectorDoc("doc1", "Roya is a Java web framework inspired by Express.js",
                 Map.of("framework", "roya", "language", "java")),
-            new AI.VectorDoc("doc2", "Express.js is a Node.js web framework", 
+            new AI.VectorDoc("doc2", "Express.js is a Node.js web framework",
                 Map.of("framework", "express", "language", "javascript")),
-            new AI.VectorDoc("doc3", "Spring Boot is a Java framework for building applications", 
+            new AI.VectorDoc("doc3", "Spring Boot is a Java framework for building applications",
                 Map.of("framework", "spring-boot", "language", "java"))
         );
 
@@ -130,16 +178,16 @@ class QdrantIntegrationTest {
 
         // Step 2: Query using RAG
         RAGResponse response = adapter.ragApi().ask("What is Roya?");
-        
+
         // Step 3: Verify response
         assertNotNull(response, "RAG response should not be null");
         assertNotNull(response.answer(), "Answer should not be null");
         assertFalse(response.answer().isEmpty(), "Answer should not be empty");
-        
+
         // Step 4: Verify sources were retrieved
         if (response.sources() != null && !response.sources().isEmpty()) {
             assertTrue(response.sources().size() > 0, "Should have at least one source");
-            
+
             // Verify source content contains relevant information
             boolean foundRoya = response.sources().stream()
                 .anyMatch(source -> source.content().toLowerCase().contains("roya"));
@@ -157,10 +205,10 @@ class QdrantIntegrationTest {
         // Create test files
         Path testFile1 = tempDir.resolve("file1.txt");
         Path testFile2 = tempDir.resolve("file2.txt");
-        
-        Files.write(testFile1, 
+
+        Files.write(testFile1,
             "This is the first test document. It contains information about Java programming.".getBytes());
-        Files.write(testFile2, 
+        Files.write(testFile2,
             "This is the second test document. It contains information about Python programming.".getBytes());
 
         // Index directory with chunking
@@ -194,7 +242,7 @@ class QdrantIntegrationTest {
             new AI.VectorDoc("doc4", "LangChain4j documentation", Map.of()),
             new AI.VectorDoc("doc5", "Qdrant vector database documentation", Map.of())
         );
-        
+
         adapter.vectors().index(testCollection, documents);
         Thread.sleep(500);
 
@@ -205,13 +253,13 @@ class QdrantIntegrationTest {
             .build();
 
         RAGResponse response = adapter.ragApi().ask("What is Roya?", options);
-        
+
         assertNotNull(response, "RAG response should not be null");
         assertNotNull(response.answer(), "Answer should not be null");
-        
+
         // Verify we got limited results (if sources are returned)
         if (response.sources() != null) {
-            assertTrue(response.sources().size() <= 2, 
+            assertTrue(response.sources().size() <= 2,
                 "Should respect topK limit of 2");
         }
     }
@@ -230,7 +278,7 @@ class QdrantIntegrationTest {
             "framework", "roya",
             "version", "1.0"
         );
-        
+
         List<AI.VectorDoc> documents = Arrays.asList(
             new AI.VectorDoc("doc1", "Roya is a Java framework", metadata1)
         );
@@ -240,7 +288,7 @@ class QdrantIntegrationTest {
 
         // Query and verify metadata is accessible
         RAGResponse response = adapter.ragApi().ask("What is Roya?");
-        
+
         assertNotNull(response, "Response should not be null");
         // Note: Metadata might be in sources, depending on RAG implementation
     }
@@ -304,10 +352,10 @@ class QdrantIntegrationTest {
         // Batch embedding
         List<String> texts = Arrays.asList("text1", "text2", "text3");
         List<float[]> embeddings = adapter.embeddings().embed(texts);
-        
+
         assertNotNull(embeddings, "Embeddings list should not be null");
         assertEquals(texts.size(), embeddings.size(), "Should have one embedding per text");
-        
+
         // Verify all embeddings have same dimensions
         int dimensions = embeddings.get(0).length;
         assertTrue(embeddings.stream().allMatch(e -> e.length == dimensions),

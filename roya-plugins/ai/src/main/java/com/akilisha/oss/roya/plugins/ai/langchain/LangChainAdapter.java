@@ -14,9 +14,9 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import dev.langchain4j.model.output.Result;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.Result;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
@@ -810,14 +810,31 @@ public class LangChainAdapter implements AI {
     @Override
     public <T> AIResponse<T> extractWithMetadata(Class<T> type, String prompt, AIOptions options) {
         try {
-            LLMService service = getLLMService();
-            if (service == null) {
+            if (chatModel == null) {
                 throw new AIException("ChatModel not configured");
             }
             
             String systemPrompt = "Extract information from the following text into JSON format matching the specified schema. Respond with JSON only.";
             
-            // Use Result wrapper to get metadata
+            // Create a custom AI Service interface for extraction with metadata
+            // We can't use LLMService.extractWithMetadata because Result<T> with generic T
+            // is not allowed in LangChain4j AI Services. So we create a custom interface here.
+            interface ExtractWithMetadataService {
+                @dev.langchain4j.service.SystemMessage("{{systemPrompt}}\n\nExtract information from the following text into the specified format. Respond with JSON only.")
+                @dev.langchain4j.service.UserMessage("{{prompt}}")
+                <T> dev.langchain4j.service.Result<T> extractWithMetadata(
+                    @dev.langchain4j.service.V("systemPrompt") String systemPrompt,
+                    @dev.langchain4j.service.V("prompt") String prompt,
+                    Class<T> extractType
+                );
+            }
+            
+            // Create AI Service instance with the custom interface
+            ExtractWithMetadataService service = AiServices.builder(ExtractWithMetadataService.class)
+                .chatModel(chatModel)
+                .build();
+            
+            // Call extraction with metadata
             Result<T> result = service.extractWithMetadata(systemPrompt, prompt, type);
             
             // Extract token usage and other metadata
@@ -944,6 +961,57 @@ public class LangChainAdapter implements AI {
         config.accept(builder);
 
         return builder.build();
+    }
+
+    /**
+     * Calculate cost based on model, prompt tokens, and completion tokens.
+     * Uses standard pricing per 1K tokens.
+     * 
+     * TODO: Make this configurable and support all models/pricing tiers.
+     */
+    private double calculateCost(String model, int promptTokens, int completionTokens) {
+        if (model == null || model.isEmpty()) {
+            return 0.0;
+        }
+        
+        // Standard pricing per 1K tokens (as of 2024)
+        // These are approximate values - should be configurable
+        double promptCostPer1K = 0.0;
+        double completionCostPer1K = 0.0;
+        
+        String modelLower = model.toLowerCase();
+        
+        // OpenAI pricing (per 1K tokens)
+        if (modelLower.contains("gpt-4") || modelLower.contains("gpt4")) {
+            if (modelLower.contains("turbo") || modelLower.contains("0125")) {
+                promptCostPer1K = 0.01;      // $0.01 per 1K input tokens
+                completionCostPer1K = 0.03;   // $0.03 per 1K output tokens
+            } else {
+                promptCostPer1K = 0.03;      // $0.03 per 1K input tokens
+                completionCostPer1K = 0.06;  // $0.06 per 1K output tokens
+            }
+        } else if (modelLower.contains("gpt-3.5") || modelLower.contains("gpt35")) {
+            promptCostPer1K = 0.0015;        // $0.0015 per 1K input tokens
+            completionCostPer1K = 0.002;     // $0.002 per 1K output tokens
+        } else if (modelLower.contains("claude")) {
+            // Anthropic Claude pricing
+            promptCostPer1K = 0.008;          // $0.008 per 1K input tokens
+            completionCostPer1K = 0.024;     // $0.024 per 1K output tokens
+        } else if (modelLower.contains("mistral")) {
+            // Mistral pricing
+            promptCostPer1K = 0.0002;         // $0.0002 per 1K input tokens
+            completionCostPer1K = 0.0006;    // $0.0006 per 1K output tokens
+        } else {
+            // Default: assume free/open-source model
+            promptCostPer1K = 0.0;
+            completionCostPer1K = 0.0;
+        }
+        
+        // Calculate total cost
+        double promptCost = (promptTokens / 1000.0) * promptCostPer1K;
+        double completionCost = (completionTokens / 1000.0) * completionCostPer1K;
+        
+        return promptCost + completionCost;
     }
 }
 
