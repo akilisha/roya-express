@@ -12,6 +12,7 @@ import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookManagementAPI;
 import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookPersistenceService;
 import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookRegistry;
 import com.akilisha.oss.roya.plugins.ai.scheduling.CronJobRegistry;
+import com.akilisha.oss.roya.plugins.ai.watching.FileWatchRegistry;
 import com.akilisha.oss.roya.plugins.database.Database;
 
 /**
@@ -150,6 +151,14 @@ public class AIPlugin implements RoyaPlugin {
             System.out.println("   Scheduled workflows will not be available");
         }
         
+        // Initialize FileWatchRegistry (WatchService)
+        try {
+            FileWatchRegistry.getInstance().initialize();
+        } catch (Exception e) {
+            System.out.println("⚠️  FileWatchRegistry initialization failed: " + e.getMessage());
+            System.out.println("   File watch workflows will not be available");
+        }
+        
         // Register webhook routes with the Roya application
         WebhookRegistry.getInstance().registerRoutes(app);
         
@@ -220,6 +229,13 @@ public class AIPlugin implements RoyaPlugin {
 
     @Override
     public void stop() throws Exception {
+        // Shutdown FileWatchRegistry
+        try {
+            FileWatchRegistry.getInstance().shutdown();
+        } catch (Exception e) {
+            System.err.println("Error shutting down FileWatchRegistry: " + e.getMessage());
+        }
+        
         // Shutdown CronJobRegistry
         try {
             CronJobRegistry.getInstance().shutdown();

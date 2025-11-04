@@ -10,6 +10,7 @@ import com.akilisha.oss.roya.plugins.ai.nodes.actions.StreamingLLMNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.VectorNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.WebhookTrigger;
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.CronJobTrigger;
+import com.akilisha.oss.roya.plugins.ai.nodes.triggers.FileWatchTrigger;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.core.WorkflowNode;
 import com.akilisha.oss.roya.workflow.edges.Edge;
@@ -86,6 +87,18 @@ public class AIWorkflowBuilder {
             webhookTrigger.setWorkflowMetadata(workflowName, nodeId);
         }
         
+        // If it's a CronJobTrigger, register it with workflow metadata
+        if (triggerNode instanceof CronJobTrigger) {
+            CronJobTrigger cronJobTrigger = (CronJobTrigger) triggerNode;
+            cronJobTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
+        // If it's a FileWatchTrigger, register it with workflow metadata
+        if (triggerNode instanceof FileWatchTrigger) {
+            FileWatchTrigger fileWatchTrigger = (FileWatchTrigger) triggerNode;
+            fileWatchTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
         workflowBuilder.trigger(nodeId, triggerNode);
         return this;
     }
@@ -105,6 +118,18 @@ public class AIWorkflowBuilder {
         if (triggerNode instanceof WebhookTrigger) {
             WebhookTrigger webhookTrigger = (WebhookTrigger) triggerNode;
             webhookTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
+        // If it's a CronJobTrigger, register it with workflow metadata
+        if (triggerNode instanceof CronJobTrigger) {
+            CronJobTrigger cronJobTrigger = (CronJobTrigger) triggerNode;
+            cronJobTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
+        // If it's a FileWatchTrigger, register it with workflow metadata
+        if (triggerNode instanceof FileWatchTrigger) {
+            FileWatchTrigger fileWatchTrigger = (FileWatchTrigger) triggerNode;
+            fileWatchTrigger.setWorkflowMetadata(workflowName, nodeId);
         }
         
         workflowBuilder.trigger(nodeId, triggerNode, timeout);
@@ -414,6 +439,11 @@ public class AIWorkflowBuilder {
             if (node instanceof CronJobTrigger) {
                 CronJobTrigger cronJobTrigger = (CronJobTrigger) node;
                 cronJobTrigger.register(workflow);
+            }
+            // Register any FileWatchTrigger nodes with the registry
+            if (node instanceof FileWatchTrigger) {
+                FileWatchTrigger fileWatchTrigger = (FileWatchTrigger) node;
+                fileWatchTrigger.register(workflow);
             }
         });
         
