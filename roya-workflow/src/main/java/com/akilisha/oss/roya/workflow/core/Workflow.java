@@ -144,6 +144,66 @@ public class Workflow {
             return this;
         }
 
+        // ===== Continuation Workflows =====
+
+        /**
+         * Add a continuation node (sequential workflow composition)
+         */
+        public WorkflowBuilder continuation(String nodeId, com.akilisha.oss.roya.workflow.core.Workflow childWorkflow, String startNodeId) {
+            return continuation(nodeId, childWorkflow, startNodeId, Duration.ofMinutes(5));
+        }
+
+        public WorkflowBuilder continuation(String nodeId, com.akilisha.oss.roya.workflow.core.Workflow childWorkflow, String startNodeId, Duration timeout) {
+            com.akilisha.oss.roya.workflow.continuation.ContinuationNode node = new com.akilisha.oss.roya.workflow.continuation.ContinuationNode(childWorkflow, startNodeId);
+            nodes.put(nodeId, node);
+            metadata.put(nodeId, new NodeMetadata(NodeType.ACTION, nodeId, timeout));
+            return this;
+        }
+
+        /**
+         * Add a continuation node with namespace for context isolation
+         */
+        public WorkflowBuilder continuationWithNamespace(String nodeId, com.akilisha.oss.roya.workflow.core.Workflow childWorkflow, String startNodeId, String namespace) {
+            return continuationWithNamespace(nodeId, childWorkflow, startNodeId, namespace, Duration.ofMinutes(5));
+        }
+
+        public WorkflowBuilder continuationWithNamespace(String nodeId, com.akilisha.oss.roya.workflow.core.Workflow childWorkflow, String startNodeId, String namespace, Duration timeout) {
+            com.akilisha.oss.roya.workflow.continuation.ContinuationNode node = com.akilisha.oss.roya.workflow.continuation.ContinuationNode.withNamespace(childWorkflow, startNodeId, namespace);
+            nodes.put(nodeId, node);
+            metadata.put(nodeId, new NodeMetadata(NodeType.ACTION, nodeId, timeout));
+            return this;
+        }
+
+        // ===== Nested Workflows =====
+
+        /**
+         * Add a nested workflow node (parallel child workflows)
+         */
+        public WorkflowBuilder nested(String nodeId, java.util.List<com.akilisha.oss.roya.workflow.core.Workflow> childWorkflows, com.akilisha.oss.roya.workflow.nested.ResultAggregator aggregator) {
+            return nested(nodeId, childWorkflows, aggregator, Duration.ofMinutes(5));
+        }
+
+        public WorkflowBuilder nested(String nodeId, java.util.List<com.akilisha.oss.roya.workflow.core.Workflow> childWorkflows, com.akilisha.oss.roya.workflow.nested.ResultAggregator aggregator, Duration timeout) {
+            com.akilisha.oss.roya.workflow.nested.NestedWorkflowNode node = new com.akilisha.oss.roya.workflow.nested.NestedWorkflowNode(childWorkflows, aggregator);
+            nodes.put(nodeId, node);
+            metadata.put(nodeId, new NodeMetadata(NodeType.ACTION, nodeId, timeout));
+            return this;
+        }
+
+        /**
+         * Add a nested workflow node with custom strategy
+         */
+        public WorkflowBuilder nested(String nodeId, java.util.List<com.akilisha.oss.roya.workflow.core.Workflow> childWorkflows, com.akilisha.oss.roya.workflow.nested.ResultAggregator aggregator, com.akilisha.oss.roya.workflow.nested.NestedExecutionStrategy strategy) {
+            return nested(nodeId, childWorkflows, aggregator, strategy, Duration.ofMinutes(5));
+        }
+
+        public WorkflowBuilder nested(String nodeId, java.util.List<com.akilisha.oss.roya.workflow.core.Workflow> childWorkflows, com.akilisha.oss.roya.workflow.nested.ResultAggregator aggregator, com.akilisha.oss.roya.workflow.nested.NestedExecutionStrategy strategy, Duration timeout) {
+            com.akilisha.oss.roya.workflow.nested.NestedWorkflowNode node = new com.akilisha.oss.roya.workflow.nested.NestedWorkflowNode(childWorkflows, aggregator, strategy, timeout);
+            nodes.put(nodeId, node);
+            metadata.put(nodeId, new NodeMetadata(NodeType.ACTION, nodeId, timeout));
+            return this;
+        }
+
         // ===== Add Edges =====
 
         /**

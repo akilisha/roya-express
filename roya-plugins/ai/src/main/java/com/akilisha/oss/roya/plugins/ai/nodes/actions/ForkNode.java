@@ -19,6 +19,10 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Fork node - executes a child workflow within parent workflow context.
  * 
+ * <p><b>⚠️ DEPRECATED: MOVING TO WORKFLOW LIBRARY</b></p>
+ * <p>This functionality is being moved to the core workflow library as a first-class feature.
+ * This implementation is kept temporarily for reference but should not be used.</p>
+ * 
  * This enables nested workflow execution where:
  * - Parent workflow spawns child workflow
  * - Parent waits for child completion

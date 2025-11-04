@@ -141,10 +141,27 @@ public class WorkflowChainRegistry {
         
         @Override
         public void onWorkflowComplete(String workflowId, WorkflowResult result) {
-            // Check if this is the parent workflow completion
-            if (!workflowId.equals(parentWorkflowName)) {
+            // workflowId is the execution ID, not workflow name
+            // We need to match workflows by checking if they're registered for this parent
+            // Since we're listening for a specific parent workflow, we can check the workflow instance
+            
+            System.out.println("🔍 WorkflowCompletionListener: Workflow completed - " + 
+                "executionId: " + workflowId + ", parentWorkflowName: " + parentWorkflowName);
+            
+            // Check if any chain matches this workflow
+            boolean isOurParent = chains.values().stream()
+                .anyMatch(chain -> {
+                    // Check if the completed workflow matches our parent workflow
+                    String parentName = chain.parentWorkflowName();
+                    return parentName != null && parentName.equals(parentWorkflowName);
+                });
+            
+            if (!isOurParent) {
+                System.out.println("   ⏭️  Not our parent workflow, skipping");
                 return;
             }
+            
+            System.out.println("✅ Parent workflow completed! Triggering child workflows...");
             
             // Trigger all registered child workflows
             chains.values().forEach(chain -> {
@@ -160,8 +177,11 @@ public class WorkflowChainRegistry {
                     }
                     
                     if (!shouldTrigger) {
+                        System.out.println("   ⏭️  Trigger condition not met for chain: " + chain.chainId());
                         return;
                     }
+                    
+                    System.out.println("✅ Triggering child workflow: " + chain.childWorkflowName());
                     
                     // Execute child workflow with parent's result data
                     WorkflowExecutor executor = WorkflowExecutorFactory.create(chain.childWorkflow());

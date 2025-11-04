@@ -150,6 +150,8 @@ public class FileWatchRegistry {
             
             watchKeys.put(watchId, watchKey);
             
+            System.out.println("✓ Watch key registered: " + watchId + " (valid: " + watchKey.isValid() + ")");
+            
             // Handle recursive watching
             if (registration.recursive()) {
                 registerRecursive(watchPath, watchId);
@@ -212,23 +214,32 @@ public class FileWatchRegistry {
      * Process watch events in background thread.
      */
     private void processWatchEvents() {
+        System.out.println("🔍 FileWatchRegistry: Watch event processing thread started");
         while (true) {
             try {
                 WatchKey key = watchService.take();
+                System.out.println("🔍 FileWatchRegistry: Watch key signaled - processing events...");
                 
                 // Find registration for this watch key
                 FileWatchRegistration registration = findRegistration(key);
                 if (registration == null) {
+                    System.out.println("⚠️  FileWatchRegistry: No registration found for watch key");
                     key.reset();
                     continue;
                 }
                 
+                System.out.println("✓ FileWatchRegistry: Found registration: " + registration.watchId());
+                
                 // Process events
-                for (WatchEvent<?> event : key.pollEvents()) {
+                List<WatchEvent<?>> events = key.pollEvents();
+                System.out.println("🔍 FileWatchRegistry: Found " + events.size() + " events");
+                
+                for (WatchEvent<?> event : events) {
                     WatchEvent.Kind<?> kind = event.kind();
                     
                     // Handle overflow
                     if (kind == StandardWatchEventKinds.OVERFLOW) {
+                        System.out.println("⚠️  FileWatchRegistry: Overflow event detected");
                         continue;
                     }
                     
@@ -238,32 +249,38 @@ public class FileWatchRegistry {
                     Path fileName = pathEvent.context();
                     Path fullPath = registration.watchPath().resolve(fileName);
                     
+                    System.out.println("🔍 FileWatchRegistry: Detected event: " + kind.name() + " for file: " + fileName);
+                    
                     // Check if file matches pattern
                     if (!matchesPattern(fileName.toString(), registration.filePattern())) {
+                        System.out.println("   ⏭️  File does not match pattern: " + registration.filePattern());
                         continue;
                     }
                     
                     // Check if event type matches
                     if (!registration.eventTypes().contains(kind)) {
+                        System.out.println("   ⏭️  Event type " + kind.name() + " not in watched types: " + registration.eventTypes());
                         continue;
                     }
                     
-                    // Execute workflow
+                    System.out.println("✅ FileWatchRegistry: Executing workflow for file: " + fullPath);
                     executeWorkflow(registration, fullPath, kind);
                 }
                 
                 // Reset key
                 boolean valid = key.reset();
                 if (!valid) {
+                    System.out.println("⚠️  FileWatchRegistry: Watch key invalid, removing registration");
                     // Key invalid - remove it
                     watchKeys.values().removeIf(k -> k == key);
                 }
                 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                System.out.println("⚠️  FileWatchRegistry: Watch event processing interrupted");
                 break;
             } catch (Exception e) {
-                System.err.println("Error processing watch events: " + e.getMessage());
+                System.err.println("✗ FileWatchRegistry: Error processing watch events: " + e.getMessage());
                 e.printStackTrace();
             }
         }

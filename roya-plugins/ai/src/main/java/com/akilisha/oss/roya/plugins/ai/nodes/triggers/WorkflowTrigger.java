@@ -12,6 +12,10 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Workflow trigger node - triggers when another workflow completes.
  * 
+ * <p><b>⚠️ DEPRECATED: MOVING TO WORKFLOW LIBRARY</b></p>
+ * <p>This functionality is being moved to the core workflow library as a first-class feature.
+ * This implementation is kept temporarily for reference but should not be used.</p>
+ * 
  * This allows chaining workflows together, where one workflow can trigger another
  * via event subscription. Parent workflow completion event triggers child workflow.
  * 

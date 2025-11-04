@@ -15,6 +15,11 @@ import java.util.concurrent.CompletableFuture;
 /**
  * File watch trigger node - monitors file system for changes.
  * 
+ * <p><b>⚠️ WARNING: BROKEN ON WINDOWS</b></p>
+ * <p>This trigger uses Java NIO WatchService which has known reliability issues on Windows.
+ * File creation events may not be detected consistently. Use PollingTrigger as an alternative
+ * for Windows environments.</p>
+ * 
  * Uses Java NIO WatchService to monitor directories for file creation, modification, and deletion.
  * Automatically triggers workflows when matching files are detected.
  * 

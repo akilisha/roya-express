@@ -1,0 +1,2 @@
+Test data: Hello from CronJobTrigger!
+Instructions: Summarize this message in one sentence.

@@ -188,18 +188,26 @@ public class PollingRegistry {
                 // Execute HTTP request
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 
+                String bodyPreview = response.body();
+                if (bodyPreview.length() > 100) {
+                    bodyPreview = bodyPreview.substring(0, 100) + "...";
+                }
+                System.out.println("🔍 PollingRegistry: Polled " + registration.url() + 
+                    " - Status: " + response.statusCode() + ", Body: " + bodyPreview);
+                
                 // Check condition
                 Predicate<HttpResponse<String>> condition = registration.condition();
                 if (condition != null && !condition.test(response)) {
                     // Condition not met - continue polling
+                    System.out.println("   ⏭️  Condition not met, continuing to poll...");
                     return;
                 }
                 
-                // Condition met - execute workflow
+                System.out.println("✅ PollingRegistry: Condition met! Executing workflow...");
                 executeWorkflow(registration, response);
                 
             } catch (Exception e) {
-                System.err.println("✗ Polling error: " + registration.url() + " - " + e.getMessage());
+                System.err.println("✗ PollingRegistry: Poll error for " + registration.url() + " - " + e.getMessage());
                 // Continue polling on error
             }
         });

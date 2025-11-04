@@ -1,0 +1,81 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.akilisha.oss.roya.workflow'
+version = '1.0.0'
+sourceCompatibility = '21'
+targetCompatibility = '21'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Optional: For better logging (uncomment if needed)
+    // implementation 'org.slf4j:slf4j-api:2.0.9'
+    // implementation 'ch.qos.logback:logback-classic:1.4.11'
+    
+    // Optional: For metrics (uncomment if needed)
+    // implementation 'io.micrometer:micrometer-core:1.12.0'
+    
+    // Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    jvmArgs += ['--enable-preview']
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += ['--enable-preview']
+}
+
+// Set main class for the example
+application {
+    mainClass = 'com.akilisha.oss.roya.workflow.examples.CustomerSupportWorkflow'
+}
+
+// Custom task to run the example
+task runExample(type: JavaExec) {
+    group = 'application'
+    description = 'Run the CustomerSupportWorkflow example'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.akilisha.oss.roya.workflow.examples.CustomerSupportWorkflow'
+    jvmArgs = ['--enable-preview']
+}
+
+// Task to display project info
+task info {
+    group = 'help'
+    description = 'Display project information'
+    doLast {
+        println """
+        ========================================
+        Workflow Orchestrator
+        ========================================
+        Group:      ${project.group}
+        Version:    ${project.version}
+        Java:       ${sourceCompatibility}
+        
+        Build:      ./gradlew build
+        Test:       ./gradlew test
+        Run:        ./gradlew runExample
+        ========================================
+        """.stripIndent()
+    }
+}

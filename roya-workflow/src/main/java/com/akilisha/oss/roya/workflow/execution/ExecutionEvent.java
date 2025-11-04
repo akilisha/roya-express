@@ -14,10 +14,10 @@ public record ExecutionEvent(
     Duration executionTime,
     Instant timestamp
 ) {
-
+    
     @Override
     public String toString() {
-        return String.format("%s -> %s (%dms)",
+        return String.format("%s -> %s (%dms)", 
             nodeId, output.status(), executionTime.toMillis());
     }
 }
