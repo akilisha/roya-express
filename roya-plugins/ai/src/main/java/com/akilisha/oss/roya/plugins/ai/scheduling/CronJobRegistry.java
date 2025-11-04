@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.ai.scheduling;
 
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.CronJobTrigger;
+import com.akilisha.oss.roya.plugins.ai.execution.WorkflowExecutorFactory;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.execution.WorkflowExecutor;
 import com.akilisha.oss.roya.workflow.execution.WorkflowResult;
@@ -191,7 +192,7 @@ public class CronJobRegistry {
             
             // Execute workflow from trigger node
             try {
-                WorkflowExecutor executor = new WorkflowExecutor(workflow);
+                WorkflowExecutor executor = WorkflowExecutorFactory.create(workflow);
                 WorkflowResult result = executor.executeFrom(triggerNodeId, cronData).join();
                 
                 if (result.isSuccess()) {

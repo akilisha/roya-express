@@ -3,6 +3,7 @@ package com.akilisha.oss.roya.plugins.ai.webhooks;
 import com.akilisha.oss.roya.api.*;
 import com.akilisha.oss.roya.api.plugin.Application;
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.WebhookTrigger;
+import com.akilisha.oss.roya.plugins.ai.execution.WorkflowExecutorFactory;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.execution.WorkflowExecutor;
 import com.akilisha.oss.roya.workflow.execution.WorkflowResult;
@@ -83,7 +84,7 @@ public class WebhookRegistry {
                 ));
                 
                 // Execute workflow from trigger node
-                WorkflowExecutor executor = new WorkflowExecutor(registration.workflow());
+                WorkflowExecutor executor = WorkflowExecutorFactory.create(registration.workflow());
                 WorkflowResult result = executor.executeFrom(
                     registration.triggerNodeId(),
                     webhookData

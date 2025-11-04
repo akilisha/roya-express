@@ -4,6 +4,7 @@ import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.AIServiceNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.EmbeddingNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.ExtractNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.actions.ForkNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.LLMActionNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.RAGNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.StreamingLLMNode;
@@ -11,6 +12,8 @@ import com.akilisha.oss.roya.plugins.ai.nodes.actions.VectorNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.WebhookTrigger;
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.CronJobTrigger;
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.FileWatchTrigger;
+import com.akilisha.oss.roya.plugins.ai.nodes.triggers.PollingTrigger;
+import com.akilisha.oss.roya.plugins.ai.nodes.triggers.WorkflowTrigger;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.core.WorkflowNode;
 import com.akilisha.oss.roya.workflow.edges.Edge;
@@ -99,6 +102,18 @@ public class AIWorkflowBuilder {
             fileWatchTrigger.setWorkflowMetadata(workflowName, nodeId);
         }
         
+        // If it's a PollingTrigger, register it with workflow metadata
+        if (triggerNode instanceof PollingTrigger) {
+            PollingTrigger pollingTrigger = (PollingTrigger) triggerNode;
+            pollingTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
+        // If it's a WorkflowTrigger, register it with workflow metadata
+        if (triggerNode instanceof WorkflowTrigger) {
+            WorkflowTrigger workflowTrigger = (WorkflowTrigger) triggerNode;
+            workflowTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
         workflowBuilder.trigger(nodeId, triggerNode);
         return this;
     }
@@ -130,6 +145,18 @@ public class AIWorkflowBuilder {
         if (triggerNode instanceof FileWatchTrigger) {
             FileWatchTrigger fileWatchTrigger = (FileWatchTrigger) triggerNode;
             fileWatchTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
+        // If it's a PollingTrigger, register it with workflow metadata
+        if (triggerNode instanceof PollingTrigger) {
+            PollingTrigger pollingTrigger = (PollingTrigger) triggerNode;
+            pollingTrigger.setWorkflowMetadata(workflowName, nodeId);
+        }
+        
+        // If it's a WorkflowTrigger, register it with workflow metadata
+        if (triggerNode instanceof WorkflowTrigger) {
+            WorkflowTrigger workflowTrigger = (WorkflowTrigger) triggerNode;
+            workflowTrigger.setWorkflowMetadata(workflowName, nodeId);
         }
         
         workflowBuilder.trigger(nodeId, triggerNode, timeout);
@@ -377,6 +404,60 @@ public class AIWorkflowBuilder {
     // - .agent()
     // - .mcp()
 
+    /**
+     * Fork a child workflow (nested execution).
+     * 
+     * Executes a child workflow within parent workflow context.
+     * Parent waits for child completion and receives child's result.
+     * 
+     * Supports parallel execution when multiple fork nodes are connected with parallel edges.
+     * 
+     * Example:
+     * <pre>
+     * Workflow child = ai.workflow("child")
+     *     .trigger("start", ManualTrigger.create())
+     *     .llm("process", builder -> builder.outputKey("result"))
+     *     .build();
+     * 
+     * ai.workflow("parent")
+     *     .trigger("start", ManualTrigger.create())
+     *     .fork("child", child, builder -> builder
+     *         .inputKey("data")  // Pass parent's data to child
+     *         .outputKey("childResult")  // Get child's result back
+     *     )
+     *     .llm("finalize", builder -> builder.inputKey("childResult"))
+     *     .edge("start", "child")
+     *     .edge("child", "finalize")
+     *     .build();
+     * </pre>
+     * 
+     * @param nodeId Node identifier
+     * @param childWorkflow Child workflow to execute
+     * @param config Fork configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder fork(String nodeId, Workflow childWorkflow, Consumer<ForkNode.Builder> config) {
+        ForkNode.Builder builder = ForkNode.builder(childWorkflow);
+        config.accept(builder);
+        workflowBuilder.action(nodeId, builder.build());
+        return this;
+    }
+    
+    /**
+     * Fork a child workflow with default configuration.
+     * 
+     * Passes entire parent context to child and merges child result back into parent context.
+     * 
+     * @param nodeId Node identifier
+     * @param childWorkflow Child workflow to execute
+     * @return This builder
+     */
+    public AIWorkflowBuilder fork(String nodeId, Workflow childWorkflow) {
+        ForkNode.Builder builder = ForkNode.builder(childWorkflow);
+        workflowBuilder.action(nodeId, builder.build());
+        return this;
+    }
+
     // ========== Edge Delegation ==========
 
     /**
@@ -444,6 +525,16 @@ public class AIWorkflowBuilder {
             if (node instanceof FileWatchTrigger) {
                 FileWatchTrigger fileWatchTrigger = (FileWatchTrigger) node;
                 fileWatchTrigger.register(workflow);
+            }
+            // Register any PollingTrigger nodes with the registry
+            if (node instanceof PollingTrigger) {
+                PollingTrigger pollingTrigger = (PollingTrigger) node;
+                pollingTrigger.register(workflow);
+            }
+            // Register any WorkflowTrigger nodes with the chain registry
+            if (node instanceof WorkflowTrigger) {
+                WorkflowTrigger workflowTrigger = (WorkflowTrigger) node;
+                workflowTrigger.register(workflow);
             }
         });
         

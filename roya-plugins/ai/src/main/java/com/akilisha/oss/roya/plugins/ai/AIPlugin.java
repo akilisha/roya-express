@@ -13,6 +13,7 @@ import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookPersistenceService;
 import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookRegistry;
 import com.akilisha.oss.roya.plugins.ai.scheduling.CronJobRegistry;
 import com.akilisha.oss.roya.plugins.ai.watching.FileWatchRegistry;
+import com.akilisha.oss.roya.plugins.ai.polling.PollingRegistry;
 import com.akilisha.oss.roya.plugins.database.Database;
 
 /**
@@ -159,6 +160,14 @@ public class AIPlugin implements RoyaPlugin {
             System.out.println("   File watch workflows will not be available");
         }
         
+        // Initialize PollingRegistry (ScheduledExecutorService)
+        try {
+            PollingRegistry.getInstance().initialize();
+        } catch (Exception e) {
+            System.out.println("⚠️  PollingRegistry initialization failed: " + e.getMessage());
+            System.out.println("   Polling workflows will not be available");
+        }
+        
         // Register webhook routes with the Roya application
         WebhookRegistry.getInstance().registerRoutes(app);
         
@@ -229,6 +238,13 @@ public class AIPlugin implements RoyaPlugin {
 
     @Override
     public void stop() throws Exception {
+        // Shutdown PollingRegistry
+        try {
+            PollingRegistry.getInstance().shutdown();
+        } catch (Exception e) {
+            System.err.println("Error shutting down PollingRegistry: " + e.getMessage());
+        }
+        
         // Shutdown FileWatchRegistry
         try {
             FileWatchRegistry.getInstance().shutdown();

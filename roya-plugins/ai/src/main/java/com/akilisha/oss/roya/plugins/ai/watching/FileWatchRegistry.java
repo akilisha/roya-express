@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.ai.watching;
 
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.FileWatchTrigger;
+import com.akilisha.oss.roya.plugins.ai.execution.WorkflowExecutorFactory;
 import com.akilisha.oss.roya.plugins.ai.workflow.WorkflowRegistry;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.execution.WorkflowExecutor;
@@ -329,7 +330,7 @@ public class FileWatchRegistry {
                 ));
                 
                 // Execute workflow from trigger node
-                WorkflowExecutor executor = new WorkflowExecutor(registration.workflow());
+                WorkflowExecutor executor = WorkflowExecutorFactory.create(registration.workflow());
                 WorkflowResult result = executor.executeFrom(
                     registration.triggerNodeId(),
                     fileData

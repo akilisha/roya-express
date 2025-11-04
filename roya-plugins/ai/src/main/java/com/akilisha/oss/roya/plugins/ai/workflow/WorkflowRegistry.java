@@ -3,6 +3,7 @@ package com.akilisha.oss.roya.plugins.ai.workflow;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -19,6 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * // Retrieve workflow
  * Workflow workflow = WorkflowRegistry.getInstance().get("my-workflow");
+ * 
+ * // Get workflow name from instance
+ * Optional<String> name = WorkflowRegistry.getInstance().getWorkflowName(workflow);
  * </pre>
  */
 public class WorkflowRegistry {
@@ -26,6 +30,7 @@ public class WorkflowRegistry {
     private static final WorkflowRegistry INSTANCE = new WorkflowRegistry();
     
     private final Map<String, Workflow> workflows = new ConcurrentHashMap<>();
+    private final Map<Workflow, String> workflowToName = new ConcurrentHashMap<>();
     
     private WorkflowRegistry() {
         // Singleton
@@ -52,6 +57,7 @@ public class WorkflowRegistry {
             throw new IllegalArgumentException("Workflow cannot be null");
         }
         workflows.put(name, workflow);
+        workflowToName.put(workflow, name);
     }
     
     /**
@@ -62,6 +68,16 @@ public class WorkflowRegistry {
      */
     public Workflow get(String name) {
         return workflows.get(name);
+    }
+    
+    /**
+     * Get workflow name from workflow instance.
+     * 
+     * @param workflow Workflow instance
+     * @return Optional workflow name
+     */
+    public Optional<String> getWorkflowName(Workflow workflow) {
+        return Optional.ofNullable(workflowToName.get(workflow));
     }
     
     /**
@@ -81,7 +97,11 @@ public class WorkflowRegistry {
      * @return The workflow that was removed, or null if not found
      */
     public Workflow unregister(String name) {
-        return workflows.remove(name);
+        Workflow workflow = workflows.remove(name);
+        if (workflow != null) {
+            workflowToName.remove(workflow);
+        }
+        return workflow;
     }
     
     /**
@@ -108,6 +128,7 @@ public class WorkflowRegistry {
      */
     public void clear() {
         workflows.clear();
+        workflowToName.clear();
     }
 }
 
