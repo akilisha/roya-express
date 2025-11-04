@@ -35,7 +35,8 @@ dependencies {
     // Official Qdrant Java client for direct connectivity testing
     implementation 'io.qdrant:client:1.15.0'
 
-    // AI Library Adapters - LangGraph
+    // Quartz scheduler for CronJobTrigger
+    implementation 'org.quartz-scheduler:quartz:2.3.2'
     implementation "org.bsc.langgraph4j:langgraph4j-core:${langgraph4jVersion}"
     implementation "org.bsc.langgraph4j:langgraph4j-langchain4j:${langgraph4jVersion}"
     implementation "org.bsc.langgraph4j:langgraph4j-agent-executor:${langgraph4jVersion}"

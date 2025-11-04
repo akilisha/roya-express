@@ -11,6 +11,7 @@ import com.akilisha.oss.roya.plugins.ai.library.AILibraryFactory;
 import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookManagementAPI;
 import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookPersistenceService;
 import com.akilisha.oss.roya.plugins.ai.webhooks.WebhookRegistry;
+import com.akilisha.oss.roya.plugins.ai.scheduling.CronJobRegistry;
 import com.akilisha.oss.roya.plugins.database.Database;
 
 /**
@@ -141,6 +142,14 @@ public class AIPlugin implements RoyaPlugin {
 
     @Override
     public void setup(Application app) {
+        // Initialize CronJobRegistry (Quartz scheduler)
+        try {
+            CronJobRegistry.getInstance().initialize();
+        } catch (Exception e) {
+            System.out.println("⚠️  CronJobRegistry initialization failed: " + e.getMessage());
+            System.out.println("   Scheduled workflows will not be available");
+        }
+        
         // Register webhook routes with the Roya application
         WebhookRegistry.getInstance().registerRoutes(app);
         
@@ -211,7 +220,12 @@ public class AIPlugin implements RoyaPlugin {
 
     @Override
     public void stop() throws Exception {
-        // No cleanup needed
+        // Shutdown CronJobRegistry
+        try {
+            CronJobRegistry.getInstance().shutdown();
+        } catch (Exception e) {
+            System.err.println("Error shutting down CronJobRegistry: " + e.getMessage());
+        }
     }
 }
 

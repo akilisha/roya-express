@@ -9,6 +9,7 @@ import com.akilisha.oss.roya.plugins.ai.nodes.actions.RAGNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.StreamingLLMNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.VectorNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.triggers.WebhookTrigger;
+import com.akilisha.oss.roya.plugins.ai.nodes.triggers.CronJobTrigger;
 import com.akilisha.oss.roya.workflow.core.Workflow;
 import com.akilisha.oss.roya.workflow.core.WorkflowNode;
 import com.akilisha.oss.roya.workflow.edges.Edge;
@@ -390,6 +391,7 @@ public class AIWorkflowBuilder {
      * Build the workflow.
      * 
      * Automatically registers any WebhookTrigger nodes with the webhook registry.
+     * Automatically registers any CronJobTrigger nodes with the Quartz scheduler.
      * Also registers the workflow with WorkflowRegistry for persistence.
      *
      * @return Compiled workflow
@@ -407,6 +409,11 @@ public class AIWorkflowBuilder {
             if (node instanceof WebhookTrigger) {
                 WebhookTrigger webhookTrigger = (WebhookTrigger) node;
                 webhookTrigger.register(workflow);
+            }
+            // Register any CronJobTrigger nodes with the scheduler
+            if (node instanceof CronJobTrigger) {
+                CronJobTrigger cronJobTrigger = (CronJobTrigger) node;
+                cronJobTrigger.register(workflow);
             }
         });
         
