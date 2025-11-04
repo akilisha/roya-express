@@ -544,6 +544,21 @@ public class AIWorkflowBuilder {
     // ========== Direct Access (for advanced use) ==========
 
     /**
+     * Add a custom action node (for advanced use cases).
+     * 
+     * Use this when you need to add a custom WorkflowNode that doesn't have
+     * a convenience method in AIWorkflowBuilder.
+     * 
+     * @param nodeId Node identifier
+     * @param node Custom workflow node
+     * @return This builder
+     */
+    public AIWorkflowBuilder action(String nodeId, WorkflowNode node) {
+        workflowBuilder.action(nodeId, node);
+        return this;
+    }
+    
+    /**
      * Get the underlying Workflow builder for direct access.
      * Use this when you need roya-workflow features not exposed by AIWorkflowBuilder.
      *
