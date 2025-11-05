@@ -8,9 +8,9 @@ import com.akilisha.oss.roya.workflow.cost.CostTracker;
 import com.akilisha.oss.roya.workflow.edges.Edge;
 import com.akilisha.oss.roya.workflow.execution.WorkflowExecutor;
 import com.akilisha.oss.roya.workflow.execution.WorkflowResult;
-import com.akilisha.oss.roya.workflow.hitl.ApprovalProvider;
-import com.akilisha.oss.roya.workflow.hitl.HumanApprovalNode;
-import com.akilisha.oss.roya.workflow.hitl.PollingApprovalProvider;
+import com.akilisha.oss.roya.workflow.hitm.ApprovalProvider;
+import com.akilisha.oss.roya.workflow.hitm.HumanApprovalNode;
+import com.akilisha.oss.roya.workflow.hitm.PollingApprovalProvider;
 import com.akilisha.oss.roya.workflow.nested.MergeAllAggregator;
 import com.akilisha.oss.roya.workflow.nested.NestedExecutionStrategy;
 import com.akilisha.oss.roya.workflow.resilience.CircuitBreaker;
@@ -68,13 +68,12 @@ public class CompleteAIAgentExample {
         Workflow mainWorkflow = Workflow.create()
                 .trigger("ticket", new TicketInputNode())
 
-                // Step 1: Classify urgency (with retry & circuit breaker)
+                // Step 1: Classify urgency (with circuit breaker)
                 .action("classify",
                         new CircuitBreakerNode(
                                 new UrgencyClassifierNode(),
                                 llmBreaker
-                        ),
-                        Duration.ofMillis(500)
+                        )
                 )
 
                 // Step 2: Route based on urgency

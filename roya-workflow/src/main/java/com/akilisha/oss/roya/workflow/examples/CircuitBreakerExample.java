@@ -1,13 +1,13 @@
 package com.akilisha.oss.roya.workflow.examples;
 
-import com.akilisha.oss.roya.workflow.core.*;
-import com.akilisha.oss.roya.workflow.edges.Edge;
+import com.akilisha.oss.roya.workflow.core.NodeInput;
+import com.akilisha.oss.roya.workflow.core.NodeOutput;
+import com.akilisha.oss.roya.workflow.core.Workflow;
+import com.akilisha.oss.roya.workflow.core.WorkflowNode;
 import com.akilisha.oss.roya.workflow.execution.WorkflowExecutor;
 import com.akilisha.oss.roya.workflow.execution.WorkflowResult;
 import com.akilisha.oss.roya.workflow.resilience.CircuitBreaker;
 import com.akilisha.oss.roya.workflow.resilience.CircuitBreakerNode;
-import com.akilisha.oss.roya.workflow.resilience.CircuitBreakerState;
-import com.akilisha.oss.roya.workflow.visitor.LoggingVisitor;
 
 import java.time.Duration;
 import java.util.Map;
@@ -17,40 +17,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Example demonstrating CIRCUIT BREAKER pattern.
- *
+ * <p>
  * Use Case: AI workflow calling unreliable external services:
  * - LLM API (sometimes times out)
  * - External knowledge base (flaky)
  * - Image generation service (rate limited)
- *
+ * <p>
  * Demonstrates:
  * 1. Circuit breaker protecting against failures
  * 2. Fail-fast when service is down (circuit open)
  * 3. Automatic recovery testing (half-open state)
  * 4. Circuit breaker statistics and monitoring
- *
- * Demonstrates:
- *
- * ✅ Basic circuit breaker usage (3 failures → open)
- * ✅ Fail-fast when circuit is open
- * ✅ Circuit states: CLOSED → OPEN → HALF_OPEN → CLOSED
- * ✅ Automatic recovery testing
- * ✅ Multiple circuit breakers in one workflow
- * ✅ Circuit breaker statistics
- * ✅ Different thresholds for different services
- *
- * Realistic Scenarios:
- *
- * Flaky LLM API (70% failure rate initially)
- * Database with connection issues (30% failure)
- * Rate-limited external API (60% failure)
- * Service that recovers after N failures
- *
- * 3 Different Examples:
- *
- * Basic circuit breaker (single service)
- * Recovery flow (OPEN → HALF_OPEN → CLOSED)
- * Multiple circuit breakers (LLM + DB + API)
  */
 public class CircuitBreakerExample {
 
@@ -89,10 +66,10 @@ public class CircuitBreakerExample {
         CircuitBreakerNode protectedNode = new CircuitBreakerNode(flakyNode, breaker, true);
 
         Workflow workflow = Workflow.create()
-            .trigger("start", new InputNode())
-            .action("llmCall", protectedNode)
-            .edge("start", "llmCall")
-            .build();
+                .trigger("start", new InputNode())
+                .action("llmCall", protectedNode)
+                .edge("start", "llmCall")
+                .build();
 
         WorkflowExecutor executor = new WorkflowExecutor(workflow);
 
@@ -101,19 +78,19 @@ public class CircuitBreakerExample {
             System.out.println("Attempt " + i + ":");
 
             WorkflowResult result = executor.executeFrom(
-                "start",
-                Map.of("prompt", "Generate a blog post")
+                    "start",
+                    Map.of("prompt", "Generate a blog post")
             ).join();
 
             if (result.isSuccess()) {
                 System.out.println("   ✅ Success! Response: " + result.context().get("response"));
 
                 // Show circuit breaker stats from output
-//                if (result.context().containsKey("circuitBreakerState")) {
-//                    System.out.println("   📊 Circuit State: " + result.context().get("circuitBreakerState"));
-//                    System.out.println("   📊 Failures: " + result.context().get("circuitBreakerFailures"));
-//                    System.out.println("   📊 Successes: " + result.context().get("circuitBreakerSuccesses"));
-//                }
+                if (result.context().get("circuitBreakerState") != null) {
+                    System.out.println("   📊 Circuit State: " + result.context().get("circuitBreakerState"));
+                    System.out.println("   📊 Failures: " + result.context().get("circuitBreakerFailures"));
+                    System.out.println("   📊 Successes: " + result.context().get("circuitBreakerSuccesses"));
+                }
             } else {
                 System.out.println("   ❌ Failed: " + result.finalOutput().error().orElse("Unknown"));
             }
@@ -121,7 +98,7 @@ public class CircuitBreakerExample {
             // Check circuit breaker state
             CircuitBreaker.CircuitBreakerStats stats = breaker.getStats();
             System.out.println("   🔌 Circuit: " + stats.state() +
-                " (failures: " + stats.failureCount() + "/" + stats.failureThreshold() + ")");
+                    " (failures: " + stats.failureCount() + "/" + stats.failureThreshold() + ")");
 
             // Small delay between attempts
             sleep(100);
@@ -144,10 +121,10 @@ public class CircuitBreakerExample {
         CircuitBreakerNode protectedNode = new CircuitBreakerNode(recoveringNode, breaker);
 
         Workflow workflow = Workflow.create()
-            .trigger("start", new InputNode())
-            .action("service", protectedNode)
-            .edge("start", "service")
-            .build();
+                .trigger("start", new InputNode())
+                .action("service", protectedNode)
+                .edge("start", "service")
+                .build();
 
         WorkflowExecutor executor = new WorkflowExecutor(workflow);
 
@@ -196,22 +173,22 @@ public class CircuitBreakerExample {
         FlakyAPINode apiNode = new FlakyAPINode(0.6);          // 60% failure
 
         Workflow workflow = Workflow.create()
-            .trigger("start", new InputNode())
+                .trigger("start", new InputNode())
 
-            // Each service protected by its own circuit breaker
-            .action("llm", new CircuitBreakerNode(llmNode, llmBreaker))
-            .action("database", new CircuitBreakerNode(dbNode, dbBreaker))
-            .action("api", new CircuitBreakerNode(apiNode, apiBreaker))
+                // Each service protected by its own circuit breaker
+                .action("llm", new CircuitBreakerNode(llmNode, llmBreaker))
+                .action("database", new CircuitBreakerNode(dbNode, dbBreaker))
+                .action("api", new CircuitBreakerNode(apiNode, apiBreaker))
 
-            .action("aggregate", new AggregateResultsNode())
+                .action("aggregate", new AggregateResultsNode())
 
-            .edge("start", "llm")
-            .edge("start", "database")
-            .edge("start", "api")
-            .edge("llm", "aggregate")
-            .edge("database", "aggregate")
-            .edge("api", "aggregate")
-            .build();
+                .edge("start", "llm")
+                .edge("start", "database")
+                .edge("start", "api")
+                .edge("llm", "aggregate")
+                .edge("database", "aggregate")
+                .edge("api", "aggregate")
+                .build();
 
         WorkflowExecutor executor = new WorkflowExecutor(workflow);
 
@@ -224,11 +201,11 @@ public class CircuitBreakerExample {
             System.out.println("  Status: " + (result.isSuccess() ? "✅ Success" : "❌ Failed"));
             System.out.println("  Circuit Breakers:");
             System.out.println("    • LLM: " + llmBreaker.getState() +
-                " (failures: " + llmBreaker.getFailureCount() + "/3)");
+                    " (failures: " + llmBreaker.getFailureCount() + "/3)");
             System.out.println("    • Database: " + dbBreaker.getState() +
-                " (failures: " + dbBreaker.getFailureCount() + "/5)");
+                    " (failures: " + dbBreaker.getFailureCount() + "/5)");
             System.out.println("    • API: " + apiBreaker.getState() +
-                " (failures: " + apiBreaker.getFailureCount() + "/2)");
+                    " (failures: " + apiBreaker.getFailureCount() + "/2)");
 
             sleep(200);
         }
@@ -242,6 +219,14 @@ public class CircuitBreakerExample {
     }
 
     // ===== Example Nodes =====
+
+    private static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     static class InputNode implements WorkflowNode {
         @Override
@@ -268,12 +253,12 @@ public class CircuitBreakerExample {
             if (random.nextDouble() < failureRate) {
                 System.out.println("      🔴 LLM API call failed (timeout/error)");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.failure("LLM API timeout")
+                        NodeOutput.failure("LLM API timeout")
                 );
             } else {
                 System.out.println("      🟢 LLM API call succeeded");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.success(Map.of("response", "Generated content..."))
+                        NodeOutput.success(Map.of("response", "Generated content..."))
                 );
             }
         }
@@ -298,12 +283,12 @@ public class CircuitBreakerExample {
             if (count <= failuresBeforeRecovery) {
                 System.out.println("      🔴 Service down (attempt " + count + ")");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.failure("Service unavailable")
+                        NodeOutput.failure("Service unavailable")
                 );
             } else {
                 System.out.println("      🟢 Service healthy (recovered!)");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.success(Map.of("result", "Service working"))
+                        NodeOutput.success(Map.of("result", "Service working"))
                 );
             }
         }
@@ -324,12 +309,12 @@ public class CircuitBreakerExample {
             if (random.nextDouble() < failureRate) {
                 System.out.println("      🔴 Database query failed");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.failure("Database connection timeout")
+                        NodeOutput.failure("Database connection timeout")
                 );
             } else {
                 System.out.println("      🟢 Database query succeeded");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.success(Map.of("dbResult", "Query results..."))
+                        NodeOutput.success(Map.of("dbResult", "Query results..."))
                 );
             }
         }
@@ -350,12 +335,12 @@ public class CircuitBreakerExample {
             if (random.nextDouble() < failureRate) {
                 System.out.println("      🔴 External API failed");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.failure("API rate limit exceeded")
+                        NodeOutput.failure("API rate limit exceeded")
                 );
             } else {
                 System.out.println("      🟢 External API succeeded");
                 return CompletableFuture.completedFuture(
-                    NodeOutput.success(Map.of("apiData", "API response..."))
+                        NodeOutput.success(Map.of("apiData", "API response..."))
                 );
             }
         }
@@ -366,16 +351,8 @@ public class CircuitBreakerExample {
         public CompletableFuture<NodeOutput> execute(NodeInput input) {
             System.out.println("      📦 Aggregating results from all services");
             return CompletableFuture.completedFuture(
-                NodeOutput.success(Map.of("aggregated", "Combined results"))
+                    NodeOutput.success(Map.of("aggregated", "Combined results"))
             );
-        }
-    }
-
-    private static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 }

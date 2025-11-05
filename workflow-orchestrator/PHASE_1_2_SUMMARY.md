@@ -349,10 +349,11 @@ This example uses:
 **To use new features:**
 
 1. **Import new packages:**
+
 ```java
 import com.akilisha.oss.roya.workflow.continuation.*;
 import com.akilisha.oss.roya.workflow.nested.*;
-import com.akilisha.oss.roya.workflow.hitl.*;
+import com.akilisha.oss.roya.workflow.hitm.*;
 import com.akilisha.oss.roya.workflow.cost.*;
 import com.akilisha.oss.roya.workflow.resilience.*;
 ```

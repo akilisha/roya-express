@@ -1,4 +1,4 @@
-package com.akilisha.oss.roya.workflow.hitl;
+package com.akilisha.oss.roya.workflow.hitm;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -14,23 +14,23 @@ import java.util.concurrent.TimeUnit;
  * Polls a response store until a human provides input or timeout occurs.
  */
 public class PollingApprovalProvider implements ApprovalProvider {
-    
+
     private final Map<String, PendingRequest> pendingRequests;
     private final Duration pollInterval;
     private final Duration timeout;
     private final ScheduledExecutorService scheduler;
-    
+
     public PollingApprovalProvider() {
         this(Duration.ofSeconds(2), Duration.ofMinutes(10));
     }
-    
+
     public PollingApprovalProvider(Duration pollInterval, Duration timeout) {
         this.pendingRequests = new ConcurrentHashMap<>();
         this.pollInterval = pollInterval;
         this.timeout = timeout;
         this.scheduler = Executors.newScheduledThreadPool(1);
     }
-    
+
     @Override
     public CompletableFuture<Boolean> requestApproval(
         String requestId,
@@ -40,7 +40,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         PendingRequest request = new PendingRequest(requestId, prompt, context, Instant.now());
         pendingRequests.put(requestId, request);
-        
+
         // Start polling
         scheduler.scheduleAtFixedRate(
             () -> checkForResponse(requestId, future),
@@ -48,7 +48,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
             pollInterval.toMillis(),
             TimeUnit.MILLISECONDS
         );
-        
+
         // Timeout
         scheduler.schedule(
             () -> {
@@ -62,10 +62,10 @@ public class PollingApprovalProvider implements ApprovalProvider {
             timeout.toMillis(),
             TimeUnit.MILLISECONDS
         );
-        
+
         return future;
     }
-    
+
     @Override
     public CompletableFuture<String> requestInput(
         String requestId,
@@ -75,7 +75,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
         CompletableFuture<String> future = new CompletableFuture<>();
         PendingRequest request = new PendingRequest(requestId, prompt, context, Instant.now());
         pendingRequests.put(requestId, request);
-        
+
         // Similar polling pattern
         scheduler.scheduleAtFixedRate(
             () -> {
@@ -89,7 +89,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
             pollInterval.toMillis(),
             TimeUnit.MILLISECONDS
         );
-        
+
         // Timeout
         scheduler.schedule(
             () -> {
@@ -103,10 +103,10 @@ public class PollingApprovalProvider implements ApprovalProvider {
             timeout.toMillis(),
             TimeUnit.MILLISECONDS
         );
-        
+
         return future;
     }
-    
+
     @Override
     public CompletableFuture<Integer> requestChoice(
         String requestId,
@@ -118,7 +118,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
         PendingRequest request = new PendingRequest(requestId, prompt, context, Instant.now());
         request.setOptions(options);
         pendingRequests.put(requestId, request);
-        
+
         // Similar polling pattern
         scheduler.scheduleAtFixedRate(
             () -> {
@@ -132,7 +132,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
             pollInterval.toMillis(),
             TimeUnit.MILLISECONDS
         );
-        
+
         // Timeout
         scheduler.schedule(
             () -> {
@@ -146,15 +146,15 @@ public class PollingApprovalProvider implements ApprovalProvider {
             timeout.toMillis(),
             TimeUnit.MILLISECONDS
         );
-        
+
         return future;
     }
-    
+
     @Override
     public void cancelRequest(String requestId) {
         pendingRequests.remove(requestId);
     }
-    
+
     private void checkForResponse(String requestId, CompletableFuture<Boolean> future) {
         PendingRequest request = pendingRequests.get(requestId);
         if (request != null && request.hasResponse()) {
@@ -162,7 +162,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
             pendingRequests.remove(requestId);
         }
     }
-    
+
     /**
      * Submit a response to a pending request (called by human/external system)
      */
@@ -172,7 +172,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
             request.setApproved(approved);
         }
     }
-    
+
     /**
      * Submit text input to a pending request
      */
@@ -182,7 +182,7 @@ public class PollingApprovalProvider implements ApprovalProvider {
             request.setTextResponse(input);
         }
     }
-    
+
     /**
      * Submit choice to a pending request
      */
@@ -192,21 +192,21 @@ public class PollingApprovalProvider implements ApprovalProvider {
             request.setChoiceResponse(choiceIndex);
         }
     }
-    
+
     /**
      * Get all pending requests (for UI display)
      */
     public Map<String, PendingRequest> getPendingRequests() {
         return Map.copyOf(pendingRequests);
     }
-    
+
     /**
      * Shutdown the provider
      */
     public void shutdown() {
         scheduler.shutdown();
     }
-    
+
     /**
      * Represents a pending approval/input request
      */
@@ -219,79 +219,79 @@ public class PollingApprovalProvider implements ApprovalProvider {
         private String textResponse;
         private Integer choiceResponse;
         private String[] options;
-        
+
         public PendingRequest(String requestId, String prompt, Map<String, Object> context, Instant createdAt) {
             this.requestId = requestId;
             this.prompt = prompt;
             this.context = context;
             this.createdAt = createdAt;
         }
-        
+
         public boolean hasResponse() {
             return approved != null;
         }
-        
+
         public boolean hasTextResponse() {
             return textResponse != null;
         }
-        
+
         public boolean hasChoiceResponse() {
             return choiceResponse != null;
         }
-        
+
         public boolean isApproved() {
             return approved != null && approved;
         }
-        
+
         public void setApproved(boolean approved) {
             this.approved = approved;
         }
-        
+
         public String getTextResponse() {
             return textResponse;
         }
-        
+
         public void setTextResponse(String textResponse) {
             this.textResponse = textResponse;
         }
-        
+
         public Integer getChoiceResponse() {
             return choiceResponse;
         }
-        
+
         public void setChoiceResponse(Integer choiceResponse) {
             this.choiceResponse = choiceResponse;
         }
-        
+
         public String[] getOptions() {
             return options;
         }
-        
+
         public void setOptions(String[] options) {
             this.options = options;
         }
-        
+
         public String getRequestId() {
             return requestId;
         }
-        
+
         public String getPrompt() {
             return prompt;
         }
-        
+
         public Map<String, Object> getContext() {
             return context;
         }
-        
+
         public Instant getCreatedAt() {
             return createdAt;
         }
-        
+
         public Duration getAge() {
             return Duration.between(createdAt, Instant.now());
         }
     }
-    
+
     /**
      * Exception thrown when approval/input times out
      */
