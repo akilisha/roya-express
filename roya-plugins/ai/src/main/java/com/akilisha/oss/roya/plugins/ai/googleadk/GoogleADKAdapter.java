@@ -43,7 +43,57 @@ public class GoogleADKAdapter implements AI {
     
     @Override
     public Vision vision() {
-        throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+        return new Vision() {
+            @Override
+            public String generateImage(String prompt) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String generateImage(String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String analyzeImage(String imageUrl, String prompt) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String analyzeImage(String imageUrl, String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String transcribeAudio(String audioUrl) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String transcribeAudio(String audioUrl, AIOptions options) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String describeVideo(String videoUrl, String prompt) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String describeVideo(String videoUrl, String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String processPdf(String pdfUrl, String prompt) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+
+            @Override
+            public String processPdf(String pdfUrl, String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+            }
+        };
     }
 
     @Override
@@ -120,6 +170,11 @@ public class GoogleADKAdapter implements AI {
     @Override
     public <T> T aiService(Class<T> serviceClass) {
         throw new UnsupportedOperationException("AI Services implementation coming soon - use AiServices.create() directly for now");
+    }
+
+    @Override
+    public <T> T aiService(Class<T> serviceClass, java.util.function.Consumer<dev.langchain4j.service.AiServices<T>> config) {
+        throw new UnsupportedOperationException("AI Services with configuration coming soon - use LangChain adapter for now");
     }
 }
 

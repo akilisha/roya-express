@@ -4,20 +4,23 @@ import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.library.AILibrary;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryConfig;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
+import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import dev.langchain4j.model.vertexai.VertexAiChatModel;
 
 /**
  * LangChain library adapter.
- *
+ * <p>
  * Bridges LangChain4j to Roya's unified AI interface.
- *
+ * <p>
  * Status: Placeholder - waiting for LangChain4j API documentation/examples
  * to implement actual integration.
- *
+ * <p>
  * Dependencies are configured but API classes need to be verified.
  * Will implement once we have confirmed package paths and API patterns.
  */
@@ -35,8 +38,8 @@ public class LangChainLibrary implements AILibrary {
         // Create EmbeddingModel from provider config
         EmbeddingModel embeddingModel = createEmbeddingModel(config);
 
-        // TODO: Create StreamingChatModel when needed
-        StreamingChatModel streamingChatModel = null;
+        // Create StreamingChatModel from provider config
+        StreamingChatModel streamingChatModel = createStreamingChatModel(config);
 
         // Create adapter wrapper around these models
         return new LangChainAdapter(chatModel, streamingChatModel, embeddingModel);
@@ -46,101 +49,135 @@ public class LangChainLibrary implements AILibrary {
         // Try OpenAI first
         var openaiConfig = config.provider("openai");
         if (openaiConfig.isPresent()) {
+            var providerConfig = openaiConfig.get();
+            String modelName = getModelName(providerConfig, "gpt-3.5-turbo");
             return OpenAiChatModel.builder()
-                .apiKey(openaiConfig.get().apiKey())
-                .modelName("gpt-3.5-turbo")
-                .build();
+                    .apiKey(providerConfig.apiKey())
+                    .modelName(modelName)
+                    .build();
         }
 
         // Try Anthropic
         var anthropicConfig = config.provider("anthropic");
         if (anthropicConfig.isPresent()) {
+            var providerConfig = anthropicConfig.get();
+            String modelName = getModelName(providerConfig, "claude-3-haiku-20240307");
             return AnthropicChatModel.builder()
-                .apiKey(anthropicConfig.get().apiKey())
-                .modelName("claude-3-haiku-20240307")
-                .build();
+                    .apiKey(providerConfig.apiKey())
+                    .modelName(modelName)
+                    .build();
         }
 
-        // Try Gemini (Vertex AI) - using reflection to avoid dependency issues
+        // Try Gemini (Vertex AI)
         var geminiConfig = config.provider("gemini");
         if (geminiConfig.isPresent()) {
             return createGeminiChatModel(geminiConfig.get());
         }
 
         throw new IllegalArgumentException(
-            "No provider configured. Configure either 'openai', 'anthropic', or 'gemini' in providers."
+                "No provider configured. Configure either 'openai', 'anthropic', or 'gemini' in providers."
         );
     }
 
     /**
-     * Create Vertex AI Gemini ChatModel using reflection.
-     * This avoids direct dependency issues if the module isn't loaded.
+     * Extract model name from provider config options, with fallback to default.
+     */
+    private String getModelName(AILibraryConfig.ProviderConfig config, String defaultModel) {
+        var options = config.options();
+        // Check both "model" and "modelName" keys for flexibility
+        if (options.containsKey("model")) {
+            return options.get("model").toString();
+        }
+        if (options.containsKey("modelName")) {
+            return options.get("modelName").toString();
+        }
+        return defaultModel;
+    }
+
+    /**
+     * Create Vertex AI Gemini ChatModel.
+     * 
+     * <p>Note: In langchain4j-vertex-ai 1.8.0-beta15, VertexAiChatModel only implements
+     * ChatModel, NOT StreamingChatModel. Streaming is not currently supported for Gemini.
      */
     private ChatModel createGeminiChatModel(AILibraryConfig.ProviderConfig config) {
-        try {
-            Class<?> vertexAiGeminiClass = Class.forName("dev.langchain4j.model.vertexai.VertexAiGeminiChatModel");
-            var options = config.options();
-            
-            String project = (String) options.get("project");
-            String location = (String) options.get("location");
-            
-            if (project == null || location == null) {
-                throw new IllegalArgumentException(
+        var options = config.options();
+
+        String project = (String) options.get("project");
+        String location = (String) options.get("location");
+
+        if (project == null || location == null) {
+            throw new IllegalArgumentException(
                     "Gemini provider requires both 'project' and 'location' options. " +
-                    "Set AI_GEMINI_PROJECT and AI_GEMINI_LOCATION environment variables."
-                );
-            }
-            
-            // Get builder method
-            java.lang.reflect.Method builderMethod = vertexAiGeminiClass.getMethod("builder");
-            Object builder = builderMethod.invoke(null);
-            
-            // Set API key
-            java.lang.reflect.Method apiKeyMethod = builder.getClass().getMethod("apiKey", String.class);
-            apiKeyMethod.invoke(builder, config.apiKey());
-            
-            // Set project
-            java.lang.reflect.Method projectMethod = builder.getClass().getMethod("project", String.class);
-            projectMethod.invoke(builder, project);
-            
-            // Set location
-            java.lang.reflect.Method locationMethod = builder.getClass().getMethod("location", String.class);
-            locationMethod.invoke(builder, location);
-            
-            // Set model name (default to gemini-1.5-pro for multimodal support)
-            java.lang.reflect.Method modelNameMethod = builder.getClass().getMethod("modelName", String.class);
-            modelNameMethod.invoke(builder, "gemini-1.5-pro");
-            
-            // Build
-            java.lang.reflect.Method buildMethod = builder.getClass().getMethod("build");
-            return (ChatModel) buildMethod.invoke(builder);
-            
-        } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException(
-                "Gemini support requires langchain4j-google-ai-gemini dependency. " +
-                "Please ensure the dependency is added to your build file.", e
-            );
-        } catch (Exception e) {
-            throw new IllegalArgumentException(
-                "Failed to create Gemini ChatModel: " + e.getMessage(), e
+                            "Set AI_GEMINI_PROJECT and AI_GEMINI_LOCATION environment variables."
             );
         }
+
+        String modelName = getModelName(config, "gemini-1.5-pro");
+
+        return VertexAiChatModel.builder()
+                .project(project)
+                .location(location)
+                .modelName(modelName)
+                .build();
     }
+
 
     private EmbeddingModel createEmbeddingModel(AILibraryConfig config) {
         // Try OpenAI embeddings
         var openaiConfig = config.provider("openai");
         if (openaiConfig.isPresent()) {
             return OpenAiEmbeddingModel.builder()
-                .apiKey(openaiConfig.get().apiKey())
-                .modelName("text-embedding-3-small")
-                .build();
+                    .apiKey(openaiConfig.get().apiKey())
+                    .modelName("text-embedding-3-small")
+                    .build();
         }
 
         throw new IllegalArgumentException(
-            "No embedding provider configured. Configure 'openai' in providers."
+                "No embedding provider configured. Configure 'openai' in providers."
         );
     }
+
+    /**
+     * Create StreamingChatModel from provider config.
+     * Mirrors createChatModel but uses streaming-specific implementations.
+     */
+    private StreamingChatModel createStreamingChatModel(AILibraryConfig config) {
+        // Try OpenAI first
+        var openaiConfig = config.provider("openai");
+        if (openaiConfig.isPresent()) {
+            var providerConfig = openaiConfig.get();
+            String modelName = getModelName(providerConfig, "gpt-3.5-turbo");
+            return OpenAiStreamingChatModel.builder()
+                    .apiKey(providerConfig.apiKey())
+                    .modelName(modelName)
+                    .build();
+        }
+
+        // Try Anthropic
+        var anthropicConfig = config.provider("anthropic");
+        if (anthropicConfig.isPresent()) {
+            var providerConfig = anthropicConfig.get();
+            String modelName = getModelName(providerConfig, "claude-3-haiku-20240307");
+            return AnthropicStreamingChatModel.builder()
+                    .apiKey(providerConfig.apiKey())
+                    .modelName(modelName)
+                    .build();
+        }
+
+        // Try Gemini (Vertex AI)
+        // Note: VertexAiChatModel in 1.8.0-beta15 does NOT implement StreamingChatModel.
+        // Streaming is not currently supported for Gemini in this version.
+        var geminiConfig = config.provider("gemini");
+        if (geminiConfig.isPresent()) {
+            // Gemini streaming not supported in langchain4j-vertex-ai 1.8.0-beta15
+            return null;
+        }
+
+        // Return null if no provider configured (streaming will be disabled)
+        return null;
+    }
+
 }
 
 

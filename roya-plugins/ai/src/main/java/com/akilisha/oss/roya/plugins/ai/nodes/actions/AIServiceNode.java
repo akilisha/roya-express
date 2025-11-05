@@ -1,9 +1,12 @@
 package com.akilisha.oss.roya.plugins.ai.nodes.actions;
 
 import com.akilisha.oss.roya.plugins.ai.AI;
+import com.akilisha.oss.roya.plugins.ai.UnifiedAIService;
+import com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter;
 import com.akilisha.oss.roya.workflow.core.NodeInput;
 import com.akilisha.oss.roya.workflow.core.NodeOutput;
 import com.akilisha.oss.roya.workflow.core.WorkflowNode;
+import dev.langchain4j.service.AiServices;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -12,10 +15,10 @@ import java.util.function.Consumer;
 
 /**
  * AI Service node for workflows.
- * 
+ *
  * Allows creating custom AI Service interfaces within workflows using LangChain4j's AI Services pattern.
  * This enables developers to define their own AI Service interfaces with annotations.
- * 
+ *
  * Example:
  * <pre>
  * interface MyService {
@@ -23,7 +26,7 @@ import java.util.function.Consumer;
  *     @dev.langchain4j.service.UserMessage("{{question}}")
  *     String answer(String question);
  * }
- * 
+ *
  * AIServiceNode node = AIServiceNode.builder(ai, MyService.class)
  *     .outputKey("answer")
  *     .execute((service, input) -> {
@@ -38,14 +41,14 @@ import java.util.function.Consumer;
  * </pre>
  */
 public class AIServiceNode<T> implements WorkflowNode {
-    
+
     private final AI ai;
     private final Class<T> serviceClass;
-    private final Consumer<Object> serviceConfig;
+    private final Consumer<AiServices<T>> serviceConfig;
     private final BiFunction<T, NodeInput, Object> serviceExecutor;
     private final String outputKey;
 
-    public AIServiceNode(AI ai, Class<T> serviceClass, Consumer<Object> serviceConfig,
+    public AIServiceNode(AI ai, Class<T> serviceClass, Consumer<AiServices<T>> serviceConfig,
                         BiFunction<T, NodeInput, Object> serviceExecutor,
                         String outputKey) {
         this.ai = ai;
@@ -86,12 +89,11 @@ public class AIServiceNode<T> implements WorkflowNode {
         });
     }
 
-    private com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter getLangChainAdapter() {
-        if (ai instanceof com.akilisha.oss.roya.plugins.ai.UnifiedAIService) {
-            var unified = (com.akilisha.oss.roya.plugins.ai.UnifiedAIService) ai;
+    private LangChainAdapter getLangChainAdapter() {
+        if (ai instanceof UnifiedAIService unified) {
             return unified.langChain();
-        } else if (ai instanceof com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter) {
-            return (com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter) ai;
+        } else if (ai instanceof LangChainAdapter langChainAdapter) {
+            return langChainAdapter;
         }
         return null;
     }
@@ -103,7 +105,7 @@ public class AIServiceNode<T> implements WorkflowNode {
     public static class Builder<T> {
         private final AI ai;
         private final Class<T> serviceClass;
-        private Consumer<Object> serviceConfig;
+        private Consumer<AiServices<T>> serviceConfig;
         private BiFunction<T, NodeInput, Object> serviceExecutor;
         private String outputKey = "result";
 
@@ -114,8 +116,9 @@ public class AIServiceNode<T> implements WorkflowNode {
 
         /**
          * Configure the AI Service builder (for RAG, tools, memory).
+         * Type-safe - no reflection needed!
          */
-        public Builder<T> configure(Consumer<Object> config) {
+        public Builder<T> configure(Consumer<AiServices<T>> config) {
             this.serviceConfig = config;
             return this;
         }

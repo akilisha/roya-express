@@ -1,0 +1,167 @@
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation project(":roya-api")
+    implementation project(":roya-core")
+    implementation project(":roya-plugins:ai")
+    implementation project(":roya-plugins:database")
+    implementation project(":roya-workflow")
+
+    // LangChain4j core (for Prompt and PromptTemplate types)
+    implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
+    implementation "dev.langchain4j:langchain4j-code-execution-engine-judge0:1.8.0-beta15"
+
+    // JOOQ for database operations (used in Tutorial 09: Persistent Memory)
+    implementation "org.jooq:jooq:${jooqVersion}"
+
+    // JSON parsing
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+}
+
+application {
+    // Default main class (can be overridden per tutorial)
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial01_basic_llm.Tutorial01BasicLLM'
+}
+
+// Enable preview features
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.withType(Test) {
+    jvmArgs += ['--enable-preview']
+}
+
+tasks.named('run') {
+    jvmArgs += ['--enable-preview']
+}
+
+// Individual tutorial tasks (similar to roya-examples structure)
+tasks.register('runTutorial01', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 01: Basic LLM Usage'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial01_basic_llm.Tutorial01BasicLLM'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
+tasks.register('runTutorial02', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 02: Model Parameters'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial02_model_parameters.Tutorial02ModelParameters'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
+tasks.register('runTutorial03', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 03: Image Generation'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial03_image_generation.Tutorial03ImageGeneration'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
+tasks.register('runTutorial04', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 04: Prompt Templates'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial04_prompt_templates.Tutorial04PromptTemplates'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
+tasks.register('runTutorial07', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 07: Few-Shot Learning'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial07_few_shot.Tutorial07FewShotLearning'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
+tasks.register('runTutorial09', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 09: Persistent Memory Per User'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial09_persistent_memory.Tutorial09PersistentMemory'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+
+    // Pass database URL from environment (required for persistent memory)
+    String dbUrl = System.getenv('DATABASE_URL')
+    if (dbUrl != null && !dbUrl.isEmpty()) {
+        environment 'DATABASE_URL', dbUrl
+    }
+}
+
+tasks.register('runTutorial10', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 10: Tools/Function Calling'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial10_tools.Tutorial10Tools'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
+tasks.register('runTutorial11', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 11: Dynamic Tools'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial11_dynamic_tools.Tutorial11DynamicTools'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+

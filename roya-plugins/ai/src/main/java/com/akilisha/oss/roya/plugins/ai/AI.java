@@ -1,6 +1,7 @@
 package com.akilisha.oss.roya.plugins.ai;
 
 import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
+import dev.langchain4j.model.input.Prompt;
 
 import java.util.function.Consumer;
 
@@ -147,6 +148,46 @@ public interface AI {
     String ask(String systemPrompt, String userMessage, AIOptions options);
 
     /**
+     * Ask the AI using Prompt objects (for template-based prompts).
+     *
+     * <p>This overload accepts LangChain4j's {@link Prompt} primitives directly,
+     * enabling reusable templates with variable substitution.
+     *
+     * <p>Example:
+     * <pre>
+     * PromptTemplate template = Prompts.template("Create a recipe for {{dishType}}");
+     * Prompt prompt = template.apply(Map.of("dishType", "oven dish"));
+     * String response = ai.ask(
+     *     Prompts.from("You are a helpful cooking assistant"),
+     *     prompt
+     * );
+     * </pre>
+     *
+     * @param systemPrompt System prompt as a Prompt object
+     * @param userMessage User message as a Prompt object
+     * @return AI response text
+     * @see Prompts
+     * @see Prompt
+     */
+    default String ask(Prompt systemPrompt, Prompt userMessage) {
+        return ask(systemPrompt.text(), userMessage.text());
+    }
+
+    /**
+     * Ask with Prompt objects and options.
+     *
+     * @param systemPrompt System prompt as a Prompt object
+     * @param userMessage User message as a Prompt object
+     * @param options AI options (model, temperature, maxTokens, etc.)
+     * @return AI response text
+     * @see Prompts
+     * @see Prompt
+     */
+    default String ask(Prompt systemPrompt, Prompt userMessage, AIOptions options) {
+        return ask(systemPrompt.text(), userMessage.text(), options);
+    }
+
+    /**
      * Extract structured data from text (type-safe).
      *
      * Uses JSON mode + Jackson to deserialize to your record type.
@@ -169,6 +210,43 @@ public interface AI {
     <T> T extract(Class<T> type, String prompt, AIOptions options);
 
     /**
+     * Extract structured data using a Prompt object.
+     *
+     * <p>This overload accepts LangChain4j's {@link Prompt} primitive directly,
+     * enabling template-based extraction prompts.
+     *
+     * <p>Example:
+     * <pre>
+     * PromptTemplate template = Prompts.template("Extract product info from: {{text}}");
+     * Prompt prompt = template.apply(Map.of("text", productDescription));
+     * ProductInfo product = ai.extract(ProductInfo.class, prompt);
+     * </pre>
+     *
+     * @param type Target record type
+     * @param prompt Prompt object describing what to extract
+     * @return Typed instance of the record
+     * @see Prompts
+     * @see Prompt
+     */
+    default <T> T extract(Class<T> type, Prompt prompt) {
+        return extract(type, prompt.text());
+    }
+
+    /**
+     * Extract structured data using a Prompt object with options.
+     *
+     * @param type Target record type
+     * @param prompt Prompt object describing what to extract
+     * @param options AI options (model, temperature, etc.)
+     * @return Typed instance of the record
+     * @see Prompts
+     * @see Prompt
+     */
+    default <T> T extract(Class<T> type, Prompt prompt, AIOptions options) {
+        return extract(type, prompt.text(), options);
+    }
+
+    /**
      * Stream AI response token by token.
      *
      * @param systemPrompt System prompt
@@ -186,6 +264,36 @@ public interface AI {
      * @param onToken Callback for each token
      */
     void stream(String systemPrompt, String userMessage, AIOptions options, Consumer<String> onToken);
+
+    /**
+     * Stream AI response using Prompt objects.
+     *
+     * <p>This overload accepts LangChain4j's {@link Prompt} primitives directly,
+     * enabling template-based streaming prompts.
+     *
+     * @param systemPrompt System prompt as a Prompt object
+     * @param userMessage User message as a Prompt object
+     * @param onToken Callback for each token as it arrives
+     * @see Prompts
+     * @see Prompt
+     */
+    default void stream(Prompt systemPrompt, Prompt userMessage, Consumer<String> onToken) {
+        stream(systemPrompt.text(), userMessage.text(), onToken);
+    }
+
+    /**
+     * Stream with Prompt objects and options.
+     *
+     * @param systemPrompt System prompt as a Prompt object
+     * @param userMessage User message as a Prompt object
+     * @param options AI options
+     * @param onToken Callback for each token
+     * @see Prompts
+     * @see Prompt
+     */
+    default void stream(Prompt systemPrompt, Prompt userMessage, AIOptions options, Consumer<String> onToken) {
+        stream(systemPrompt.text(), userMessage.text(), options, onToken);
+    }
 
     /**
      * RAG (Retrieval-Augmented Generation).
@@ -252,6 +360,33 @@ public interface AI {
     <T> T aiService(Class<T> serviceClass);
 
     /**
+     * Create an AI Service with advanced configuration (RAG, tools, memory).
+     * 
+     * This overload allows you to configure the AI Service builder with tools, RAG,
+     * custom memory, and other features. Full type safety - no reflection needed!
+     * 
+     * Example:
+     * <pre>
+     * interface CalculatorAssistant {
+     *     @SystemMessage("You are a helpful calculator")
+     *     String chat(String query);
+     * }
+     * 
+     * AI ai = req.get(AI.class);
+     * CalculatorAssistant assistant = ai.aiService(CalculatorAssistant.class, builder -> {
+     *     builder.tools(new CalculatorTools()); // Type-safe!
+     * });
+     * String response = assistant.chat("What is 2 + 2?");
+     * </pre>
+     * 
+     * @param serviceClass AI Service interface class
+     * @param config Configuration consumer for builder customization
+     * @return AI Service instance (proxy)
+     * @param <T> Service interface type
+     */
+    <T> T aiService(Class<T> serviceClass, java.util.function.Consumer<dev.langchain4j.service.AiServices<T>> config);
+
+    /**
      * Ask with metadata (tokens, cost, caching info).
      *
      * Use this when you need visibility into the AI call's details.
@@ -306,6 +441,10 @@ public interface AI {
         String ask(String systemPrompt, String userMessage);
         /** Chat completion with options (model, temperature, etc.). */
         String ask(String systemPrompt, String userMessage, AIOptions options);
+        /** Chat completion with conversation memory (maintains context across turns). */
+        String ask(dev.langchain4j.memory.ChatMemory chatMemory, String systemPrompt, String userMessage);
+        /** Chat completion with memory and options. */
+        String ask(dev.langchain4j.memory.ChatMemory chatMemory, String systemPrompt, String userMessage, AIOptions options);
         /** Type-safe extraction into a Java record. */
         <T> T extract(Class<T> type, String prompt);
         /** Type-safe extraction with options. */
@@ -314,6 +453,18 @@ public interface AI {
         void stream(String systemPrompt, String userMessage, java.util.function.Consumer<String> onToken);
         /** Token-streaming with options. */
         void stream(String systemPrompt, String userMessage, AIOptions options, java.util.function.Consumer<String> onToken);
+        /** Token-streaming with conversation memory. */
+        void stream(dev.langchain4j.memory.ChatMemory chatMemory, String systemPrompt, String userMessage, java.util.function.Consumer<String> onToken);
+        /** Token-streaming with memory and options. */
+        void stream(dev.langchain4j.memory.ChatMemory chatMemory, String systemPrompt, String userMessage, AIOptions options, java.util.function.Consumer<String> onToken);
+        /** Token-streaming with Prompt objects. */
+        default void stream(Prompt systemPrompt, Prompt userMessage, java.util.function.Consumer<String> onToken) {
+            stream(systemPrompt.text(), userMessage.text(), onToken);
+        }
+        /** Token-streaming with Prompt objects and options. */
+        default void stream(Prompt systemPrompt, Prompt userMessage, AIOptions options, java.util.function.Consumer<String> onToken) {
+            stream(systemPrompt.text(), userMessage.text(), options, onToken);
+        }
     }
 
     /** Embedding operations for text inputs. */

@@ -19,12 +19,12 @@ allprojects {
         junitVersion = "5.10.2"
         mockitoJunitVersion = "5.5.0"
         handlebarsVersion = "4.3.1"
-        
+
         // AI libraries
-        langchain4jVersion = "1.7.1"
-        langgraph4jVersion = "1.7.1"
+        langchain4jVersion = "1.8.0"
+        langgraph4jVersion = "1.7.2"
         googleadkVersion = "0.3.0"
-        
+
         // OpenAI SDK (legacy - for backward compatibility)
         theokanningOpenAIVersion = "0.18.2"
     }

@@ -120,6 +120,13 @@ public final class BodyParser {
 
     /**
      * Parse URL-encoded form data.
+     * 
+     * Handles:
+     * - key=value → {"key": "value"}
+     * - key= → {"key": ""} (empty value)
+     * - key → {"key": ""} (no equals, treated as empty value)
+     * - URL-decodes both keys and values
+     * - Skips pairs with invalid encoding gracefully
      */
     private static Map<String, String> parseUrlEncoded(String bodyText) {
         Map<String, String> result = new HashMap<>();
@@ -130,15 +137,21 @@ public final class BodyParser {
 
         String[] pairs = bodyText.split("&");
         for (String pair : pairs) {
+            if (pair.isEmpty()) {
+                continue; // Skip empty pairs (e.g., from trailing &)
+            }
+            
             String[] keyValue = pair.split("=", 2);
-            if (keyValue.length == 2) {
-                try {
-                    String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
-                    String value = URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
-                    result.put(key, value);
-                } catch (Exception e) {
-                    // Skip invalid pairs
-                }
+            String encodedKey = keyValue[0];
+            String encodedValue = keyValue.length == 2 ? keyValue[1] : ""; // No = means empty value
+            
+            try {
+                String key = URLDecoder.decode(encodedKey, StandardCharsets.UTF_8);
+                String value = URLDecoder.decode(encodedValue, StandardCharsets.UTF_8);
+                result.put(key, value);
+            } catch (Exception e) {
+                // Skip invalid pairs (e.g., malformed URL encoding)
+                // This prevents the entire parsing from failing due to one bad pair
             }
         }
 

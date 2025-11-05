@@ -76,6 +76,26 @@ public class LangGraphAdapter implements AI {
             public void stream(String systemPrompt, String userMessage, AIOptions options, Consumer<String> onToken) {
                 LangGraphAdapter.this.stream(systemPrompt, userMessage, options, onToken);
             }
+
+            @Override
+            public String ask(dev.langchain4j.memory.ChatMemory memory, String systemPrompt, String userMessage) {
+                throw new UnsupportedOperationException("Memory operations not supported in LangGraphAdapter. Use LangChainAdapter for memory support.");
+            }
+
+            @Override
+            public String ask(dev.langchain4j.memory.ChatMemory memory, String systemPrompt, String userMessage, AIOptions options) {
+                throw new UnsupportedOperationException("Memory operations not supported in LangGraphAdapter. Use LangChainAdapter for memory support.");
+            }
+
+            @Override
+            public void stream(dev.langchain4j.memory.ChatMemory memory, String systemPrompt, String userMessage, Consumer<String> onToken) {
+                throw new UnsupportedOperationException("Memory operations not supported in LangGraphAdapter. Use LangChainAdapter for memory support.");
+            }
+
+            @Override
+            public void stream(dev.langchain4j.memory.ChatMemory memory, String systemPrompt, String userMessage, AIOptions options, Consumer<String> onToken) {
+                throw new UnsupportedOperationException("Memory operations not supported in LangGraphAdapter. Use LangChainAdapter for memory support.");
+            }
         };
     }
 
@@ -173,7 +193,57 @@ public class LangGraphAdapter implements AI {
     public Vision vision() {
         // LangGraph adapter doesn't implement vision yet
         // Delegate to LangChain4j's multimodal support when available
-        throw new UnsupportedOperationException("Vision API not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+        return new Vision() {
+            @Override
+            public String generateImage(String prompt) {
+                throw new UnsupportedOperationException("Image generation not yet implemented in LangGraph adapter. Use LangChain adapter for image generation.");
+            }
+
+            @Override
+            public String generateImage(String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("Image generation not yet implemented in LangGraph adapter. Use LangChain adapter for image generation.");
+            }
+
+            @Override
+            public String analyzeImage(String imageUrl, String prompt) {
+                throw new UnsupportedOperationException("Image analysis not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+
+            @Override
+            public String analyzeImage(String imageUrl, String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("Image analysis not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+
+            @Override
+            public String transcribeAudio(String audioUrl) {
+                throw new UnsupportedOperationException("Audio transcription not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+
+            @Override
+            public String transcribeAudio(String audioUrl, AIOptions options) {
+                throw new UnsupportedOperationException("Audio transcription not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+
+            @Override
+            public String describeVideo(String videoUrl, String prompt) {
+                throw new UnsupportedOperationException("Video description not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+
+            @Override
+            public String describeVideo(String videoUrl, String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("Video description not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+
+            @Override
+            public String processPdf(String pdfUrl, String prompt) {
+                throw new UnsupportedOperationException("PDF processing not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+
+            @Override
+            public String processPdf(String pdfUrl, String prompt, AIOptions options) {
+                throw new UnsupportedOperationException("PDF processing not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+            }
+        };
     }
 
     // Convenience methods - delegate to llm()
@@ -310,6 +380,11 @@ public class LangGraphAdapter implements AI {
     @Override
     public <T> T aiService(Class<T> serviceClass) {
         throw new UnsupportedOperationException("AI Services implementation coming soon - use AiServices.create() directly for now");
+    }
+
+    @Override
+    public <T> T aiService(Class<T> serviceClass, java.util.function.Consumer<dev.langchain4j.service.AiServices<T>> config) {
+        throw new UnsupportedOperationException("AI Services with configuration coming soon - use LangChain adapter for now");
     }
 
     /**

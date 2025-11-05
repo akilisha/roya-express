@@ -125,6 +125,42 @@ Current placeholder implementation in `roya-plugins/ai/src/main/java/com/akilish
 
 ---
 
+### AI Cost Calculation System (Configurable Pricing)
+**Category**: Enhancement
+**Priority**: P2-Medium
+**Estimated Effort**: 8 hours
+**Proposed For**: Post-Foundation
+**Status**: Backlog
+
+**Description**:
+Make AI cost calculation configurable and support all models/pricing tiers. Current implementation in `LangChainAdapter.calculateCost()` has hardcoded pricing for a limited set of models (OpenAI GPT-3.5/GPT-4, Anthropic Claude, Mistral).
+
+**Motivation**:
+- Pricing changes frequently and varies by model/region
+- Current hardcoded values become outdated quickly
+- Need to support all providers/models (Gemini, Cohere, local models, etc.)
+- Users may have custom pricing tiers or enterprise agreements
+- Need accurate cost tracking for budget management
+
+**Acceptance Criteria**:
+- Configurable pricing via configuration file/database
+- Support for all major providers and models
+- Pricing tiers (standard, enterprise, custom)
+- Per-model pricing configuration
+- Per-region pricing (if applicable)
+- Default fallback pricing when model not configured
+- Documentation for pricing configuration
+- Hot-reload support for pricing updates (optional)
+
+**Dependencies**:
+- Configuration system (see "RAG Configuration System" backlog item)
+- Database or configuration file storage
+
+**Notes**:
+Current implementation in `roya-plugins/ai/src/main/java/com/akilisha/oss/roya/plugins/ai/langchain/LangChainAdapter.java` method `calculateCost()` has TODO comment: "Make this configurable and support all models/pricing tiers."
+
+---
+
 ### Structured Logging Redaction/Sampling
 **Category**: Enhancement  
 **Priority**: P1-High  
@@ -1405,6 +1441,37 @@ MVP has per-request tracking. This enhancement adds budget management layer. Con
 
 ---
 
+### AI Cost Calculation Configuration
+**Category**: Enhancement
+**Priority**: P2-Medium
+**Estimated Effort**: 8 hours
+**Proposed For**: Post-Foundation
+**Status**: New
+
+**Description**:
+Make cost calculation configurable and support all models/pricing tiers. Currently `calculateCost()` in `LangChainAdapter` uses hardcoded pricing values that are approximate and don't support all models or pricing tiers.
+
+**Motivation**:
+Current implementation has hardcoded pricing that:
+- Is approximate and may be outdated
+- Doesn't support all models/providers
+- Doesn't support pricing tiers (e.g., different pricing for different regions, enterprise pricing)
+- Cannot be customized per deployment
+
+**Acceptance Criteria**:
+- Extract pricing configuration to a configurable system (file, environment, or config API)
+- Support all major providers (OpenAI, Anthropic, Mistral, Google, etc.)
+- Support pricing tiers (standard, enterprise, region-specific)
+- Allow per-model pricing override
+- Support pricing updates without code changes
+- Document pricing configuration format
+- Backward compatible (defaults to current hardcoded values if not configured)
+
+**Dependencies**:
+- Configuration system (may depend on framework config infrastructure)
+
+**Notes**:
+TODO comment in `LangChainAdapter.calculateCost()` method (line ~1911). Current implementation has hardcoded pricing for GPT-4, GPT-3.5, Claude, and Mistral models. Should be made configurable and extensible.
 
 ---
 

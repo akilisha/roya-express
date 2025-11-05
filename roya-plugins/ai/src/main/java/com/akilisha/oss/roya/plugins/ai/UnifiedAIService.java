@@ -73,6 +73,15 @@ public class UnifiedAIService implements AI {
     }
 
     @Override
+    public <T> T aiService(Class<T> serviceClass, java.util.function.Consumer<dev.langchain4j.service.AiServices<T>> config) {
+        // Delegate to LangChain adapter (primary implementation)
+        if (langChain != null) {
+            return langChain.aiService(serviceClass, config);
+        }
+        throw new UnsupportedOperationException("AI Services with configuration require LangChain adapter");
+    }
+
+    @Override
     public LLM llm() {
         // LangChain4j is the best for basic LLM operations
         return langChain.llm();

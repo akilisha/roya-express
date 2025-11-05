@@ -5,6 +5,7 @@ package com.akilisha.oss.roya.plugins.ai;
  * 
  * <p>Supports:
  * <ul>
+ *   <li>Image generation (DALL-E 2, DALL-E 3)</li>
  *   <li>Image analysis (GPT-4 Vision, Claude, Gemini, etc.)</li>
  *   <li>Audio transcription (Gemini with AudioContent, requires langchain4j-google-ai-gemini)</li>
  *   <li>Video description (Gemini with VideoContent, requires langchain4j-google-ai-gemini)</li>
@@ -21,6 +22,9 @@ package com.akilisha.oss.roya.plugins.ai;
  * 
  * // Image analysis
  * String description = ai.vision().analyzeImage("https://example.com/image.jpg", "What's in this image?");
+ * 
+ * // Image generation (DALL-E)
+ * String imageUrl = ai.vision().generateImage("A futuristic cityscape at sunset");
  * 
  * // Audio transcription (Gemini)
  * String transcript = ai.vision().transcribeAudio("https://storage.googleapis.com/cloud-samples-data/generative-ai/audio/pixel.mp3");
@@ -42,6 +46,23 @@ package com.akilisha.oss.roya.plugins.ai;
  * @see <a href="https://glaforge.dev/posts/2024/07/25/analyzing-videos-audios-and-pdfs-with-gemini-in-langchain4j/">LangChain4j Multimodal Support</a>
  */
 public interface Vision {
+    
+    /**
+     * Generate an image using DALL-E models.
+     * 
+     * @param prompt Text description of the image to generate
+     * @return URL of the generated image
+     */
+    String generateImage(String prompt);
+    
+    /**
+     * Generate an image with options.
+     * 
+     * @param prompt Text description of the image to generate
+     * @param options AI options (model, size, quality, etc.)
+     * @return URL of the generated image
+     */
+    String generateImage(String prompt, AIOptions options);
     
     /**
      * Analyze an image using vision-capable models.
