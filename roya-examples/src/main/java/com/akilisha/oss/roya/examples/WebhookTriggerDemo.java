@@ -19,7 +19,7 @@ import java.util.Map;
  * <p>
  * To test:
  * 1. Start the server: java WebhookTriggerDemo
- * 2. Send POST request: curl -X POST http://localhost:3000/api/webhook -H "Content-Type: application/json" -d '{"message":"Hello"}'
+ * 2. Send POST request: curl -X POST <a href="http://localhost:3000/api/webhook">...</a> -H "Content-Type: application/json" -d '{"message":"Hello"}'
  */
 public class WebhookTriggerDemo {
 

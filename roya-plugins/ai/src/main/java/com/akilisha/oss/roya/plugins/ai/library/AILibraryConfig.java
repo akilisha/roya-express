@@ -98,6 +98,22 @@ public record AILibraryConfig(
             return new ProviderConfig(apiKey, Optional.of(endpoint), Map.of());
         }
 
+        /**
+         * Create Gemini provider config with project and location.
+         * 
+         * @param apiKey Gemini API key
+         * @param project GCP project ID
+         * @param location GCP region/location (e.g., "us-central1")
+         * @return ProviderConfig with project and location in options
+         */
+        public static ProviderConfig gemini(String apiKey, String project, String location) {
+            return new ProviderConfig(
+                apiKey,
+                Optional.empty(),
+                Map.of("project", project, "location", location)
+            );
+        }
+
         public static Builder builder() {
             return new Builder();
         }

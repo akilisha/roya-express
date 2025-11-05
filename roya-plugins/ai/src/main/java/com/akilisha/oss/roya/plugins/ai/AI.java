@@ -69,6 +69,14 @@ public interface AI {
      * Power-users can still access provider primitives via {@link #provider(Class)}.
      */
     Agents agents();
+    
+    /**
+     * Vision API for multimodal operations (images, audio, video).
+     * 
+     * @return Vision API instance
+     */
+    Vision vision();
+    
     /**
      * Create an AI workflow builder for multi-node, stateful AI workflows.
      *
@@ -322,6 +330,18 @@ public interface AI {
         void indexPath(String collection, java.nio.file.Path directory, ChunkingOptions options);
         /** Index a supplied list of documents. */
         void index(String collection, java.util.List<VectorDoc> documents);
+        
+        /** Collection Management APIs */
+        /** Create a new collection (or ensure it exists). */
+        void createCollection(String collection);
+        /** Delete a collection. */
+        void deleteCollection(String collection);
+        /** List all collections. */
+        java.util.List<String> listCollections();
+        /** Get collection statistics. */
+        com.akilisha.oss.roya.plugins.ai.rag.CollectionStats getCollectionStats(String collection);
+        /** Check if a collection exists. */
+        boolean collectionExists(String collection);
     }
 
     /** Retrieval-Augmented Generation. */
@@ -343,7 +363,34 @@ public interface AI {
     record VectorDoc(String id, String content, java.util.Map<String, Object> metadata) {}
     /** Chunking configuration for indexing. */
     record ChunkingOptions(int size, int overlap) {
-        public static ChunkingOptions fixed(int size, int overlap) { return new ChunkingOptions(size, overlap); }
+        public static ChunkingOptions fixed(int size, int overlap) { 
+            return new ChunkingOptions(size, overlap); 
+        }
+        
+        /** Preset: Small chunks for code/documentation (800 tokens, 200 overlap). */
+        public static ChunkingOptions small() {
+            return new ChunkingOptions(800, 200);
+        }
+        
+        /** Preset: Medium chunks for general text (1200 tokens, 300 overlap). */
+        public static ChunkingOptions medium() {
+            return new ChunkingOptions(1200, 300);
+        }
+        
+        /** Preset: Large chunks for long-form content (2000 tokens, 500 overlap). */
+        public static ChunkingOptions large() {
+            return new ChunkingOptions(2000, 500);
+        }
+        
+        /** Preset: Optimized for Markdown files (preserves structure). */
+        public static ChunkingOptions markdown() {
+            return new ChunkingOptions(1000, 250);
+        }
+        
+        /** Preset: Optimized for code files (smaller chunks, larger overlap). */
+        public static ChunkingOptions code() {
+            return new ChunkingOptions(600, 150);
+        }
     }
     /** Minimal agent contract. */
     interface Agent { AgentResult run(String input); }

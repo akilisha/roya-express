@@ -62,6 +62,69 @@ Finalize Qdrant-only RAG with production-grade UX and ops.
 
 ---
 
+### RAG Observability & Metrics (Proper Implementation)
+**Category**: Enhancement
+**Priority**: P2-Medium
+**Estimated Effort**: 16 hours
+**Proposed For**: Post-Foundation
+**Status**: Backlog
+
+**Description**:
+Implement proper observability and metrics for RAG operations. Current implementation in `RAGMetrics.java` is a placeholder (simple in-memory counters).
+
+**Motivation**:
+Placeholder implementation exists but is not production-ready. Need proper metrics infrastructure.
+
+**Acceptance Criteria**:
+- Use proper metrics library (Micrometer/Prometheus integration)
+- Integrate with observability infrastructure
+- Follow production-grade patterns
+- Track RAG query metrics (count, duration, success/failure)
+- Track vector index operation metrics
+- Track collection management metrics
+- Expose metrics via `/metrics` endpoint or observability platform
+- Support RAG tracing for debugging
+
+**Dependencies**:
+- Metrics plugin/infrastructure
+- Observability platform (Prometheus/Grafana or equivalent)
+
+**Notes**:
+Current placeholder implementation in `roya-plugins/ai/src/main/java/com/akilisha/oss/roya/plugins/ai/rag/RAGMetrics.java` marked as placeholder. Proper implementation should replace this.
+
+---
+
+### RAG Configuration System (Proper Implementation)
+**Category**: Enhancement
+**Priority**: P2-Medium
+**Estimated Effort**: 12 hours
+**Proposed For**: Post-Foundation
+**Status**: Backlog
+
+**Description**:
+Implement proper configuration system for RAG options. Current implementation in `RAGOptions.Builder` is a placeholder using System.getenv() and System.getProperty().
+
+**Motivation**:
+Placeholder implementation exists but is not production-ready. Need proper configuration library/pattern.
+
+**Acceptance Criteria**:
+- Use dedicated configuration library/pattern (e.g., Config4j, Typesafe Config, or framework config)
+- Support multiple configuration sources (files, environment, system properties)
+- Proper precedence handling
+- Configuration validation
+- Hot-reload support (optional)
+- Type-safe configuration access
+- Documentation for configuration options
+
+**Dependencies**:
+- Configuration library/infrastructure
+- Framework configuration system
+
+**Notes**:
+Current placeholder implementation in `roya-plugins/ai/src/main/java/com/akilisha/oss/roya/plugins/ai/RAGOptions.java` marked as placeholder. Proper implementation should use a dedicated configuration system.
+
+---
+
 ### Structured Logging Redaction/Sampling
 **Category**: Enhancement  
 **Priority**: P1-High  
@@ -566,7 +629,7 @@ Postmark is excellent for transactional emails. Follow the same thin wrapper pat
 **Priority**: P0-Critical  
 **Estimated Effort**: 4 hours  
 **Proposed For**: Phase 6 (AI Integration)  
-**Status**: New
+**Status**: ✅ COMPLETE (January 30, 2025)
 
 **Description**:
 Currently, `askWithMetadata()` and `extractWithMetadata()` methods in `LangChainAdapter` return zero values for token usage. Need to extract actual token usage from LangChain4j's `Result<T>` wrapper.
@@ -596,7 +659,7 @@ LangChain4j AI Services support `Result<T>` wrapper which provides `tokenUsage()
 **Priority**: P0-Critical  
 **Estimated Effort**: 6 hours  
 **Proposed For**: Phase 6 (AI Integration)  
-**Status**: New
+**Status**: ✅ COMPLETE (January 30, 2025)
 
 **Description**:
 Add streaming support to `LLMService` interface using LangChain4j's `TokenStream` return type. Currently streaming uses low-level `StreamingChatModel` API instead of AI Services pattern.
@@ -627,7 +690,7 @@ LangChain4j AI Services support `TokenStream` return type. Need to add streaming
 **Priority**: P0-Critical  
 **Estimated Effort**: 4 hours  
 **Proposed For**: Phase 6 (AI Integration)  
-**Status**: New
+**Status**: ✅ COMPLETE (January 30, 2025)
 
 **Description**:
 Add metadata support to `LLMService` interface using LangChain4j's `Result<T>` wrapper to get token usage, finish reason, sources, and other metadata.
@@ -653,12 +716,102 @@ This completes the metadata feature. Can be implemented alongside Token Usage Ex
 
 ---
 
+### MCP (Model Context Protocol) Client Integration ⭐ MUST HAVE - USER PRIORITY
+**Category**: Feature  
+**Priority**: P0-Critical (100% must-have)  
+**Estimated Effort**: 20 hours  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: ✅ COMPLETE (January 30, 2025)
+
+**Description**:
+Implement MCP (Model Context Protocol) client integration with built-in caching. MCPs provide discoverable tools hosted in repositories, enabling AI agents to discover and leverage "superpowers" automatically.
+
+**Motivation**:
+User explicitly stated: "100% must have. It would be such a disservice and disingenuous not to have mcp." MCP is essential for AI agents to discover and use external capabilities.
+
+**Acceptance Criteria**:
+- `MCPClient` class with built-in caching (configurable TTL)
+- Multiple server registration support
+- Health checks and monitoring for MCP servers
+- Automatic tool discovery from registered servers
+- Convert MCP tool definitions to LangChain4j `ToolSpecification`
+- `MCPClient.builder()` API for flexible configuration
+- `.discoverTools()` and `.discoverAllTools()` methods
+- `.mcp()` convenience method on `AIWorkflowBuilder`
+- Error handling and retries
+- Documentation with examples
+
+**Proposed API**:
+```java
+// MCP Client with built-in caching
+MCPClient mcpClient = MCPClient.builder()
+    .server("mcp-server-1", "https://mcp-server.example.com")
+    .server("mcp-server-2", "https://another-mcp.example.com")
+    .cacheDuration(Duration.ofMinutes(10))
+    .healthCheckInterval(Duration.ofMinutes(5))
+    .build();
+
+// Use in workflow
+Workflow workflow = ai.workflow("mcp-agent")
+    .mcp("agent", mcpClient, builder -> builder
+        .systemPrompt("You have access to MCP tools")
+    )
+    .build();
+```
+
+**Dependencies**:
+- MCP protocol specification and implementation
+- HTTP/WebSocket client for MCP communication
+- Tool discovery and conversion logic
+
+**Notes**:
+User prefers Option A (MCP Client) but with built-in caching (combining benefits of Option A and C). The MCPClient should abstract away caching complexity automatically.
+
+---
+
+### LangChain4j Demo Recreation Project
+**Category**: Example/Showcase
+**Priority**: P2-Medium
+**Estimated Effort**: 80 hours
+**Proposed For**: Post-Foundation (After MCP & Convenience Methods Complete)
+**Status**: Planned
+
+**Description**:
+Recreate Julien Dubois's comprehensive LangChain4j demo suite using Roya AI framework. This will serve as a powerful showcase and reference implementation.
+
+**Reference**: [jdubois-langchain4j-demo](https://github.com/jdubois/jdubois-langchain4j-demo/tree/main)
+
+**Motivation**:
+- Showcase Roya's workflow-first approach vs. raw LangChain4j
+- Provide real-world examples for developers
+- Demonstrate advanced patterns (nested/continuation, MCP, resilience)
+- Create production-ready reference implementations
+
+**Acceptance Criteria**:
+- All original demos recreated (image generation, text generation, chat, vectors, RAG, tools, structured outputs, agents)
+- MCP integration demo (Roya-specific)
+- Advanced workflow patterns demo (nested/continuation/loop/circuit/approval/costing)
+- Web UI for demo selection and execution
+- Multiple configuration profiles (Azure, local, GitHub Models)
+- Complete documentation with comparison to original
+
+**Dependencies**:
+- Requires complete AI workflow foundation ✅
+- Requires MCP client integration ⏳
+- Requires vector & RAG polishing ⏳
+- Requires all convenience methods (`.loop()`, `.circuit()`, `.approval()`, `.costing()`, `.mcp()`) ⏳
+
+**Notes**:
+See `docs/FUTURE_PROJECTS.md` for detailed implementation plan. This is a showcase project that will demonstrate Roya's unique advantages over raw LangChain4j.
+
+---
+
 ### Audio & Video Capabilities Integration ⭐ USER REQUESTED
 **Category**: Feature  
 **Priority**: P1-High  
 **Estimated Effort**: 16 hours  
 **Proposed For**: Phase 6 (AI Integration)  
-**Status**: New
+**Status**: ✅ COMPLETE (January 30, 2025)
 
 **Description**:
 Add multimodal support (audio, video, images) to the AI plugin. LangChain4j supports multimodal content via `Content` interface: `TextContent`, `ImageContent`, `AudioContent`, `VideoContent`, `PdfFileContent`.
@@ -1150,36 +1303,76 @@ Better resource management - only create streaming models when actually needed.
 
 ---
 
-### AIWorkflowBuilder Convenience Methods
+### AIWorkflowBuilder Convenience Methods ⭐ PRIORITY UPDATE
 **Category**: Enhancement  
-**Priority**: P2-Medium  
-**Estimated Effort**: 4 hours  
+**Priority**: P1-High (Updated from P2)  
+**Estimated Effort**: 10 hours (Updated from 4)  
 **Proposed For**: Phase 6 (AI Integration)  
-**Status**: New
+**Status**: Approved
 
 **Description**:
-Add convenience methods to `AIWorkflowBuilder` for new node types as they're created.
+Add concise convenience methods to `AIWorkflowBuilder` for common AI + workflow patterns. Method names should be short and natural: `.loop()`, `.circuit()`, `.approval()`, `.costing()`, `.mcp()`. Also add delegation methods for `.nested()` and `.continuation()` workflows.
 
-**Location**: `AIWorkflowBuilder.java:329`
-
-**Current State**:
-```java
-// TODO: Add more convenience methods as we implement more node types:
-```
+**Location**: `AIWorkflowBuilder.java`
 
 **Acceptance Criteria**:
-- Add convenience methods for new node types as they're created
-- Keep API consistent and discoverable
-- Document all available methods
-- Ensure fluent builder pattern consistency
+- **Workflow Composition** (Delegation):
+  - `.nested(nodeId, childWorkflows, aggregator, strategy)` - Delegate to workflow library
+  - `.continuation(nodeId, childWorkflow, startNodeId)` - Delegate to workflow library
+  - `.continuationWithNamespace(nodeId, childWorkflow, startNodeId, namespace)` - Delegate with namespace
+- **Workflow Patterns** (New convenience methods):
+  - `.loop(nodeId, iterations, strategy, config)` - Wrap LLM node with LoopNode
+  - `.circuit(nodeId, breaker, config)` - Wrap LLM node with CircuitBreakerNode
+  - `.approval(nodeId, provider, prompt, config)` - Chain HumanApprovalNode → LLM node
+  - `.costing(budget)` - Create and return CostTracker instance
+  - `.mcp(nodeId, mcpClient, config)` - Discover MCP tools and use with LLM
+- All methods maintain fluent builder pattern
+- Natural, concise API (no verbose names like `llmWithLoop`)
+- Document all methods with examples
+- Integration tests showing nested/continuation workflows with AI nodes
+
+### AIWorkflowBuilder Convenience Methods ⭐ PRIORITY UPDATE
+**Category**: Enhancement  
+**Priority**: P1-High (Updated from P2)  
+**Estimated Effort**: 10 hours (Updated from 4)  
+**Proposed For**: Phase 6 (AI Integration)  
+**Status**: ✅ COMPLETE (January 30, 2025)
+
+**Description**:
+Add concise convenience methods to `AIWorkflowBuilder` for common AI + workflow patterns. Method names should be short and natural: `.loop()`, `.circuit()`, `.approval()`, `.costing()`, `.mcp()`. Also add delegation methods for `.nested()` and `.continuation()` workflows.
+
+**Location**: `AIWorkflowBuilder.java`
+
+**Acceptance Criteria**:
+- **Workflow Composition** (Delegation):
+  - `.nested(nodeId, childWorkflows, aggregator, strategy)` - Delegate to workflow library ✅
+  - `.continuation(nodeId, childWorkflow, startNodeId)` - Delegate to workflow library ✅
+  - `.continuationWithNamespace(nodeId, childWorkflow, startNodeId, namespace)` - Delegate with namespace ✅
+- **Workflow Patterns** (New convenience methods):
+  - `.loop(nodeId, iterations, strategy, config)` - Wrap LLM node with LoopNode ✅
+  - `.circuit(nodeId, breaker, config)` - Wrap LLM node with CircuitBreakerNode ✅
+  - `.approval(nodeId, provider, prompt, config)` - Chain HumanApprovalNode → LLM node ✅
+  - `.costing(budget)` - Create and return CostTracker instance ✅
+  - `.mcp(nodeId, mcpClient, config)` - Discover MCP tools and use with LLM ✅
+  - `.agents(nodeId, config)` - Agent orchestration with tools ✅
+- All methods maintain fluent builder pattern ✅
+- Natural, concise API (no verbose names like `llmWithLoop`) ✅
+- Document all methods with examples ✅
+- Integration tests showing nested/continuation workflows with AI nodes ✅
+- **Integration Documentation**: Created comprehensive `NESTED_CONTINUATION_AI_WORKFLOWS.md` guide ✅
 
 **Dependencies**:
-- New node types (VisionNode, etc.)
+- Workflow library features (NestedWorkflowNode, ContinuationNode, LoopNode, CircuitBreakerNode, HumanApprovalNode, CostTracker) ✅
+- MCP client integration ✅
 
 **Notes**:
-Keep API consistent as new node types are added. Ensure fluent builder pattern.
+User explicitly requested shorter, more natural method names. Avoid forced/unimaginative naming patterns. Nested and continuation are already in workflow library - just need delegation methods for fluent API access.
 
----
+**Completed**:
+- All convenience methods implemented ✅
+- Delegation methods for nested/continuation workflows ✅
+- Comprehensive integration documentation created (`NESTED_CONTINUATION_AI_WORKFLOWS.md`) ✅
+- Examples demonstrating real-world usage ✅
 
 ### Per-User and Per-Organization Budget Tracking
 **Category**: Enhancement  

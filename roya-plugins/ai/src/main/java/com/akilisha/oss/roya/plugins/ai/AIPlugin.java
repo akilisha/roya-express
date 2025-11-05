@@ -70,6 +70,20 @@ public class AIPlugin implements RoyaPlugin {
                 configBuilder.provider("anthropic", AILibraryConfig.ProviderConfig.simple(anthropicKey));
             }
 
+            // Add Google Gemini provider if configured
+            String geminiApiKey = getConfigValue("ai.gemini.apiKey", "AI_GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY");
+            String geminiProject = getConfigValue("ai.gemini.project", "AI_GEMINI_PROJECT", "GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID");
+            String geminiLocation = getConfigValue("ai.gemini.location", "AI_GEMINI_LOCATION", "GOOGLE_CLOUD_LOCATION", "GCP_REGION");
+            
+            if (geminiApiKey != null && !geminiApiKey.isBlank()) {
+                // Gemini requires project, location, and API key
+                var geminiConfig = geminiProject != null && !geminiProject.isBlank() && 
+                                  geminiLocation != null && !geminiLocation.isBlank()
+                    ? AILibraryConfig.ProviderConfig.gemini(geminiApiKey, geminiProject, geminiLocation)
+                    : AILibraryConfig.ProviderConfig.simple(geminiApiKey); // Fallback if project/location not set
+                configBuilder.provider("gemini", geminiConfig);
+            }
+
             var config = configBuilder.build();
 
             // Create all three library adapters (they work together!)
@@ -216,6 +230,7 @@ public class AIPlugin implements RoyaPlugin {
     public void start() throws Exception {
         String openaiKey = getConfigValue("ai.openai.apiKey", "AI_OPENAI_API_KEY", "OPENAI_API_KEY");
         String anthropicKey = getConfigValue("ai.anthropic.apiKey", "AI_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY");
+        String geminiKey = getConfigValue("ai.gemini.apiKey", "AI_GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY");
         boolean caching = Boolean.parseBoolean(System.getProperty("ai.cache.enabled", "true"));
 
         System.out.println("✓ AIPlugin: Unified AI service initialized");
@@ -223,16 +238,17 @@ public class AIPlugin implements RoyaPlugin {
         System.out.println("    • LangChain4j: LLM primitives, embeddings, tools");
         System.out.println("    • LangGraph4j: Stateful workflows, multi-node agents");
         System.out.println("    • Google ADK: High-level orchestration (optional)");
-        System.out.println("  - Providers: " + buildProviderList(openaiKey, anthropicKey));
+        System.out.println("  - Providers: " + buildProviderList(openaiKey, anthropicKey, geminiKey));
         System.out.println("  - Caching: " + (caching ? "enabled" : "disabled"));
         System.out.println("  - Usage: AI ai = req.get(AI.class);");
         System.out.println("  - Direct access: ((UnifiedAIService) ai).langChain() / .langGraph() / .googleADK()");
     }
 
-    private String buildProviderList(String openaiKey, String anthropicKey) {
+    private String buildProviderList(String openaiKey, String anthropicKey, String geminiKey) {
         var providers = new java.util.ArrayList<String>();
         if (openaiKey != null) providers.add("openai");
         if (anthropicKey != null) providers.add("anthropic");
+        if (geminiKey != null) providers.add("gemini");
         return providers.isEmpty() ? "none" : String.join(", ", providers);
     }
 

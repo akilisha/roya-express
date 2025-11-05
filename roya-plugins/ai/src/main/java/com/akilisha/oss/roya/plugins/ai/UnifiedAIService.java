@@ -127,6 +127,16 @@ public class UnifiedAIService implements AI {
             }
         };
     }
+    
+    @Override
+    public Vision vision() {
+        // Vision operations use LangChain4j's multimodal support
+        if (langChain != null) {
+            return langChain.vision();
+        } else {
+            throw new IllegalStateException("LangChain service not configured - required for vision operations");
+        }
+    }
 
     // Convenience methods delegate to LangChain (best for basic operations)
 

@@ -61,9 +61,70 @@ public class LangChainLibrary implements AILibrary {
                 .build();
         }
 
+        // Try Gemini (Vertex AI) - using reflection to avoid dependency issues
+        var geminiConfig = config.provider("gemini");
+        if (geminiConfig.isPresent()) {
+            return createGeminiChatModel(geminiConfig.get());
+        }
+
         throw new IllegalArgumentException(
-            "No provider configured. Configure either 'openai' or 'anthropic' in providers."
+            "No provider configured. Configure either 'openai', 'anthropic', or 'gemini' in providers."
         );
+    }
+
+    /**
+     * Create Vertex AI Gemini ChatModel using reflection.
+     * This avoids direct dependency issues if the module isn't loaded.
+     */
+    private ChatModel createGeminiChatModel(AILibraryConfig.ProviderConfig config) {
+        try {
+            Class<?> vertexAiGeminiClass = Class.forName("dev.langchain4j.model.vertexai.VertexAiGeminiChatModel");
+            var options = config.options();
+            
+            String project = (String) options.get("project");
+            String location = (String) options.get("location");
+            
+            if (project == null || location == null) {
+                throw new IllegalArgumentException(
+                    "Gemini provider requires both 'project' and 'location' options. " +
+                    "Set AI_GEMINI_PROJECT and AI_GEMINI_LOCATION environment variables."
+                );
+            }
+            
+            // Get builder method
+            java.lang.reflect.Method builderMethod = vertexAiGeminiClass.getMethod("builder");
+            Object builder = builderMethod.invoke(null);
+            
+            // Set API key
+            java.lang.reflect.Method apiKeyMethod = builder.getClass().getMethod("apiKey", String.class);
+            apiKeyMethod.invoke(builder, config.apiKey());
+            
+            // Set project
+            java.lang.reflect.Method projectMethod = builder.getClass().getMethod("project", String.class);
+            projectMethod.invoke(builder, project);
+            
+            // Set location
+            java.lang.reflect.Method locationMethod = builder.getClass().getMethod("location", String.class);
+            locationMethod.invoke(builder, location);
+            
+            // Set model name (default to gemini-1.5-pro for multimodal support)
+            java.lang.reflect.Method modelNameMethod = builder.getClass().getMethod("modelName", String.class);
+            modelNameMethod.invoke(builder, "gemini-1.5-pro");
+            
+            // Build
+            java.lang.reflect.Method buildMethod = builder.getClass().getMethod("build");
+            return (ChatModel) buildMethod.invoke(builder);
+            
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException(
+                "Gemini support requires langchain4j-google-ai-gemini dependency. " +
+                "Please ensure the dependency is added to your build file.", e
+            );
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                "Failed to create Gemini ChatModel: " + e.getMessage(), e
+            );
+        }
     }
 
     private EmbeddingModel createEmbeddingModel(AILibraryConfig config) {

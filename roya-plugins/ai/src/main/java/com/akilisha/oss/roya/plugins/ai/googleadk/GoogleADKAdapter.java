@@ -40,6 +40,11 @@ public class GoogleADKAdapter implements AI {
     public Agents agents() {
         throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
     }
+    
+    @Override
+    public Vision vision() {
+        throw new UnsupportedOperationException("Google ADK adapter not yet implemented");
+    }
 
     @Override
     public String ask(String systemPrompt, String userMessage) {

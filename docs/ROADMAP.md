@@ -442,6 +442,24 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - **Comprehensive tests**: 28 tests covering all features
 - **Developer experience**: Same pattern as Database/Email plugins
 
+### Enhancements (January 30, 2025)
+- ✅ **Vision API**: Multimodal support (image, audio, video, PDF)
+  - `ai.vision().analyzeImage()` - Image analysis
+  - `ai.vision().transcribeAudio()` - Audio transcription (Gemini)
+  - `ai.vision().describeVideo()` - Video description (Gemini)
+  - `ai.vision().processPdf()` - PDF processing (Gemini)
+- ✅ **Gemini Integration**: Google Gemini provider support
+  - `langchain4j-google-ai-gemini` dependency added
+  - Environment variable configuration (API key, project, location)
+  - Reflection-based model creation for flexibility
+- ✅ **VisionNode**: Workflow integration for multimodal operations
+  - `.vision()` convenience method on `AIWorkflowBuilder`
+  - Configurable operations, input/output keys, prompts
+- ✅ **Integration Documentation**: Comprehensive guide for nested/continuation workflows
+  - `NESTED_CONTINUATION_AI_WORKFLOWS.md` created
+  - Real-world examples and best practices
+  - Troubleshooting guide included
+
 ---
 
 ## Phase 7: Vector Store & RAG - ✅ COMPLETE
@@ -492,7 +510,42 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - **Pipeline**: Modular (can swap components)
 - **Metadata**: Flexible Map<String, Object>
 
-See `PHASE7_DESIGN.md` for complete architecture and final design.
+---
+
+## Next Priorities (Post-Foundation)
+
+Based on completed foundation work, the following items are recommended for the next development cycle:
+
+### High Priority (P1)
+
+1. **RAG Observability & Metrics** (Proper Implementation)
+   - Replace placeholder metrics with production-grade implementation
+   - Integrate with Micrometer/Prometheus
+   - See `docs/BACKLOG.md` for details
+
+2. **RAG Configuration System** (Proper Implementation)
+   - Replace placeholder config with proper configuration library
+   - Support multiple sources with precedence
+   - See `docs/BACKLOG.md` for details
+
+3. **Vector & RAG Polishing** (Phase 7 Continuation)
+   - LLM-based reranking (already implemented ✅)
+   - Collection management APIs (already implemented ✅)
+   - Enhanced chunking presets (already implemented ✅)
+   - Remaining: Production-grade observability and config (see above)
+
+### Medium Priority (P2)
+
+4. **Remaining Trigger Nodes** (if needed)
+   - SubscriptionTrigger (WebSocket/SSE)
+   - ChatTrigger (chat interface)
+   - EmailTrigger (email-triggered workflows)
+   - AppEventTrigger (internal event triggers)
+   - CustomTrigger (generic trigger pattern)
+
+5. **LangChain4j Demo Recreation Project**
+   - Comprehensive showcase project
+   - See `docs/FUTURE_PROJECTS.md` for details
 
 ---
 

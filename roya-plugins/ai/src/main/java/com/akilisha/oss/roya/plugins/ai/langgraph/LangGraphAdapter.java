@@ -168,6 +168,13 @@ public class LangGraphAdapter implements AI {
             }
         };
     }
+    
+    @Override
+    public Vision vision() {
+        // LangGraph adapter doesn't implement vision yet
+        // Delegate to LangChain4j's multimodal support when available
+        throw new UnsupportedOperationException("Vision API not yet implemented in LangGraph adapter. Use LangChain adapter for vision operations.");
+    }
 
     // Convenience methods - delegate to llm()
 

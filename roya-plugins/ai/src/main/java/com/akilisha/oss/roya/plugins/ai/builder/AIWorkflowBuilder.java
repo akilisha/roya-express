@@ -2,6 +2,8 @@ package com.akilisha.oss.roya.plugins.ai.builder;
 
 import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.AIServiceNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.actions.AgentNode;
+import com.akilisha.oss.roya.plugins.ai.nodes.actions.VisionNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.EmbeddingNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.ExtractNode;
 import com.akilisha.oss.roya.plugins.ai.nodes.actions.ForkNode;
@@ -20,6 +22,7 @@ import com.akilisha.oss.roya.workflow.edges.Edge;
 
 import java.time.Duration;
 import java.util.function.Consumer;
+import java.util.List;
 
 /**
  * Fluent builder specifically for AI workflows.
@@ -233,7 +236,108 @@ public class AIWorkflowBuilder {
         workflowBuilder.action(nodeId, builder.build());
         return this;
     }
+
+    /**
+     * Add an agent node (LLM with tools that can autonomously use tools).
+     * 
+     * <p>Agents are similar to LLMs with tools, but they have autonomy to decide when and how to use tools.
+     * This is the recommended way to create tool-enabled workflows where the AI decides tool usage.
+     * 
+     * <p>Example:
+     * <pre>
+     * List&lt;ToolSpecification&gt; tools = List.of(
+     *     ToolSpecification.builder()
+     *         .name("get_weather")
+     *         .description("Get current weather for a location")
+     *         .build(),
+     *     ToolSpecification.builder()
+     *         .name("send_email")
+     *         .description("Send an email")
+     *         .build()
+     * );
+     * 
+     * ai.workflow("agent-workflow")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .agents("assistant", builder -> builder
+     *         .inputKey("query")
+     *         .outputKey("response")
+     *         .tools(tools)
+     *         .systemPrompt("You are a helpful assistant with access to weather and email tools")
+     *     )
+     *     .build();
+     * </pre>
+     * 
+     * <p><b>Note:</b> Agents automatically decide when to use tools. Use {@link #llmWithTools(String, Object, Consumer)}
+     * if you want more control over tool invocation.
+     * 
+     * @param nodeId Node identifier
+     * @param config Node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder agents(String nodeId,
+                                   Consumer<AgentNode.Builder> config) {
+        AgentNode.Builder builder = AgentNode.Builder.builder(ai);
+        config.accept(builder);
+        workflowBuilder.action(nodeId, builder.build());
+        return this;
+    }
     
+    /**
+     * Convenience method for agent nodes with tools.
+     * 
+     * <p>Equivalent to calling {@link #agents(String, Consumer)} with tools configured in the builder.
+     * 
+     * @param nodeId Node identifier
+     * @param tools List of ToolSpecification instances
+     * @param config Node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder agents(String nodeId,
+                                   Object tools,  // List<dev.langchain4j.agent.tool.ToolSpecification>
+                                   Consumer<AgentNode.Builder> config) {
+        AgentNode.Builder builder = AgentNode.Builder.builder(ai);
+        builder.tools(tools);
+        config.accept(builder);
+        workflowBuilder.action(nodeId, builder.build());
+        return this;
+    }
+    
+    /**
+     * Add a vision node for multimodal operations (image analysis, audio transcription, video description).
+     * 
+     * <p>Vision nodes support:
+     * <ul>
+     *   <li>Image analysis using vision-capable models (GPT-4 Vision, Claude, etc.)</li>
+     *   <li>Audio transcription (when audio transcription models are available)</li>
+     *   <li>Video description (when video analysis is available)</li>
+     *   <li>PDF processing</li>
+     * </ul>
+     * 
+     * <p>Example:
+     * <pre>
+     * ai.workflow("image-analysis")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .vision("analyze", builder -> builder
+     *         .operation(VisionNode.VisionOperation.ANALYZE_IMAGE)
+     *         .inputKey("imageUrl")
+     *         .prompt("What's in this image?")
+     *         .outputKey("description")
+     *     )
+     *     .build();
+     * </pre>
+     * 
+     * @param nodeId Node identifier
+     * @param config Node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder vision(String nodeId,
+                                    Consumer<VisionNode.Builder> config) {
+        VisionNode.Builder builder = VisionNode.Builder.builder(ai);
+        config.accept(builder);
+        workflowBuilder.action(nodeId, builder.build());
+        return this;
+    }
+
     /**
      * Add an LLM action node with memory (conversation history).
      * 
@@ -455,6 +559,316 @@ public class AIWorkflowBuilder {
     public AIWorkflowBuilder fork(String nodeId, Workflow childWorkflow) {
         ForkNode.Builder builder = ForkNode.builder(childWorkflow);
         workflowBuilder.action(nodeId, builder.build());
+        return this;
+    }
+
+    // TODO: Add more convenience methods as we implement more node types:
+    // - .vision()
+    // - .audio()
+    // - .agent()
+    // - .mcp()
+
+    // ========== Workflow Pattern Convenience Methods ==========
+
+    /**
+     * Wrap an LLM node with circuit breaker protection.
+     * 
+     * <p>Protects LLM calls from cascading failures. Circuit opens after threshold failures.
+     * 
+     * <p>Example:
+     * <pre>
+     * CircuitBreaker breaker = CircuitBreaker.withThreshold(3, Duration.ofSeconds(5));
+     * 
+     * ai.workflow("agent")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .circuit("analyze", breaker, builder -> builder
+     *         .systemPrompt("Analyze data")
+     *         .inputKey("data")
+     *         .outputKey("analysis")
+     *     )
+     *     .build();
+     * </pre>
+     * 
+     * @param nodeId Node identifier
+     * @param breaker Circuit breaker instance
+     * @param config LLM node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder circuit(String nodeId,
+                                    com.akilisha.oss.roya.workflow.resilience.CircuitBreaker breaker,
+                                    Consumer<LLMActionNode.Builder> config) {
+        LLMActionNode.Builder llmBuilder = LLMActionNode.builder(ai);
+        config.accept(llmBuilder);
+        LLMActionNode llmNode = llmBuilder.build();
+        
+        com.akilisha.oss.roya.workflow.resilience.CircuitBreakerNode protectedNode = 
+            new com.akilisha.oss.roya.workflow.resilience.CircuitBreakerNode(llmNode, breaker);
+        workflowBuilder.action(nodeId, protectedNode);
+        return this;
+    }
+
+    /**
+     * Wrap an LLM node with a loop for retry/repeat execution.
+     * 
+     * <p>Example:
+     * <pre>
+     * ai.workflow("agent")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .loop("retry", 3, LoopNode.LoopStrategy.UNTIL_SUCCESS, builder -> builder
+     *         .systemPrompt("Generate response")
+     *         .inputKey("message")
+     *         .outputKey("response")
+     *     )
+     *     .build();
+     * </pre>
+     * 
+     * @param nodeId Node identifier
+     * @param iterations Number of iterations (or max attempts for UNTIL_SUCCESS)
+     * @param strategy Loop strategy (SEQUENTIAL, PARALLEL, UNTIL_SUCCESS, UNTIL_FAILURE)
+     * @param config LLM node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder loop(String nodeId,
+                                  int iterations,
+                                  com.akilisha.oss.roya.workflow.loop.LoopNode.LoopStrategy strategy,
+                                  Consumer<LLMActionNode.Builder> config) {
+        LLMActionNode.Builder llmBuilder = LLMActionNode.builder(ai);
+        config.accept(llmBuilder);
+        LLMActionNode llmNode = llmBuilder.build();
+        
+        com.akilisha.oss.roya.workflow.loop.LoopNode loopNode = 
+            new com.akilisha.oss.roya.workflow.loop.LoopNode(llmNode, iterations, strategy);
+        workflowBuilder.action(nodeId, loopNode);
+        return this;
+    }
+
+    /**
+     * Chain human approval before LLM execution.
+     * 
+     * <p>Creates an approval node that precedes the LLM node. The LLM only executes if approval is granted.
+     * 
+     * <p>Example:
+     * <pre>
+     * ApprovalProvider provider = new PollingApprovalProvider();
+     * 
+     * ai.workflow("agent")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .approval("generate", provider, "Approve this action?", builder -> builder
+     *         .systemPrompt("Generate response")
+     *         .inputKey("message")
+     *         .outputKey("response")
+     *     )
+     *     .edge("webhook", "generate-approval")  // Webhook → Approval node
+     *     .edge("generate-approval", "generate")  // Approval → LLM node (created automatically)
+     *     .build();
+     * </pre>
+     * 
+     * <p><b>Note:</b> The approval node ID will be `{nodeId}-approval` and the LLM node will be `{nodeId}`.
+     * The edge from approval to LLM is created automatically. You only need to connect to `{nodeId}-approval`.
+     * 
+     * @param nodeId Node identifier (for the LLM node; approval node will be `{nodeId}-approval`)
+     * @param provider Approval provider instance
+     * @param prompt Approval prompt/question
+     * @param config LLM node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder approval(String nodeId,
+                                     com.akilisha.oss.roya.workflow.hitm.ApprovalProvider provider,
+                                     String prompt,
+                                     Consumer<LLMActionNode.Builder> config) {
+        LLMActionNode.Builder llmBuilder = LLMActionNode.builder(ai);
+        config.accept(llmBuilder);
+        LLMActionNode llmNode = llmBuilder.build();
+        
+        // Chain: approval → LLM
+        String approvalNodeId = nodeId + "-approval";
+        workflowBuilder.action(approvalNodeId, 
+            new com.akilisha.oss.roya.workflow.hitm.HumanApprovalNode(provider, prompt));
+        workflowBuilder.action(nodeId, llmNode);
+        workflowBuilder.edge(approvalNodeId, nodeId);
+        
+        return this;
+    }
+
+    /**
+     * Create a cost tracker for budget management.
+     * 
+     * <p>This is a convenience method that returns a `CostTracker` instance.
+     * The tracker should be added as a visitor to the `WorkflowExecutor` (not part of workflow builder chain).
+     * 
+     * <p>Example:
+     * <pre>
+     * Workflow workflow = ai.workflow("agent")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .llm("analyze", builder -> builder.systemPrompt("..."))
+     *     .build();
+     * 
+     * // Create cost tracker (not part of builder chain)
+     * CostTracker tracker = ai.workflow("agent").costing(10.00)  // $10 budget
+     *     .withNodeCost("analyze", 0.01);
+     * 
+     * // Add tracker to executor
+     * WorkflowExecutor executor = new WorkflowExecutor(workflow)
+     *     .addVisitor(tracker);
+     * </pre>
+     * 
+     * <p><b>Note:</b> This method breaks the fluent builder chain because it returns a `CostTracker` visitor,
+     * not a builder. Use it after calling `.build()` or create the tracker separately.
+     * 
+     * @param budget Budget limit in dollars
+     * @return CostTracker instance for visitor registration
+     */
+    public com.akilisha.oss.roya.workflow.cost.CostTracker costing(double budget) {
+        return new com.akilisha.oss.roya.workflow.cost.CostTracker(budget);
+    }
+
+    /**
+     * Integrate MCP (Model Context Protocol) tools with an LLM node.
+     * 
+     * <p>Discovers tools from MCP servers and configures them for use with the LLM.
+     * Uses the MCPClient to discover and cache tools automatically.
+     * 
+     * <p>Example:
+     * <pre>
+     * MCPClient mcpClient = MCPClient.builder()
+     *     .server("mcp-server-1", "https://mcp-server.example.com")
+     *     .server("mcp-server-2", "https://another-mcp.example.com")
+     *     .cacheDuration(Duration.ofMinutes(10))
+     *     .healthCheckInterval(Duration.ofMinutes(5))
+     *     .build();
+     * 
+     * ai.workflow("mcp-agent")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .mcp("agent", mcpClient, builder -> builder
+     *         .systemPrompt("You have access to MCP tools")
+     *         .inputKey("message")
+     *         .outputKey("response")
+     *     )
+     *     .build();
+     * </pre>
+     * 
+     * @param nodeId Node identifier
+     * @param mcpClient MCP client instance
+     * @param config LLM node configuration
+     * @return This builder
+     */
+    public AIWorkflowBuilder mcp(String nodeId,
+                                com.akilisha.oss.roya.plugins.ai.mcp.MCPClient mcpClient,
+                                Consumer<LLMActionNode.Builder> config) {
+        // Discover tools from MCP client
+        List<Object> tools = mcpClient.discoverAllTools();
+        
+        // Use llmWithTools to configure LLM with MCP tools
+        return llmWithTools(nodeId, tools, config);
+    }
+
+    // ========== Nested & Continuation Workflows ==========
+
+    /**
+     * Execute multiple child workflows in parallel and aggregate results.
+     * 
+     * <p>This is a convenience method that delegates to {@link Workflow.WorkflowBuilder#nested(String, java.util.List, com.akilisha.oss.roya.workflow.nested.ResultAggregator, com.akilisha.oss.roya.workflow.nested.NestedExecutionStrategy)}.
+     * 
+     * <p>Example:
+     * <pre>
+     * Workflow billingWorkflow = ai.workflow("billing").trigger("start", ...).build();
+     * Workflow historyWorkflow = ai.workflow("history").trigger("start", ...).build();
+     * 
+     * Workflow main = ai.workflow("support-agent")
+     *     .trigger("webhook", WebhookTrigger.create(...))
+     *     .nested("gatherContext", 
+     *         List.of(billingWorkflow, historyWorkflow),
+     *         new MergeAllAggregator(true),
+     *         NestedExecutionStrategy.WAIT_FOR_ALL_BEST_EFFORT
+     *     )
+     *     .build();
+     * </pre>
+     * 
+     * @param nodeId Node identifier
+     * @param childWorkflows List of child workflows to execute in parallel
+     * @param aggregator Result aggregator (MergeAllAggregator, CollectAllAggregator, SelectBestAggregator)
+     * @param strategy Execution strategy (WAIT_FOR_ALL, WAIT_FOR_ALL_BEST_EFFORT, FIRST_SUCCESS, BEST_OF_ALL)
+     * @return This builder
+     */
+    public AIWorkflowBuilder nested(String nodeId, 
+                                    java.util.List<Workflow> childWorkflows,
+                                    com.akilisha.oss.roya.workflow.nested.ResultAggregator aggregator,
+                                    com.akilisha.oss.roya.workflow.nested.NestedExecutionStrategy strategy) {
+        workflowBuilder.nested(nodeId, childWorkflows, aggregator, strategy);
+        return this;
+    }
+
+    /**
+     * Execute multiple child workflows in parallel with default timeout.
+     * 
+     * @param nodeId Node identifier
+     * @param childWorkflows List of child workflows to execute in parallel
+     * @param aggregator Result aggregator
+     * @return This builder
+     */
+    public AIWorkflowBuilder nested(String nodeId, 
+                                    java.util.List<Workflow> childWorkflows,
+                                    com.akilisha.oss.roya.workflow.nested.ResultAggregator aggregator) {
+        workflowBuilder.nested(nodeId, childWorkflows, aggregator);
+        return this;
+    }
+
+    /**
+     * Chain a child workflow sequentially (continuation pattern).
+     * 
+     * <p>This is a convenience method that delegates to {@link Workflow.WorkflowBuilder#continuation(String, Workflow, String)}.
+     * 
+     * <p>Example:
+     * <pre>
+     * Workflow scrapeWorkflow = ai.workflow("scrape").trigger("start", ...).build();
+     * Workflow analyzeWorkflow = ai.workflow("analyze").trigger("start", ...).build();
+     * 
+     * Workflow pipeline = ai.workflow("data-pipeline")
+     *     .trigger("init", input -> ...)
+     *     .continuation("scrape", scrapeWorkflow, "start")
+     *     .continuation("analyze", analyzeWorkflow, "start")
+     *     .edge("init", "scrape")
+     *     .edge("scrape", "analyze")
+     *     .build();
+     * </pre>
+     * 
+     * @param nodeId Node identifier
+     * @param childWorkflow Child workflow to execute
+     * @param startNodeId Entry point node ID in the child workflow
+     * @return This builder
+     */
+    public AIWorkflowBuilder continuation(String nodeId, Workflow childWorkflow, String startNodeId) {
+        workflowBuilder.continuation(nodeId, childWorkflow, startNodeId);
+        return this;
+    }
+
+    /**
+     * Chain a child workflow sequentially with timeout.
+     * 
+     * @param nodeId Node identifier
+     * @param childWorkflow Child workflow to execute
+     * @param startNodeId Entry point node ID in the child workflow
+     * @param timeout Timeout for the continuation
+     * @return This builder
+     */
+    public AIWorkflowBuilder continuation(String nodeId, Workflow childWorkflow, String startNodeId, Duration timeout) {
+        workflowBuilder.continuation(nodeId, childWorkflow, startNodeId, timeout);
+        return this;
+    }
+
+    /**
+     * Chain a child workflow sequentially with namespace isolation.
+     * 
+     * <p>Use this when you want to prevent context key collisions between parent and child workflows.
+     * 
+     * @param nodeId Node identifier
+     * @param childWorkflow Child workflow to execute
+     * @param startNodeId Entry point node ID in the child workflow
+     * @param namespace Namespace prefix for child workflow context keys
+     * @return This builder
+     */
+    public AIWorkflowBuilder continuationWithNamespace(String nodeId, Workflow childWorkflow, String startNodeId, String namespace) {
+        workflowBuilder.continuationWithNamespace(nodeId, childWorkflow, startNodeId, namespace);
         return this;
     }
 

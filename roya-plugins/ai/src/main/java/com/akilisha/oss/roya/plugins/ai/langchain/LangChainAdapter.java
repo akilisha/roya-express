@@ -168,8 +168,9 @@ public class LangChainAdapter implements AI {
         
         /**
          * Ensure a Qdrant collection exists, creating it if necessary.
+         * Made public for use in createCollection.
          */
-        private void ensureCollectionExists(String collectionName, EmbeddingModel embeddingModel) {
+        void ensureCollectionExists(String collectionName, EmbeddingModel embeddingModel) {
             if (qdrantClient == null) {
                 // Create Qdrant client for collection management
                 qdrantClient = new io.qdrant.client.QdrantClient(
@@ -251,6 +252,106 @@ public class LangChainAdapter implements AI {
                 } catch (Exception e) {
                     // Ignore errors on close
                 }
+            }
+        }
+        
+        /**
+         * Delete a collection.
+         */
+        void deleteCollection(String collectionName) {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+            
+            try {
+                qdrantClient.deleteCollectionAsync(collectionName).get();
+                // Remove from cache
+                embeddingStores.remove(collectionName);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to delete collection '" + collectionName + "': " + e.getMessage(), e);
+            }
+        }
+        
+        /**
+         * List all collections.
+         */
+        java.util.List<String> listCollections() {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+            
+            try {
+                java.util.List<String> collections = qdrantClient.listCollectionsAsync().get();
+                return collections;
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to list collections: " + e.getMessage(), e);
+            }
+        }
+        
+        /**
+         * Get collection statistics.
+         */
+        com.akilisha.oss.roya.plugins.ai.rag.CollectionStats getCollectionStats(String collectionName) {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+            
+            try {
+                io.qdrant.client.grpc.Collections.CollectionInfo info = 
+                    qdrantClient.getCollectionInfoAsync(collectionName).get();
+                
+                long vectorCount = info.getPointsCount();
+                int vectorSize = (int) info.getConfig().getParams().getVectorsConfig().getParams().getSize();
+                String status = info.getStatus().name();
+                
+                java.util.Map<String, Object> metadata = new java.util.HashMap<>();
+                metadata.put("points_count", vectorCount);
+                metadata.put("vector_size", vectorSize);
+                metadata.put("status", status);
+                
+                return new com.akilisha.oss.roya.plugins.ai.rag.CollectionStats(
+                    collectionName,
+                    vectorCount,
+                    vectorSize,
+                    status,
+                    metadata
+                );
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to get collection stats for '" + collectionName + "': " + e.getMessage(), e);
+            }
+        }
+        
+        /**
+         * Check if a collection exists.
+         */
+        boolean collectionExists(String collectionName) {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+            
+            try {
+                qdrantClient.getCollectionInfoAsync(collectionName).get();
+                return true;
+            } catch (java.util.concurrent.ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof io.grpc.StatusRuntimeException) {
+                    io.grpc.StatusRuntimeException grpcEx = (io.grpc.StatusRuntimeException) cause;
+                    if (grpcEx.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                        return false;
+                    }
+                }
+                // Other errors - assume doesn't exist
+                return false;
+            } catch (Exception e) {
+                return false;
             }
         }
     }
@@ -389,21 +490,50 @@ public class LangChainAdapter implements AI {
         return new Vectors() {
             @Override
             public void indexPath(String collection, java.nio.file.Path directory, ChunkingOptions options) {
-                var state = getQdrantConnection();
-                if (!state.connected) {
-                    throw new AIException("Qdrant connection failed: " + state.error);
-                }
-                
-                if (embeddingModel == null) {
-                    throw new AIException("EmbeddingModel not configured - required for vector indexing");
-                }
+                long startTime = System.currentTimeMillis();
+                boolean success = false;
                 
                 try {
+                    var state = getQdrantConnection();
+                    if (!state.connected) {
+                        throw new AIException("Qdrant connection failed: " + state.error);
+                    }
+                    
+                    if (embeddingModel == null) {
+                        throw new AIException("EmbeddingModel not configured - required for vector indexing");
+                    }
+                    
                     // Get or create embedding store for this collection
                     EmbeddingStore<TextSegment> embeddingStore = state.getOrCreateStore(collection, embeddingModel);
                     
                     // Load documents from directory
                     List<dev.langchain4j.data.document.Document> documents = FileSystemDocumentLoader.loadDocuments(directory);
+                    
+                    // Filter by file extensions (.md, .markdown, .txt)
+                    List<dev.langchain4j.data.document.Document> filteredDocs = documents.stream()
+                        .filter(doc -> {
+                            // Try to get source from metadata
+                            String fileName = null;
+                            try {
+                                java.lang.reflect.Method metadataMethod = doc.getClass().getMethod("metadata");
+                                Object metadataObj = metadataMethod.invoke(doc);
+                                if (metadataObj instanceof Map) {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, String> metaMap = (Map<String, String>) metadataObj;
+                                    fileName = metaMap.get("source");
+                                }
+                            } catch (Exception e) {
+                                // Metadata access failed, include document
+                            }
+                            
+                            if (fileName == null) return true; // Include if no source metadata
+                            
+                            String lowerName = fileName.toLowerCase();
+                            return lowerName.endsWith(".md") || 
+                                   lowerName.endsWith(".markdown") || 
+                                   lowerName.endsWith(".txt");
+                        })
+                        .collect(Collectors.toList());
                     
                     // Split documents into chunks
                     DocumentSplitter splitter = DocumentSplitters.recursive(
@@ -411,29 +541,37 @@ public class LangChainAdapter implements AI {
                         options.overlap()
                     );
                     
-                    List<TextSegment> segments = splitter.splitAll(documents);
+                    List<TextSegment> segments = splitter.splitAll(filteredDocs);
                     
                     // Embed and store segments
                     List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
                     embeddingStore.addAll(embeddings, segments);
                     
+                    success = true;
                 } catch (Exception e) {
                     throw new AIException("Failed to index directory: " + e.getMessage(), e);
+                } finally {
+                    // Record metrics
+                    long durationMs = System.currentTimeMillis() - startTime;
+                    com.akilisha.oss.roya.plugins.ai.rag.RAGMetrics.recordVectorIndexOperation(durationMs, success);
                 }
             }
 
             @Override
             public void index(String collection, java.util.List<VectorDoc> documents) {
-                var state = getQdrantConnection();
-                if (!state.connected) {
-                    throw new AIException("Qdrant connection failed: " + state.error);
-                }
-                
-                if (embeddingModel == null) {
-                    throw new AIException("EmbeddingModel not configured - required for vector indexing");
-                }
+                long startTime = System.currentTimeMillis();
+                boolean success = false;
                 
                 try {
+                    var state = getQdrantConnection();
+                    if (!state.connected) {
+                        throw new AIException("Qdrant connection failed: " + state.error);
+                    }
+                    
+                    if (embeddingModel == null) {
+                        throw new AIException("EmbeddingModel not configured - required for vector indexing");
+                    }
+                    
                     // Get or create embedding store for this collection
                     EmbeddingStore<TextSegment> embeddingStore = state.getOrCreateStore(collection, embeddingModel);
                     
@@ -461,8 +599,95 @@ public class LangChainAdapter implements AI {
                     // Store in Qdrant
                     embeddingStore.addAll(embeddings, segments);
                     
+                    success = true;
                 } catch (Exception e) {
                     throw new AIException("Failed to index documents: " + e.getMessage(), e);
+                } finally {
+                    // Record metrics
+                    long durationMs = System.currentTimeMillis() - startTime;
+                    com.akilisha.oss.roya.plugins.ai.rag.RAGMetrics.recordVectorIndexOperation(durationMs, success);
+                }
+            }
+            
+            @Override
+            public void createCollection(String collection) {
+                try {
+                    var state = getQdrantConnection();
+                    if (!state.connected) {
+                        throw new AIException("Qdrant connection failed: " + state.error);
+                    }
+                    
+                    if (embeddingModel == null) {
+                        throw new AIException("EmbeddingModel not configured - required for collection creation");
+                    }
+                    
+                    state.ensureCollectionExists(collection, embeddingModel);
+                    // Also ensure store is created in cache
+                    state.getOrCreateStore(collection, embeddingModel);
+                    
+                    // Record metrics
+                    com.akilisha.oss.roya.plugins.ai.rag.RAGMetrics.recordCollectionCreate();
+                } catch (Exception e) {
+                    throw new AIException("Failed to create collection: " + e.getMessage(), e);
+                }
+            }
+            
+            @Override
+            public void deleteCollection(String collection) {
+                try {
+                    var state = getQdrantConnection();
+                    if (!state.connected) {
+                        throw new AIException("Qdrant connection failed: " + state.error);
+                    }
+                    
+                    state.deleteCollection(collection);
+                    
+                    // Record metrics
+                    com.akilisha.oss.roya.plugins.ai.rag.RAGMetrics.recordCollectionDelete();
+                } catch (Exception e) {
+                    throw new AIException("Failed to delete collection: " + e.getMessage(), e);
+                }
+            }
+            
+            @Override
+            public java.util.List<String> listCollections() {
+                var state = getQdrantConnection();
+                if (!state.connected) {
+                    throw new AIException("Qdrant connection failed: " + state.error);
+                }
+                
+                try {
+                    return state.listCollections();
+                } catch (Exception e) {
+                    throw new AIException("Failed to list collections: " + e.getMessage(), e);
+                }
+            }
+            
+            @Override
+            public com.akilisha.oss.roya.plugins.ai.rag.CollectionStats getCollectionStats(String collection) {
+                var state = getQdrantConnection();
+                if (!state.connected) {
+                    throw new AIException("Qdrant connection failed: " + state.error);
+                }
+                
+                try {
+                    return state.getCollectionStats(collection);
+                } catch (Exception e) {
+                    throw new AIException("Failed to get collection stats: " + e.getMessage(), e);
+                }
+            }
+            
+            @Override
+            public boolean collectionExists(String collection) {
+                var state = getQdrantConnection();
+                if (!state.connected) {
+                    return false;
+                }
+                
+                try {
+                    return state.collectionExists(collection);
+                } catch (Exception e) {
+                    return false;
                 }
             }
         };
@@ -478,20 +703,23 @@ public class LangChainAdapter implements AI {
 
             @Override
             public RAGResponse ask(String question, RAGOptions options) {
-                var state = getQdrantConnection();
-                if (!state.connected) {
-                    throw new AIException("Qdrant connection failed: " + state.error);
-                }
-                
-                if (embeddingModel == null) {
-                    throw new AIException("EmbeddingModel not configured - required for RAG");
-                }
-                
-                if (chatModel == null) {
-                    throw new AIException("ChatModel not configured - required for RAG");
-                }
+                long startTime = System.currentTimeMillis();
+                boolean success = false;
                 
                 try {
+                    var state = getQdrantConnection();
+                    if (!state.connected) {
+                        throw new AIException("Qdrant connection failed: " + state.error);
+                    }
+                    
+                    if (embeddingModel == null) {
+                        throw new AIException("EmbeddingModel not configured - required for RAG");
+                    }
+                    
+                    if (chatModel == null) {
+                        throw new AIException("ChatModel not configured - required for RAG");
+                    }
+                    
                     // Get or create embedding store for the specified collection
                     String collectionName = options.collection() != null ? options.collection() : "default";
                     EmbeddingStore<TextSegment> embeddingStore = state.getOrCreateStore(collectionName, embeddingModel);
@@ -514,6 +742,11 @@ public class LangChainAdapter implements AI {
                             .filter(match -> match.score() >= options.minScore().floatValue())
                             .collect(Collectors.toList()) :
                         allMatches;
+                    
+                    // Rerank if requested
+                    if (options.rerank() && !matches.isEmpty()) {
+                        matches = rerankMatches(matches, question, options.aiOptions());
+                    }
                     
                     // Convert to Document format
                     // Based on example: match.embedded() returns TextSegment, match.score() exists
@@ -573,13 +806,433 @@ public class LangChainAdapter implements AI {
                     
                     String answer = LangChainAdapter.this.ask(systemPrompt, prompt, options.aiOptions());
                     
+                    success = true;
                     return new RAGResponse(answer, sources);
                     
                 } catch (Exception e) {
                     throw new AIException("RAG query failed: " + e.getMessage(), e);
+                } finally {
+                    // Record metrics
+                    long durationMs = System.currentTimeMillis() - startTime;
+                    com.akilisha.oss.roya.plugins.ai.rag.RAGMetrics.recordRAGQuery(durationMs, success);
                 }
             }
         };
+    }
+    
+    /**
+     * Rerank matches using LLM-based relevance scoring.
+     * Uses the LLM to score each match's relevance to the question.
+     */
+    private List<EmbeddingMatch<TextSegment>> rerankMatches(
+            List<EmbeddingMatch<TextSegment>> matches,
+            String question,
+            AIOptions aiOptions) {
+        if (chatModel == null) {
+            // If no LLM available, return original matches
+            return matches;
+        }
+        
+        try {
+            // Score each match
+            List<java.util.Map.Entry<EmbeddingMatch<TextSegment>, Double>> scoredMatches = new java.util.ArrayList<>();
+            
+            for (EmbeddingMatch<TextSegment> match : matches) {
+                String docText = match.embedded().text();
+                String prompt = String.format(
+                    "Rate the relevance of the following document to the question on a scale of 0.0 to 1.0.\n" +
+                    "Question: %s\n\n" +
+                    "Document:\n%s\n\n" +
+                    "Return only a single number between 0.0 and 1.0.",
+                    question,
+                    docText
+                );
+                
+                String response = ask("You are a relevance scorer. Return only a number.", prompt, aiOptions);
+                
+                try {
+                    double score = Double.parseDouble(response.trim());
+                    scoredMatches.add(new java.util.AbstractMap.SimpleEntry<>(match, score));
+                } catch (NumberFormatException e) {
+                    // If parsing fails, use original similarity score
+                    scoredMatches.add(new java.util.AbstractMap.SimpleEntry<>(match, (double) match.score()));
+                }
+            }
+            
+            // Sort by rerank score (descending)
+            scoredMatches.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+            
+            // Return reranked matches
+            return scoredMatches.stream()
+                .map(java.util.Map.Entry::getKey)
+                .collect(Collectors.toList());
+                
+        } catch (Exception e) {
+            // If reranking fails, return original matches
+            return matches;
+        }
+    }
+
+    @Override
+    public Vision vision() {
+        return new Vision() {
+            @Override
+            public String analyzeImage(String imageUrl, String prompt) {
+                return analyzeImage(imageUrl, prompt, AIOptions.defaults());
+            }
+
+            @Override
+            public String analyzeImage(String imageUrl, String prompt, AIOptions options) {
+                if (chatModel == null) {
+                    throw new AIException("ChatModel not configured - required for vision operations");
+                }
+                
+                try {
+                    // Create ImageContent using LangChain4j's Content interface
+                    // Use reflection to avoid direct dependency
+                    Object imageContent = createImageContent(imageUrl);
+                    
+                    // Create UserMessage with image content using reflection
+                    // LangChain4j uses UserMessage.from(text, imageContent) for multimodal
+                    Class<?> userMessageClass = Class.forName("dev.langchain4j.data.message.UserMessage");
+                    java.lang.reflect.Method fromMethod = userMessageClass.getMethod("from", Object.class, Object.class);
+                    
+                    // Create system message
+                    Class<?> systemMessageClass = Class.forName("dev.langchain4j.data.message.SystemMessage");
+                    java.lang.reflect.Method fromSysMethod = systemMessageClass.getMethod("from", String.class);
+                    Object systemMessage = fromSysMethod.invoke(null, "You are a vision model that analyzes images. Describe what you see accurately and in detail.");
+                    
+                    // Create user message with text and image
+                    Object userMessage = fromMethod.invoke(null, prompt, imageContent);
+                    
+                    // Create chat message list
+                    java.util.List<Object> messages = new java.util.ArrayList<>();
+                    messages.add(systemMessage);
+                    messages.add(userMessage);
+                    
+                    // Call ChatModel.generate() with messages
+                    java.lang.reflect.Method generateMethod = chatModel.getClass().getMethod("generate", java.util.List.class);
+                    Object response = generateMethod.invoke(chatModel, messages);
+                    
+                    // Extract text from response
+                    java.lang.reflect.Method contentMethod = response.getClass().getMethod("content");
+                    Object content = contentMethod.invoke(response);
+                    java.lang.reflect.Method textMethod = content.getClass().getMethod("text");
+                    return (String) textMethod.invoke(content);
+                    
+                } catch (Exception e) {
+                    throw new AIException("Image analysis failed: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public String transcribeAudio(String audioUrl) {
+                return transcribeAudio(audioUrl, AIOptions.defaults());
+            }
+
+            @Override
+            public String transcribeAudio(String audioUrl, AIOptions options) {
+                if (chatModel == null) {
+                    throw new AIException("ChatModel not configured - required for audio transcription");
+                }
+                
+                try {
+                    // Create AudioContent using LangChain4j's Content interface
+                    // Use reflection to avoid direct dependency
+                    Object audioContent = createAudioContent(audioUrl);
+                    
+                    // Create TextContent for the prompt
+                    Class<?> textContentClass = Class.forName("dev.langchain4j.data.message.TextContent");
+                    java.lang.reflect.Method fromTextMethod = textContentClass.getMethod("from", String.class);
+                    Object textContent = fromTextMethod.invoke(null, "Write a transcription of this audio file");
+                    
+                    // Create UserMessage with audio and text content using reflection
+                    // LangChain4j uses UserMessage.from(audioContent, textContent) for multimodal
+                    Class<?> userMessageClass = Class.forName("dev.langchain4j.data.message.UserMessage");
+                    java.lang.reflect.Method fromMethod = userMessageClass.getMethod("from", Object.class, Object.class);
+                    Object userMessage = fromMethod.invoke(null, audioContent, textContent);
+                    
+                    // Create chat message list
+                    java.util.List<Object> messages = new java.util.ArrayList<>();
+                    messages.add(userMessage);
+                    
+                    // Call ChatModel.generate() with messages
+                    java.lang.reflect.Method generateMethod = chatModel.getClass().getMethod("generate", java.util.List.class);
+                    Object response = generateMethod.invoke(chatModel, messages);
+                    
+                    // Extract text from response
+                    java.lang.reflect.Method contentMethod = response.getClass().getMethod("content");
+                    Object content = contentMethod.invoke(response);
+                    java.lang.reflect.Method textMethod = content.getClass().getMethod("text");
+                    return (String) textMethod.invoke(content);
+                    
+                } catch (ClassNotFoundException e) {
+                    throw new AIException("Audio transcription requires langchain4j-google-ai-gemini for Gemini models or provider-specific audio support", e);
+                } catch (Exception e) {
+                    throw new AIException("Audio transcription failed: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public String describeVideo(String videoUrl, String prompt) {
+                return describeVideo(videoUrl, prompt, AIOptions.defaults());
+            }
+
+            @Override
+            public String describeVideo(String videoUrl, String prompt, AIOptions options) {
+                if (chatModel == null) {
+                    throw new AIException("ChatModel not configured - required for video description");
+                }
+                
+                try {
+                    // Create VideoContent using LangChain4j's Content interface
+                    // Use reflection to avoid direct dependency
+                    Object videoContent = createVideoContent(videoUrl);
+                    
+                    // Create TextContent for the prompt
+                    Class<?> textContentClass = Class.forName("dev.langchain4j.data.message.TextContent");
+                    java.lang.reflect.Method fromTextMethod = textContentClass.getMethod("from", String.class);
+                    Object textContent = fromTextMethod.invoke(null, prompt != null && !prompt.isEmpty() ? prompt : "Describe this video");
+                    
+                    // Create UserMessage with video and text content using reflection
+                    // LangChain4j uses UserMessage.from(videoContent, textContent) for multimodal
+                    Class<?> userMessageClass = Class.forName("dev.langchain4j.data.message.UserMessage");
+                    java.lang.reflect.Method fromMethod = userMessageClass.getMethod("from", Object.class, Object.class);
+                    Object userMessage = fromMethod.invoke(null, videoContent, textContent);
+                    
+                    // Create chat message list
+                    java.util.List<Object> messages = new java.util.ArrayList<>();
+                    messages.add(userMessage);
+                    
+                    // Call ChatModel.generate() with messages
+                    java.lang.reflect.Method generateMethod = chatModel.getClass().getMethod("generate", java.util.List.class);
+                    Object response = generateMethod.invoke(chatModel, messages);
+                    
+                    // Extract text from response
+                    java.lang.reflect.Method contentMethod = response.getClass().getMethod("content");
+                    Object content = contentMethod.invoke(response);
+                    java.lang.reflect.Method textMethod = content.getClass().getMethod("text");
+                    return (String) textMethod.invoke(content);
+                    
+                } catch (ClassNotFoundException e) {
+                    throw new AIException("Video description requires langchain4j-google-ai-gemini for Gemini models or provider-specific video support", e);
+                } catch (Exception e) {
+                    throw new AIException("Video description failed: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public String processPdf(String pdfUrl, String prompt) {
+                return processPdf(pdfUrl, prompt, AIOptions.defaults());
+            }
+
+            @Override
+            public String processPdf(String pdfUrl, String prompt, AIOptions options) {
+                if (chatModel == null) {
+                    throw new AIException("ChatModel not configured - required for PDF processing");
+                }
+                
+                try {
+                    // Create PdfFileContent using LangChain4j's Content interface
+                    // Use reflection to avoid direct dependency
+                    Object pdfContent = createPdfFileContent(pdfUrl);
+                    
+                    // Create TextContent for the prompt
+                    Class<?> textContentClass = Class.forName("dev.langchain4j.data.message.TextContent");
+                    java.lang.reflect.Method fromTextMethod = textContentClass.getMethod("from", String.class);
+                    Object textContent = fromTextMethod.invoke(null, prompt != null && !prompt.isEmpty() ? prompt : "Give a summary of this document");
+                    
+                    // Create UserMessage with PDF and text content using reflection
+                    // LangChain4j uses UserMessage.from(pdfContent, textContent) for multimodal
+                    Class<?> userMessageClass = Class.forName("dev.langchain4j.data.message.UserMessage");
+                    java.lang.reflect.Method fromMethod = userMessageClass.getMethod("from", Object.class, Object.class);
+                    Object userMessage = fromMethod.invoke(null, pdfContent, textContent);
+                    
+                    // Create chat message list
+                    java.util.List<Object> messages = new java.util.ArrayList<>();
+                    messages.add(userMessage);
+                    
+                    // Call ChatModel.generate() with messages
+                    java.lang.reflect.Method generateMethod = chatModel.getClass().getMethod("generate", java.util.List.class);
+                    Object response = generateMethod.invoke(chatModel, messages);
+                    
+                    // Extract text from response
+                    java.lang.reflect.Method contentMethod = response.getClass().getMethod("content");
+                    Object content = contentMethod.invoke(response);
+                    java.lang.reflect.Method textMethod = content.getClass().getMethod("text");
+                    return (String) textMethod.invoke(content);
+                    
+                } catch (ClassNotFoundException e) {
+                    throw new AIException("PDF processing requires langchain4j-google-ai-gemini for Gemini models or provider-specific PDF support", e);
+                } catch (Exception e) {
+                    throw new AIException("PDF processing failed: " + e.getMessage(), e);
+                }
+            }
+        };
+    }
+    
+    /**
+     * Create ImageContent from URL, base64, or file path using LangChain4j.
+     * Uses reflection to avoid direct dependency on LangChain4j Content types.
+     */
+    private Object createImageContent(String imageUrl) {
+        try {
+            // Try to use LangChain4j's ImageContent class
+            Class<?> imageContentClass = Class.forName("dev.langchain4j.data.message.ImageContent");
+            
+            // Check if it's a URL (http:// or https://)
+            if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+                // Use fromUrl method
+                java.lang.reflect.Method fromUrlMethod = imageContentClass.getMethod("fromUrl", String.class);
+                return fromUrlMethod.invoke(null, imageUrl);
+            }
+            
+            // Check if it's a base64 data URI (data:image/...)
+            if (imageUrl.startsWith("data:image/")) {
+                // Extract base64 part
+                String base64Data = imageUrl.substring(imageUrl.indexOf(",") + 1);
+                // Use fromBase64 method if available
+                try {
+                    java.lang.reflect.Method fromBase64Method = imageContentClass.getMethod("fromBase64", String.class);
+                    return fromBase64Method.invoke(null, base64Data);
+                } catch (NoSuchMethodException e) {
+                    // Fallback: try fromDataUri
+                    java.lang.reflect.Method fromDataUriMethod = imageContentClass.getMethod("fromDataUri", String.class);
+                    return fromDataUriMethod.invoke(null, imageUrl);
+                }
+            }
+            
+            // Assume it's a file path
+            java.nio.file.Path filePath = java.nio.file.Paths.get(imageUrl);
+            java.lang.reflect.Method fromFileMethod = imageContentClass.getMethod("from", java.nio.file.Path.class);
+            return fromFileMethod.invoke(null, filePath);
+            
+        } catch (Exception e) {
+            throw new AIException("Failed to create ImageContent: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Create AudioContent from URL, Google Cloud Storage URL, file path, or URI using LangChain4j.
+     * Uses reflection to avoid direct dependency on LangChain4j Content types.
+     * 
+     * <p>Supports:
+     * <ul>
+     *   <li>HTTP/HTTPS URLs: "https://example.com/audio.mp3"</li>
+     *   <li>Google Cloud Storage URLs: "gs://bucket/audio.mp3"</li>
+     *   <li>Local file paths: "/path/to/audio.mp3"</li>
+     *   <li>URIs: Paths.get("audio.mp3").toUri()</li>
+     * </ul>
+     */
+    private Object createAudioContent(String audioUrl) {
+        try {
+            // Try to use LangChain4j's AudioContent class
+            Class<?> audioContentClass = Class.forName("dev.langchain4j.data.message.AudioContent");
+            
+            // Check if it's a URL (http://, https://, or gs://)
+            if (audioUrl.startsWith("http://") || audioUrl.startsWith("https://") || audioUrl.startsWith("gs://")) {
+                // Use from method with String (URL)
+                java.lang.reflect.Method fromMethod = audioContentClass.getMethod("from", String.class);
+                return fromMethod.invoke(null, audioUrl);
+            }
+            
+            // Assume it's a file path
+            java.nio.file.Path filePath = java.nio.file.Paths.get(audioUrl);
+            // Try from(Path) first
+            try {
+                java.lang.reflect.Method fromPathMethod = audioContentClass.getMethod("from", java.nio.file.Path.class);
+                return fromPathMethod.invoke(null, filePath);
+            } catch (NoSuchMethodException e) {
+                // Fallback: try from(URI)
+                java.lang.reflect.Method fromUriMethod = audioContentClass.getMethod("from", java.net.URI.class);
+                return fromUriMethod.invoke(null, filePath.toUri());
+            }
+            
+        } catch (Exception e) {
+            throw new AIException("Failed to create AudioContent: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Create VideoContent from URL, Google Cloud Storage URL, file path, or URI using LangChain4j.
+     * Uses reflection to avoid direct dependency on LangChain4j Content types.
+     * 
+     * <p>Supports:
+     * <ul>
+     *   <li>HTTP/HTTPS URLs: "https://example.com/video.mp4"</li>
+     *   <li>Google Cloud Storage URLs: "gs://bucket/video.mp4"</li>
+     *   <li>Local file paths: "/path/to/video.mp4"</li>
+     *   <li>URIs: Paths.get("video.mp4").toUri()</li>
+     * </ul>
+     */
+    private Object createVideoContent(String videoUrl) {
+        try {
+            // Try to use LangChain4j's VideoContent class
+            Class<?> videoContentClass = Class.forName("dev.langchain4j.data.message.VideoContent");
+            
+            // Check if it's a URL (http://, https://, or gs://)
+            if (videoUrl.startsWith("http://") || videoUrl.startsWith("https://") || videoUrl.startsWith("gs://")) {
+                // Use from method with String (URL)
+                java.lang.reflect.Method fromMethod = videoContentClass.getMethod("from", String.class);
+                return fromMethod.invoke(null, videoUrl);
+            }
+            
+            // Assume it's a file path
+            java.nio.file.Path filePath = java.nio.file.Paths.get(videoUrl);
+            // Try from(Path) first
+            try {
+                java.lang.reflect.Method fromPathMethod = videoContentClass.getMethod("from", java.nio.file.Path.class);
+                return fromPathMethod.invoke(null, filePath);
+            } catch (NoSuchMethodException e) {
+                // Fallback: try from(URI)
+                java.lang.reflect.Method fromUriMethod = videoContentClass.getMethod("from", java.net.URI.class);
+                return fromUriMethod.invoke(null, filePath.toUri());
+            }
+            
+        } catch (Exception e) {
+            throw new AIException("Failed to create VideoContent: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Create PdfFileContent from URL, Google Cloud Storage URL, file path, or URI using LangChain4j.
+     * Uses reflection to avoid direct dependency on LangChain4j Content types.
+     * 
+     * <p>Supports:
+     * <ul>
+     *   <li>HTTP/HTTPS URLs: "https://example.com/document.pdf"</li>
+     *   <li>Google Cloud Storage URLs: "gs://bucket/document.pdf"</li>
+     *   <li>Local file paths: "/path/to/document.pdf"</li>
+     *   <li>URIs: Paths.get("document.pdf").toUri()</li>
+     * </ul>
+     */
+    private Object createPdfFileContent(String pdfUrl) {
+        try {
+            // Try to use LangChain4j's PdfFileContent class
+            Class<?> pdfContentClass = Class.forName("dev.langchain4j.data.message.PdfFileContent");
+            
+            // Check if it's a URL (http://, https://, or gs://)
+            if (pdfUrl.startsWith("http://") || pdfUrl.startsWith("https://") || pdfUrl.startsWith("gs://")) {
+                // Use from method with String (URL)
+                java.lang.reflect.Method fromMethod = pdfContentClass.getMethod("from", String.class);
+                return fromMethod.invoke(null, pdfUrl);
+            }
+            
+            // Assume it's a file path
+            java.nio.file.Path filePath = java.nio.file.Paths.get(pdfUrl);
+            // Try from(Path) first
+            try {
+                java.lang.reflect.Method fromPathMethod = pdfContentClass.getMethod("from", java.nio.file.Path.class);
+                return fromPathMethod.invoke(null, filePath);
+            } catch (NoSuchMethodException e) {
+                // Fallback: try from(URI)
+                java.lang.reflect.Method fromUriMethod = pdfContentClass.getMethod("from", java.net.URI.class);
+                return fromUriMethod.invoke(null, filePath.toUri());
+            }
+            
+        } catch (Exception e) {
+            throw new AIException("Failed to create PdfFileContent: " + e.getMessage(), e);
+        }
     }
 
     @Override
