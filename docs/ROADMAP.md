@@ -460,6 +460,24 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
   - Real-world examples and best practices
   - Troubleshooting guide included
 
+### LangChain4j Tutorial Recreation (January 31, 2025)
+- ✅ **Complete Tutorial Suite (12 Tutorials)**: All LangChain4j tutorials recreated in Roya
+  - Tutorial 01: Basic LLM
+  - Tutorial 02: Model Parameters
+  - Tutorial 03: Image Generation
+  - Tutorial 04: Prompt Templates (framework-level solution)
+  - Tutorial 05: Streaming (SSE)
+  - Tutorial 06: Memory (ChatMemory integration)
+  - Tutorial 07: Few-Shot Learning
+  - Tutorial 08: AI Services
+  - Tutorial 09: Persistent Memory (database-backed)
+  - Tutorial 10: Tools (function calling)
+  - Tutorial 11: Dynamic Tools
+  - Tutorial 12: RAG with Documents
+- ✅ **Real-World Examples**: Coffee Shop Assistant, MCP GitHub Example, Customer Support Agent
+- ✅ **Workflow Demo**: Customer Inquiry Processing Workflow showcasing multi-step AI orchestration
+- ✅ **Framework Refinement**: Zero reflection, type-safe AI Services, native LangChain4j primitives
+
 ---
 
 ## Phase 7: Vector Store & RAG - ✅ COMPLETE

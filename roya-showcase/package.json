@@ -1,0 +1,23 @@
+{
+  "name": "roya-showcase",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Roya Framework Showcase - Interactive demos, tutorials, and documentation",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "docs:dev": "cd docs && npm run dev",
+    "docs:build": "cd docs && npm run build"
+  },
+  "keywords": [
+    "roya",
+    "framework",
+    "showcase",
+    "preact",
+    "demo"
+  ],
+  "author": "Roya Framework Team",
+  "license": "Apache-2.0"
+}
+

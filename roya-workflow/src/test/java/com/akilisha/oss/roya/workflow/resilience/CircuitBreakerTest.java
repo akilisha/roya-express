@@ -180,7 +180,7 @@ class CircuitBreakerTest {
     }
 
     @Test
-    void testStatsFail ureRateWithNoRequests() {
+    void testStatsFailureRateWithNoRequests() {
         // Arrange
         CircuitBreaker breaker = new CircuitBreaker(3, Duration.ofSeconds(1));
 

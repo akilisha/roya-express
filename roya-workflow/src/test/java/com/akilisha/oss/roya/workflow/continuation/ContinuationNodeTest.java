@@ -212,11 +212,11 @@ class ContinuationNodeTest {
 
         // Parent values should be unchanged
         assertEquals("parent", parentContext.get("name"));
-        assertEquals(100, parentContext.get("value"));
+        assertEquals(100, (Integer) parentContext.get("value"));
 
         // Child values should be namespaced
         assertEquals("child", parentContext.get("ns.name"));
-        assertEquals(42, parentContext.get("ns.value"));
+        assertEquals(42, (Integer) parentContext.get("ns.value"));
     }
 
     @Test
@@ -277,8 +277,8 @@ class ContinuationNodeTest {
 
         // Assert
         assertTrue(output.isSuccess());
-        assertEquals(15, parentContext.get("sum"));
-        assertEquals(30, parentContext.get("result"));
+        assertEquals(15, (Integer) parentContext.get("sum"));
+        assertEquals(30, (Integer) parentContext.get("result"));
     }
 
     @Test

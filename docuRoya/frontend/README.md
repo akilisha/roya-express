@@ -58,7 +58,7 @@ frontend/
 ├── package.json         # Dependencies
 ├── vite.config.js       # Vite configuration
 ├── tailwind.config.js   # Tailwind configuration
-└── postcss.config.js    # PostCSS configuration
+└── postcss.config.cjs    # PostCSS configuration
 ```
 
 ## Features Tested

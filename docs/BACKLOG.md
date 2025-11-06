@@ -36,6 +36,46 @@ Additional context
 
 ---
 
+## Documentation & Marketing (Phase 11)
+
+### Phase 11: Documentation & Examples - Marketing & Showcasing Plan
+**Category**: Documentation / Marketing  
+**Priority**: P1-High  
+**Estimated Effort**: 120+ hours  
+**Proposed For**: Phase 11  
+**Status**: Ready to Begin
+
+**Description**:
+Build comprehensive marketing materials, showcase examples, and documentation to bring awareness to Roya Framework. Focus on demonstrating unique value proposition and real-world capabilities.
+
+**See**: `docs/PHASE11_MARKETING_PLAN.md` for complete details.
+
+**Key Deliverables**:
+- Interactive demo website with live code playground
+- Video tutorial series (5 videos)
+- Comprehensive documentation website
+- Showcase project: "Roya Playground"
+- Marketing materials package (blog posts, one-pager, social assets)
+- Developer advocacy program
+- Migration tools & guides
+
+**Motivation**:
+- We've built something impressive (12 LangChain4j tutorials, 4 real-world examples, complete AI workflow system)
+- Need to showcase this to gain traction, attract contributors, and demonstrate production readiness
+- Marketing materials will help developers understand why Roya is different and valuable
+
+**Target Audiences**:
+1. Express.js Developers - "Express for Java" messaging
+2. Java Developers - Modern Java features, performance, AI-native
+3. AI/ML Practitioners - Built-in RAG, agents, workflows
+4. Enterprise Decision Makers - Cost savings, scalability, production-ready
+
+**Success Metrics**:
+- Short-term (3 months): 1,000+ GitHub stars, 10,000+ doc page views, 5,000+ video views
+- Long-term (6 months): 5,000+ GitHub stars, 100,000+ page views, 50,000+ video views
+
+---
+
 ## High Priority (P0-P1)
 
 ### Phase 7: Vector & RAG Polishing
@@ -1289,22 +1329,77 @@ Add intelligent library selection logic to choose between LangChain, LangGraph, 
 // Simple agent → LangChain
 // Stateful/multi-node → LangGraph
 // Multi-agent orchestration → Google ADK
+
+// Currently defaults to LangGraph for all agents
+return langGraph.agents().create(config);
 ```
+
+**What Needs to Be Implemented**:
+
+1. **Agent Configuration Analysis Logic**:
+   - Analyze `AgentBuilder` configuration to determine complexity
+   - **Heuristics to consider**:
+     - **Simple agents**: Few tools (< 5), simple system prompt → LangChain
+     - **Stateful workflows**: Many tools (> 5), complex prompt → LangGraph
+     - **Multi-agent**: Need to detect multiple agents (API extension may be needed) → Google ADK
+
+2. **Library Routing Logic**:
+   - Route to LangChain for simple agents
+   - Route to LangGraph for stateful/multi-node workflows
+   - Route to Google ADK for multi-agent orchestration
+   - Fallback to LangChain if analysis fails or library unavailable
+
+**Current Limitations**:
+
+The `AgentBuilder` interface is simple:
+```java
+interface AgentBuilder {
+    AgentBuilder model(Object chatLanguageModel);
+    AgentBuilder tools(List<Object> tools);
+    AgentBuilder systemPrompt(String prompt);
+}
+```
+
+**No explicit indicator for**:
+- Multi-agent scenarios
+- Stateful workflow requirements
+- Orchestration complexity
+
+**Possible Approaches**:
+1. **Heuristics-based**: Use tool count, prompt complexity as indicators
+2. **Extend AgentBuilder**: Add explicit complexity hints (e.g., `.stateful()`, `.multiAgent()`)
+3. **Configuration hints**: Add optional hints for manual selection (e.g., `.useLibrary(Library.LANGGRAPH)`)
 
 **Acceptance Criteria**:
 - Analyze `AgentBuilder` configuration to determine complexity
 - Route simple agents to LangChain
 - Route stateful workflows to LangGraph
 - Route multi-agent scenarios to Google ADK
-- Add configuration hints for manual selection
-- Fallback to LangChain if analysis fails
+- Add configuration hints for manual selection (optional)
+- Fallback to LangChain if analysis fails or library unavailable
+- Graceful degradation when adapters aren't available
 
 **Dependencies**:
-- Complete LangGraph and Google ADK implementations
-- Agent configuration analysis logic
+- ⚠️ **BLOCKING**: Complete LangGraph adapter implementation
+  - Current: Has basic implementation but needs full StateGraph integration
+  - TODO: "Replace with AgentExecutor or StateGraph-based agent"
+  - Location: `LangGraphAdapter.java:154`
+- ⚠️ **BLOCKING**: Complete Google ADK adapter implementation
+  - Current: Completely stub - throws `UnsupportedOperationException`
+  - TODO: "Google ADK adapter not yet implemented"
+  - Location: `GoogleADKAdapter.java:40`
+- Agent configuration analysis logic (heuristics or extended API)
+
+**Recommendation**:
+**Complete LangGraph and Google ADK implementations FIRST**, then add intelligent routing logic. 
+
+Currently, LangGraph is the only fully functional option (despite being incomplete), so defaulting to it is reasonable until the others are complete. The routing logic can be implemented with fallbacks once all adapters are functional.
 
 **Notes**:
-Current implementation defaults to LangGraph. Need to add intelligent routing based on agent requirements.
+- Current implementation defaults to LangGraph for all agents
+- Need to add intelligent routing based on agent requirements
+- Routing logic is straightforward but depends on adapter completeness
+- Consider extending `AgentBuilder` API if heuristics prove insufficient
 
 ---
 
