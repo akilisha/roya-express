@@ -92,7 +92,13 @@ import java.util.Map;
  *   <li>Judge0JavaScriptExecutionTool executes JavaScript code via Judge0 service</li>
  *   <li>Perfect example of dynamic tool addition - code execution can be enabled/disabled</li>
  *   <li>Demonstrates tools that provide external capabilities (code execution)</li>
- *   <li>Requires RapidAPI key (configured via environment variables)</li>
+ *   <li>Requires RapidAPI key - configure via environment variable or system property:
+ *     <ul>
+ *       <li>Environment variable: {@code RAPIDAPI_KEY} or {@code RAPID_API_KEY}</li>
+ *       <li>System property: {@code -Drapidapi.key=your-key}</li>
+ *       <li>Get your key from: https://rapidapi.com/judge0-official/api/judge0-ce</li>
+ *     </ul>
+ *   </li>
  * </ul>
  */
 public class Tutorial11DynamicTools {
@@ -198,6 +204,24 @@ public class Tutorial11DynamicTools {
         String chat(@UserMessage String query);
     }
 
+    /**
+     * Helper method to get configuration values from system properties or environment variables.
+     * Similar to AIPlugin.getConfigValue() pattern.
+     */
+    private static String getConfigValue(String systemProp, String... envVars) {
+        String value = System.getProperty(systemProp);
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+        for (String envVar : envVars) {
+            value = System.getenv(envVar);
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
     public static void main(String[] args) {
         var app = Roya.create();
 
@@ -295,11 +319,23 @@ public class Tutorial11DynamicTools {
                 ? (Boolean) body.getOrDefault("enableCodeExecution", false)
                 : true; // Default: enabled
 
+            // Get RapidAPI key from environment variables or system properties
+            String rapidApiKey = getConfigValue("rapidapi.key", "RAPIDAPI_KEY", "RAPID_API_KEY");
+
+            if (enableCodeExecution && rapidApiKey == null) {
+                res.status(400).json(Map.of(
+                    "error", "RapidAPI key not configured",
+                    "message", "Please set RAPIDAPI_KEY environment variable or rapidapi.key system property",
+                    "note", "Get your key from https://rapidapi.com/judge0-official/api/judge0-ce"
+                ));
+                return;
+            }
+
             // Dynamically add Judge0 tool based on request
             CodeExecutionAssistant assistant = ai.aiService(CodeExecutionAssistant.class, builder -> {
                 if (enableCodeExecution) {
-                    // Dynamically add code execution tool
-                    builder.tools(new Judge0JavaScriptExecutionTool());
+                    // Dynamically add code execution tool with RapidAPI key
+                    builder.tools(new Judge0JavaScriptExecutionTool(rapidApiKey));
                 }
                 // Can also add calculator tools if needed
                 // builder.tools(new CalculatorTools());
@@ -311,7 +347,10 @@ public class Tutorial11DynamicTools {
                 "query", query,
                 "response", response,
                 "codeExecutionEnabled", enableCodeExecution,
-                "note", "Judge0 JavaScript execution tool is dynamically added when enabled"
+                "rapidApiKeyConfigured", rapidApiKey != null,
+                "note", rapidApiKey != null
+                    ? "Judge0 JavaScript execution tool is dynamically added when enabled"
+                    : "Judge0 tool requires RapidAPI key configuration"
             ));
         });
 

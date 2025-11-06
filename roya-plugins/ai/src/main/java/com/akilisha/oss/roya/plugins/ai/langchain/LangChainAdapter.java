@@ -4,26 +4,22 @@ import com.akilisha.oss.roya.plugins.ai.*;
 import com.akilisha.oss.roya.plugins.ai.builder.AIWorkflowBuilder;
 import com.akilisha.oss.roya.plugins.ai.langchain.services.EmbeddingService;
 import com.akilisha.oss.roya.plugins.ai.langchain.services.LLMService;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.memory.ChatMemory;
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.output.Response;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.Result;
-import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -31,8 +27,6 @@ import dev.langchain4j.store.embedding.qdrant.QdrantEmbeddingStore;
 
 import java.net.ConnectException;
 import java.net.URI;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -40,7 +34,7 @@ import java.util.stream.Collectors;
 
 /**
  * LangChain adapter implementation of Roya's AI interface.
- *
+ * <p>
  * Bridges LangChain4j models to Roya's unified API.
  * Currently implements LLM, Embeddings. Vectors/RAG/Agents/NLP/Vision/Audio coming soon.
  */
@@ -49,16 +43,13 @@ public class LangChainAdapter implements AI {
     private final ChatModel chatModel;
     private final StreamingChatModel streamingChatModel;
     private final EmbeddingModel embeddingModel;
-
+    // ChatMemory provider (manages ChatMemory instances per conversation ID)
+    private final ChatMemoryProvider memoryProvider = ChatMemoryProvider.getInstance();
     // AI Services instances (created lazily)
     private LLMService llmService;
     private EmbeddingService embeddingService;
-
     // Qdrant connection (lazy initialization with graceful failure)
     private QdrantConnectionState qdrantState;
-
-    // ChatMemory provider (manages ChatMemory instances per conversation ID)
-    private final ChatMemoryProvider memoryProvider = ChatMemoryProvider.getInstance();
 
     public LangChainAdapter(ChatModel chatModel, StreamingChatModel streamingChatModel, EmbeddingModel embeddingModel) {
         this.chatModel = chatModel;
@@ -96,7 +87,7 @@ public class LangChainAdapter implements AI {
                 // This properly tests gRPC connectivity on port 6334
                 try {
                     io.qdrant.client.QdrantClient testClient = new io.qdrant.client.QdrantClient(
-                        io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                            io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
                     );
 
                     // Try to list collections (lightweight operation that tests connectivity)
@@ -106,11 +97,11 @@ public class LangChainAdapter implements AI {
                     // Check if it's a connection error
                     Throwable cause = e.getCause();
                     if (e instanceof java.net.ConnectException ||
-                        e instanceof java.net.SocketTimeoutException ||
-                        (cause instanceof java.net.ConnectException) ||
-                        (cause instanceof java.net.SocketTimeoutException) ||
-                        e.getMessage().contains("Connection refused") ||
-                        e.getMessage().contains("Connection timed out")) {
+                            e instanceof java.net.SocketTimeoutException ||
+                            (cause instanceof java.net.ConnectException) ||
+                            (cause instanceof java.net.SocketTimeoutException) ||
+                            e.getMessage().contains("Connection refused") ||
+                            e.getMessage().contains("Connection timed out")) {
                         ConnectException connEx = new ConnectException("Cannot connect to Qdrant gRPC at " + host + ":" + port);
                         connEx.initCause(e);
                         throw connEx;
@@ -129,240 +120,21 @@ public class LangChainAdapter implements AI {
                 // Check for specific exception types
                 if (e instanceof ClassNotFoundException) {
                     qdrantState.error = "Qdrant support not available: langchain4j-qdrant module not found. " +
-                        "Please ensure the dependency is added to your build file.";
+                            "Please ensure the dependency is added to your build file.";
                 } else if (e instanceof ConnectException ||
-                          e instanceof java.net.SocketTimeoutException ||
-                          (e.getCause() instanceof ConnectException) ||
-                          (e.getCause() instanceof java.net.SocketTimeoutException)) {
+                        e instanceof java.net.SocketTimeoutException ||
+                        (e.getCause() instanceof ConnectException) ||
+                        (e.getCause() instanceof java.net.SocketTimeoutException)) {
                     qdrantState.error = "Cannot connect to Qdrant at " + qdrantState.url + ": " + e.getMessage() +
-                        ". Please ensure Qdrant is running (docker compose up -d qdrant) and accessible.";
+                            ". Please ensure Qdrant is running (docker compose up -d qdrant) and accessible.";
                 } else {
                     qdrantState.error = "Failed to initialize Qdrant: " + e.getMessage() +
-                        ". Please check QDRANT_URL environment variable (default: http://localhost:6333). " +
-                        "Note: Qdrant uses gRPC on port 6334 by default, but REST API is on 6333.";
+                            ". Please check QDRANT_URL environment variable (default: http://localhost:6333). " +
+                            "Note: Qdrant uses gRPC on port 6334 by default, but REST API is on 6333.";
                 }
             }
         }
         return qdrantState;
-    }
-
-    /**
-     * Helper class to track Qdrant connection state.
-     */
-    private static class QdrantConnectionState {
-        Map<String, EmbeddingStore<TextSegment>> embeddingStores = new java.util.concurrent.ConcurrentHashMap<>();
-        String host;
-        int port;
-        boolean connected = false;
-        String url;
-        String error;
-        io.qdrant.client.QdrantClient qdrantClient; // For collection management
-
-        /**
-         * Get or create an embedding store for a specific collection.
-         * Automatically creates the collection if it doesn't exist.
-         */
-        EmbeddingStore<TextSegment> getOrCreateStore(String collectionName, EmbeddingModel embeddingModel) {
-            return embeddingStores.computeIfAbsent(collectionName, name -> {
-                // Ensure collection exists before creating the store
-                ensureCollectionExists(name, embeddingModel);
-
-                return QdrantEmbeddingStore.builder()
-                    .host(host)
-                    .port(port)
-                    .collectionName(name)
-                    .build();
-            });
-        }
-
-        /**
-         * Ensure a Qdrant collection exists, creating it if necessary.
-         * Made public for use in createCollection.
-         */
-        void ensureCollectionExists(String collectionName, EmbeddingModel embeddingModel) {
-            if (qdrantClient == null) {
-                // Create Qdrant client for collection management
-                qdrantClient = new io.qdrant.client.QdrantClient(
-                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
-                );
-            }
-
-            try {
-                // Check if collection exists by trying to get its info
-                qdrantClient.getCollectionInfoAsync(collectionName).get();
-                // If we get here, collection exists
-                return;
-            } catch (java.util.concurrent.ExecutionException e) {
-                // If collection doesn't exist, we'll get an exception and create it
-                Throwable cause = e.getCause();
-                if (cause instanceof io.grpc.StatusRuntimeException) {
-                    io.grpc.StatusRuntimeException grpcEx = (io.grpc.StatusRuntimeException) cause;
-                    if (grpcEx.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
-                        // Collection doesn't exist, create it
-                        createCollection(collectionName, embeddingModel);
-                        return;
-                    }
-                }
-                // Other errors - rethrow
-                throw new RuntimeException("Failed to check collection existence: " + e.getMessage(), e);
-            } catch (Exception e) {
-                // Check if it's a NOT_FOUND error
-                if (e.getMessage() != null && e.getMessage().contains("doesn't exist")) {
-                    createCollection(collectionName, embeddingModel);
-                    return;
-                }
-                throw new RuntimeException("Failed to check collection existence: " + e.getMessage(), e);
-            }
-        }
-
-        /**
-         * Create a Qdrant collection with the appropriate vector configuration.
-         */
-        private void createCollection(String collectionName, EmbeddingModel embeddingModel) {
-            if (embeddingModel == null) {
-                throw new IllegalStateException("EmbeddingModel not configured - cannot determine vector dimension for collection creation");
-            }
-
-            try {
-                // Get embedding dimension from the model
-                int dimension = embeddingModel.dimension();
-
-                // Create collection configuration using gRPC API
-                io.qdrant.client.grpc.Collections.VectorParams vectorParams = io.qdrant.client.grpc.Collections.VectorParams.newBuilder()
-                    .setSize(dimension)
-                    .setDistance(io.qdrant.client.grpc.Collections.Distance.Cosine)
-                    .build();
-
-                io.qdrant.client.grpc.Collections.VectorsConfig vectorsConfig = io.qdrant.client.grpc.Collections.VectorsConfig.newBuilder()
-                    .setParams(vectorParams)
-                    .build();
-
-                io.qdrant.client.grpc.Collections.CreateCollection createCollection = io.qdrant.client.grpc.Collections.CreateCollection.newBuilder()
-                    .setCollectionName(collectionName)
-                    .setVectorsConfig(vectorsConfig)
-                    .build();
-
-                // Create the collection
-                qdrantClient.createCollectionAsync(createCollection).get();
-
-                System.out.println("✅ Created Qdrant collection: " + collectionName + " (dimension: " + dimension + ")");
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to create Qdrant collection '" + collectionName + "': " + e.getMessage(), e);
-            }
-        }
-
-        /**
-         * Close the Qdrant client when done.
-         */
-        void close() {
-            if (qdrantClient != null) {
-                try {
-                    qdrantClient.close();
-                } catch (Exception e) {
-                    // Ignore errors on close
-                }
-            }
-        }
-
-        /**
-         * Delete a collection.
-         */
-        void deleteCollection(String collectionName) {
-            if (qdrantClient == null) {
-                qdrantClient = new io.qdrant.client.QdrantClient(
-                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
-                );
-            }
-
-            try {
-                qdrantClient.deleteCollectionAsync(collectionName).get();
-                // Remove from cache
-                embeddingStores.remove(collectionName);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to delete collection '" + collectionName + "': " + e.getMessage(), e);
-            }
-        }
-
-        /**
-         * List all collections.
-         */
-        java.util.List<String> listCollections() {
-            if (qdrantClient == null) {
-                qdrantClient = new io.qdrant.client.QdrantClient(
-                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
-                );
-            }
-
-            try {
-                java.util.List<String> collections = qdrantClient.listCollectionsAsync().get();
-                return collections;
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to list collections: " + e.getMessage(), e);
-            }
-        }
-
-        /**
-         * Get collection statistics.
-         */
-        com.akilisha.oss.roya.plugins.ai.rag.CollectionStats getCollectionStats(String collectionName) {
-            if (qdrantClient == null) {
-                qdrantClient = new io.qdrant.client.QdrantClient(
-                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
-                );
-            }
-
-            try {
-                io.qdrant.client.grpc.Collections.CollectionInfo info =
-                    qdrantClient.getCollectionInfoAsync(collectionName).get();
-
-                long vectorCount = info.getPointsCount();
-                int vectorSize = (int) info.getConfig().getParams().getVectorsConfig().getParams().getSize();
-                String status = info.getStatus().name();
-
-                java.util.Map<String, Object> metadata = new java.util.HashMap<>();
-                metadata.put("points_count", vectorCount);
-                metadata.put("vector_size", vectorSize);
-                metadata.put("status", status);
-
-                return new com.akilisha.oss.roya.plugins.ai.rag.CollectionStats(
-                    collectionName,
-                    vectorCount,
-                    vectorSize,
-                    status,
-                    metadata
-                );
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to get collection stats for '" + collectionName + "': " + e.getMessage(), e);
-            }
-        }
-
-        /**
-         * Check if a collection exists.
-         */
-        boolean collectionExists(String collectionName) {
-            if (qdrantClient == null) {
-                qdrantClient = new io.qdrant.client.QdrantClient(
-                    io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
-                );
-            }
-
-            try {
-                qdrantClient.getCollectionInfoAsync(collectionName).get();
-                return true;
-            } catch (java.util.concurrent.ExecutionException e) {
-                Throwable cause = e.getCause();
-                if (cause instanceof io.grpc.StatusRuntimeException) {
-                    io.grpc.StatusRuntimeException grpcEx = (io.grpc.StatusRuntimeException) cause;
-                    if (grpcEx.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
-                        return false;
-                    }
-                }
-                // Other errors - assume doesn't exist
-                return false;
-            } catch (Exception e) {
-                return false;
-            }
-        }
     }
 
     /**
@@ -373,7 +145,7 @@ public class LangChainAdapter implements AI {
         if (llmService == null && chatModel != null) {
             // Use builder to support both ChatModel and StreamingChatModel
             var builder = AiServices.builder(LLMService.class)
-                .chatModel(chatModel);
+                    .chatModel(chatModel);
 
             // Add StreamingChatModel if available (for streaming operations)
             if (streamingChatModel != null) {
@@ -391,7 +163,7 @@ public class LangChainAdapter implements AI {
      */
     private EmbeddingService getEmbeddingService() {
         if (embeddingService == null && embeddingModel != null) {
-            embeddingService = new EmbeddingService(){
+            embeddingService = new EmbeddingService() {
                 @Override
                 public float[] embed(String text) {
                     try {
@@ -540,34 +312,34 @@ public class LangChainAdapter implements AI {
 
                     // Filter by file extensions (.md, .markdown, .txt)
                     List<dev.langchain4j.data.document.Document> filteredDocs = documents.stream()
-                        .filter(doc -> {
-                            // Try to get source from metadata
-                            String fileName = null;
-                            try {
-                                java.lang.reflect.Method metadataMethod = doc.getClass().getMethod("metadata");
-                                Object metadataObj = metadataMethod.invoke(doc);
-                                if (metadataObj instanceof Map) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, String> metaMap = (Map<String, String>) metadataObj;
-                                    fileName = metaMap.get("source");
+                            .filter(doc -> {
+                                // Try to get source from metadata
+                                String fileName = null;
+                                try {
+                                    java.lang.reflect.Method metadataMethod = doc.getClass().getMethod("metadata");
+                                    Object metadataObj = metadataMethod.invoke(doc);
+                                    if (metadataObj instanceof Map) {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, String> metaMap = (Map<String, String>) metadataObj;
+                                        fileName = metaMap.get("source");
+                                    }
+                                } catch (Exception e) {
+                                    // Metadata access failed, include document
                                 }
-                            } catch (Exception e) {
-                                // Metadata access failed, include document
-                            }
 
-                            if (fileName == null) return true; // Include if no source metadata
+                                if (fileName == null) return true; // Include if no source metadata
 
-                            String lowerName = fileName.toLowerCase();
-                            return lowerName.endsWith(".md") ||
-                                   lowerName.endsWith(".markdown") ||
-                                   lowerName.endsWith(".txt");
-                        })
-                        .collect(Collectors.toList());
+                                String lowerName = fileName.toLowerCase();
+                                return lowerName.endsWith(".md") ||
+                                        lowerName.endsWith(".markdown") ||
+                                        lowerName.endsWith(".txt");
+                            })
+                            .collect(Collectors.toList());
 
                     // Split documents into chunks
                     DocumentSplitter splitter = DocumentSplitters.recursive(
-                        options.size(),
-                        options.overlap()
+                            options.size(),
+                            options.overlap()
                     );
 
                     List<TextSegment> segments = splitter.splitAll(filteredDocs);
@@ -606,21 +378,21 @@ public class LangChainAdapter implements AI {
 
                     // Convert VectorDoc to TextSegment
                     List<TextSegment> segments = documents.stream()
-                        .map(doc -> {
-                            TextSegment segment = TextSegment.from(doc.content());
-                            // Add metadata
-                            if (doc.metadata() != null && !doc.metadata().isEmpty()) {
-                                doc.metadata().forEach((key, value) ->
-                                    segment.metadata().put(key, value.toString())
-                                );
-                            }
-                            // Store document ID as metadata
-                            if (doc.id() != null) {
-                                segment.metadata().put("document_id", doc.id());
-                            }
-                            return segment;
-                        })
-                        .collect(Collectors.toList());
+                            .map(doc -> {
+                                TextSegment segment = TextSegment.from(doc.content());
+                                // Add metadata
+                                if (doc.metadata() != null && !doc.metadata().isEmpty()) {
+                                    doc.metadata().forEach((key, value) ->
+                                            segment.metadata().put(key, value.toString())
+                                    );
+                                }
+                                // Store document ID as metadata
+                                if (doc.id() != null) {
+                                    segment.metadata().put("document_id", doc.id());
+                                }
+                                return segment;
+                            })
+                            .collect(Collectors.toList());
 
                     // Embed segments
                     List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
@@ -758,19 +530,19 @@ public class LangChainAdapter implements AI {
 
                     // Search for similar embeddings using EmbeddingSearchRequest
                     EmbeddingSearchRequest searchRequest = EmbeddingSearchRequest.builder()
-                        .queryEmbedding(questionEmbedding)
-                        .maxResults(options.topK())
-                        .build();
+                            .queryEmbedding(questionEmbedding)
+                            .maxResults(options.topK())
+                            .build();
 
                     // Note: minScore filtering happens after retrieval if the API doesn't support it
                     List<EmbeddingMatch<TextSegment>> allMatches = embeddingStore.search(searchRequest).matches();
 
                     // Filter by minScore if provided
                     List<EmbeddingMatch<TextSegment>> matches = options.minScore() != null ?
-                        allMatches.stream()
-                            .filter(match -> match.score() >= options.minScore().floatValue())
-                            .collect(Collectors.toList()) :
-                        allMatches;
+                            allMatches.stream()
+                                    .filter(match -> match.score() >= options.minScore().floatValue())
+                                    .collect(Collectors.toList()) :
+                            allMatches;
 
                     // Rerank if requested
                     if (options.rerank() && !matches.isEmpty()) {
@@ -780,57 +552,57 @@ public class LangChainAdapter implements AI {
                     // Convert to Document format
                     // Based on example: match.embedded() returns TextSegment, match.score() exists
                     List<com.akilisha.oss.roya.plugins.ai.Document> sources = matches.stream()
-                        .map(match -> {
-                            TextSegment segment = match.embedded();
+                            .map(match -> {
+                                TextSegment segment = match.embedded();
 
-                            // Extract ID - try to get from metadata or generate one
-                            String id = "";
-                            try {
-                                // Check if there's an id method
-                                java.lang.reflect.Method idMethod = match.getClass().getMethod("id");
-                                Object idObj = idMethod.invoke(match);
-                                id = idObj != null ? idObj.toString() : "";
-                            } catch (Exception e) {
-                                // No id method - generate one
-                                id = java.util.UUID.randomUUID().toString();
-                            }
-
-                            // Extract metadata
-                            Map<String, Object> metadata = new java.util.HashMap<>();
-                            try {
-                                java.lang.reflect.Method metadataMethod = segment.getClass().getMethod("metadata");
-                                Object metadataObj = metadataMethod.invoke(segment);
-                                if (metadataObj instanceof Map) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, String> metaMap = (Map<String, String>) metadataObj;
-                                    metaMap.forEach((key, value) -> metadata.put(key, value));
+                                // Extract ID - try to get from metadata or generate one
+                                String id = "";
+                                try {
+                                    // Check if there's an id method
+                                    java.lang.reflect.Method idMethod = match.getClass().getMethod("id");
+                                    Object idObj = idMethod.invoke(match);
+                                    id = idObj != null ? idObj.toString() : "";
+                                } catch (Exception e) {
+                                    // No id method - generate one
+                                    id = java.util.UUID.randomUUID().toString();
                                 }
-                            } catch (Exception e) {
-                                // Metadata not available or different API
-                            }
 
-                            return new com.akilisha.oss.roya.plugins.ai.Document(
-                                segment.text(),
-                                id,
-                                metadata
-                            );
-                        })
-                        .collect(Collectors.toList());
+                                // Extract metadata
+                                Map<String, Object> metadata = new java.util.HashMap<>();
+                                try {
+                                    java.lang.reflect.Method metadataMethod = segment.getClass().getMethod("metadata");
+                                    Object metadataObj = metadataMethod.invoke(segment);
+                                    if (metadataObj instanceof Map) {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, String> metaMap = (Map<String, String>) metadataObj;
+                                        metaMap.forEach((key, value) -> metadata.put(key, value));
+                                    }
+                                } catch (Exception e) {
+                                    // Metadata not available or different API
+                                }
+
+                                return new com.akilisha.oss.roya.plugins.ai.Document(
+                                        segment.text(),
+                                        id,
+                                        metadata
+                                );
+                            })
+                            .collect(Collectors.toList());
 
                     // Build context from retrieved documents
                     String context = matches.stream()
-                        .map(match -> match.embedded().text())
-                        .collect(Collectors.joining("\n\n"));
+                            .map(match -> match.embedded().text())
+                            .collect(Collectors.joining("\n\n"));
 
                     // Generate answer using LLM with context
                     String systemPrompt = "Answer the question based only on the provided context. " +
-                        "If the context doesn't contain enough information, say so. " +
-                        "Use the context to provide a comprehensive answer.";
+                            "If the context doesn't contain enough information, say so. " +
+                            "Use the context to provide a comprehensive answer.";
 
                     String prompt = String.format(
-                        "Context:\n%s\n\nQuestion: %s\n\nAnswer:",
-                        context.isEmpty() ? "(No relevant context found)" : context,
-                        question
+                            "Context:\n%s\n\nQuestion: %s\n\nAnswer:",
+                            context.isEmpty() ? "(No relevant context found)" : context,
+                            question
                     );
 
                     String answer = LangChainAdapter.this.ask(systemPrompt, prompt, options.aiOptions());
@@ -869,12 +641,12 @@ public class LangChainAdapter implements AI {
             for (EmbeddingMatch<TextSegment> match : matches) {
                 String docText = match.embedded().text();
                 String prompt = String.format(
-                    "Rate the relevance of the following document to the question on a scale of 0.0 to 1.0.\n" +
-                    "Question: %s\n\n" +
-                    "Document:\n%s\n\n" +
-                    "Return only a single number between 0.0 and 1.0.",
-                    question,
-                    docText
+                        "Rate the relevance of the following document to the question on a scale of 0.0 to 1.0.\n" +
+                                "Question: %s\n\n" +
+                                "Document:\n%s\n\n" +
+                                "Return only a single number between 0.0 and 1.0.",
+                        question,
+                        docText
                 );
 
                 String response = ask("You are a relevance scorer. Return only a number.", prompt, aiOptions);
@@ -893,8 +665,8 @@ public class LangChainAdapter implements AI {
 
             // Return reranked matches
             return scoredMatches.stream()
-                .map(java.util.Map.Entry::getKey)
-                .collect(Collectors.toList());
+                    .map(java.util.Map.Entry::getKey)
+                    .collect(Collectors.toList());
 
         } catch (Exception e) {
             // If reranking fails, return original matches
@@ -1405,7 +1177,7 @@ public class LangChainAdapter implements AI {
 
                 // Use the adapter's chatModel or the one provided by builder
                 ChatModel modelToUse = builder.chatModel != null ?
-                    (ChatModel) builder.chatModel : chatModel;
+                        (ChatModel) builder.chatModel : chatModel;
 
                 // Create AI Service interface for agent
                 interface AgentService {
@@ -1417,7 +1189,7 @@ public class LangChainAdapter implements AI {
                 // Build AI Service with tools using the specified model
                 // Use reflection to configure tools to avoid type dependency issues
                 var serviceBuilder = AiServices.builder(AgentService.class)
-                    .chatModel(modelToUse);
+                        .chatModel(modelToUse);
 
                 // Configure tools via reflection
                 try {
@@ -1432,43 +1204,14 @@ public class LangChainAdapter implements AI {
                 // Return agent implementation
                 return input -> {
                     String response = agentService.run(
-                        builder.systemPrompt != null ? builder.systemPrompt : "You are a helpful assistant",
-                        input
+                            builder.systemPrompt != null ? builder.systemPrompt : "You are a helpful assistant",
+                            input
                     );
                     return new AgentResult(response, List.of());
                 };
             }
         };
     }
-
-    /**
-     * Agent builder implementation.
-     */
-    private static class AgentBuilderImpl implements AgentBuilder {
-        Object chatModel;
-        java.util.List<Object> tools;
-        String systemPrompt;
-
-        @Override
-        public AgentBuilder model(Object chatLanguageModel) {
-            this.chatModel = chatLanguageModel;
-            return this;
-        }
-
-        @Override
-        public AgentBuilder tools(java.util.List<Object> tools) {
-            this.tools = tools;
-            return this;
-        }
-
-        @Override
-        public AgentBuilder systemPrompt(String prompt) {
-            this.systemPrompt = prompt;
-            return this;
-        }
-    }
-
-    // Convenience methods - delegate to llm()
 
     @Override
     public String ask(String systemPrompt, String userMessage) {
@@ -1488,6 +1231,8 @@ public class LangChainAdapter implements AI {
             throw new AIException("LangChain chat completion failed: " + e.getMessage(), e);
         }
     }
+
+    // Convenience methods - delegate to llm()
 
     @Override
     public <T> T extract(Class<T> type, String prompt) {
@@ -1536,23 +1281,23 @@ public class LangChainAdapter implements AI {
             // Stream using StreamingChatResponseHandler
             // Note: StreamingChatModel.generate() returns void and handles streaming via callbacks
             streamingChatModel.chat(
-                messages,
-                new StreamingChatResponseHandler() {
-                    @Override
-                    public void onPartialResponse(String partialResponse) {
-                        onToken.accept(partialResponse);
-                    }
+                    messages,
+                    new StreamingChatResponseHandler() {
+                        @Override
+                        public void onPartialResponse(String partialResponse) {
+                            onToken.accept(partialResponse);
+                        }
 
-                    @Override
-                    public void onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse completeResponse) {
-                        future.complete(null);
-                    }
+                        @Override
+                        public void onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse completeResponse) {
+                            future.complete(null);
+                        }
 
-                    @Override
-                    public void onError(Throwable error) {
-                        future.completeExceptionally(error);
+                        @Override
+                        public void onError(Throwable error) {
+                            future.completeExceptionally(error);
+                        }
                     }
-                }
             );
 
             // Wait for streaming to complete (blocking call)
@@ -1585,10 +1330,10 @@ public class LangChainAdapter implements AI {
      *
      * <p>Pattern: {@code chatModel.generate(chatMemory.messages())}
      *
-     * @param memory ChatMemory instance (repository of chat messages)
+     * @param memory       ChatMemory instance (repository of chat messages)
      * @param systemPrompt System prompt (role/context)
-     * @param userMessage User message
-     * @param options AI options
+     * @param userMessage  User message
+     * @param options      AI options
      * @return AI response
      */
     private String ask(dev.langchain4j.memory.ChatMemory memory, String systemPrompt, String userMessage, AIOptions options) {
@@ -1600,7 +1345,7 @@ public class LangChainAdapter implements AI {
             // Add system message if not already present (only add once per conversation)
             if (systemPrompt != null && !systemPrompt.isEmpty()) {
                 boolean hasSystemMessage = memory.messages().stream()
-                    .anyMatch(msg -> msg instanceof SystemMessage);
+                        .anyMatch(msg -> msg instanceof SystemMessage);
                 if (!hasSystemMessage) {
                     memory.add(SystemMessage.from(systemPrompt));
                 }
@@ -1612,8 +1357,8 @@ public class LangChainAdapter implements AI {
             // Use AI Services with ChatMemory - LangChain4j pattern
             // Create a temporary AI Service configured with this ChatMemory
             var builder = AiServices.builder(LLMService.class)
-                .chatModel(chatModel)
-                .chatMemory(memory);
+                    .chatModel(chatModel)
+                    .chatMemory(memory);
 
             LLMService service = builder.build();
 
@@ -1633,11 +1378,11 @@ public class LangChainAdapter implements AI {
      *
      * <p>Pattern: {@code streamingChatModel.chat(chatMemory.messages(), handler)}
      *
-     * @param memory ChatMemory instance (repository of chat messages)
+     * @param memory       ChatMemory instance (repository of chat messages)
      * @param systemPrompt System prompt (role/context)
-     * @param userMessage User message
-     * @param options AI options
-     * @param onToken Callback for each token
+     * @param userMessage  User message
+     * @param options      AI options
+     * @param onToken      Callback for each token
      */
     private void stream(dev.langchain4j.memory.ChatMemory memory, String systemPrompt, String userMessage, AIOptions options, Consumer<String> onToken) {
         if (streamingChatModel == null) {
@@ -1648,7 +1393,7 @@ public class LangChainAdapter implements AI {
             // Add system message if not already present
             if (systemPrompt != null && !systemPrompt.isEmpty()) {
                 boolean hasSystemMessage = memory.messages().stream()
-                    .anyMatch(msg -> msg instanceof SystemMessage);
+                        .anyMatch(msg -> msg instanceof SystemMessage);
                 if (!hasSystemMessage) {
                     memory.add(SystemMessage.from(systemPrompt));
                 }
@@ -1662,25 +1407,25 @@ public class LangChainAdapter implements AI {
 
             // Stream using StreamingChatResponseHandler with memory.messages()
             streamingChatModel.chat(
-                memory.messages(),
-                new StreamingChatResponseHandler() {
-                    @Override
-                    public void onPartialResponse(String partialResponse) {
-                        onToken.accept(partialResponse);
-                    }
+                    memory.messages(),
+                    new StreamingChatResponseHandler() {
+                        @Override
+                        public void onPartialResponse(String partialResponse) {
+                            onToken.accept(partialResponse);
+                        }
 
-                    @Override
-                    public void onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse completeResponse) {
-                        // Add AI response to memory
-                        memory.add(completeResponse.aiMessage());
-                        future.complete(null);
-                    }
+                        @Override
+                        public void onCompleteResponse(dev.langchain4j.model.chat.response.ChatResponse completeResponse) {
+                            // Add AI response to memory
+                            memory.add(completeResponse.aiMessage());
+                            future.complete(null);
+                        }
 
-                    @Override
-                    public void onError(Throwable error) {
-                        future.completeExceptionally(error);
+                        @Override
+                        public void onError(Throwable error) {
+                            future.completeExceptionally(error);
+                        }
                     }
-                }
             );
 
             // Wait for streaming to complete (blocking call)
@@ -1722,8 +1467,8 @@ public class LangChainAdapter implements AI {
 
             // Use Result wrapper to get metadata
             Result<String> result = service.askWithMetadata(
-                systemPrompt != null ? systemPrompt : "",
-                userMessage
+                    systemPrompt != null ? systemPrompt : "",
+                    userMessage
             );
 
             // Extract token usage and other metadata
@@ -1736,13 +1481,13 @@ public class LangChainAdapter implements AI {
             double cost = calculateCost(options.model(), promptTokens, completionTokens);
 
             return new AIResponse<>(
-                result.content(),
-                options.model(),
-                promptTokens,
-                completionTokens,
-                totalTokens,
-                cost,
-                false // TODO: Check if result was cached
+                    result.content(),
+                    options.model(),
+                    promptTokens,
+                    completionTokens,
+                    totalTokens,
+                    cost,
+                    false // TODO: Check if result was cached
             );
         } catch (Exception e) {
             throw new AIException("LangChain chat completion with metadata failed: " + e.getMessage(), e);
@@ -1765,16 +1510,16 @@ public class LangChainAdapter implements AI {
                 @dev.langchain4j.service.SystemMessage("{{systemPrompt}}\n\nExtract information from the following text into the specified format. Respond with JSON only.")
                 @dev.langchain4j.service.UserMessage("{{prompt}}")
                 <T> dev.langchain4j.service.Result<T> extractWithMetadata(
-                    @dev.langchain4j.service.V("systemPrompt") String systemPrompt,
-                    @dev.langchain4j.service.V("prompt") String prompt,
-                    Class<T> extractType
+                        @dev.langchain4j.service.V("systemPrompt") String systemPrompt,
+                        @dev.langchain4j.service.V("prompt") String prompt,
+                        Class<T> extractType
                 );
             }
 
             // Create AI Service instance with the custom interface
             ExtractWithMetadataService service = AiServices.builder(ExtractWithMetadataService.class)
-                .chatModel(chatModel)
-                .build();
+                    .chatModel(chatModel)
+                    .build();
 
             // Call extraction with metadata
             Result<T> result = service.extractWithMetadata(systemPrompt, prompt, type);
@@ -1789,13 +1534,13 @@ public class LangChainAdapter implements AI {
             double cost = calculateCost(options.model(), promptTokens, completionTokens);
 
             return new AIResponse<>(
-                result.content(),
-                options.model(),
-                promptTokens,
-                completionTokens,
-                totalTokens,
-                cost,
-                false // TODO: Check if result was cached
+                    result.content(),
+                    options.model(),
+                    promptTokens,
+                    completionTokens,
+                    totalTokens,
+                    cost,
+                    false // TODO: Check if result was cached
             );
         } catch (Exception e) {
             throw new AIException("LangChain extraction with metadata failed: " + e.getMessage(), e);
@@ -1805,7 +1550,7 @@ public class LangChainAdapter implements AI {
     @Override
     public AIWorkflowBuilder workflow(String name) {
         throw new UnsupportedOperationException(
-            "Workflow API not available in LangChainAdapter. Use UnifiedAIService for workflows."
+                "Workflow API not available in LangChainAdapter. Use UnifiedAIService for workflows."
         );
     }
 
@@ -1864,7 +1609,7 @@ public class LangChainAdapter implements AI {
 
     /**
      * Create an AI Service instance with optional RAG, tools, and memory support.
-     *
+     * <p>
      * This method supports advanced configuration via AiServices builder with full type safety:
      * <pre>
      * // With RAG
@@ -1903,7 +1648,7 @@ public class LangChainAdapter implements AI {
      * autocomplete and compile-time type checking. No reflection needed!
      *
      * @param serviceClass AI Service interface class
-     * @param config Configuration consumer that receives the AiServices builder
+     * @param config       Configuration consumer that receives the AiServices builder
      * @return AI Service instance (proxy)
      */
     public <T> T aiService(Class<T> serviceClass, java.util.function.Consumer<AiServices<T>> config) {
@@ -1934,7 +1679,7 @@ public class LangChainAdapter implements AI {
     /**
      * Calculate cost based on model, prompt tokens, and completion tokens.
      * Uses standard pricing per 1K tokens.
-     *
+     * <p>
      * TODO: Make this configurable and support all models/pricing tiers.
      */
     private double calculateCost(String model, int promptTokens, int completionTokens) {
@@ -1980,6 +1725,252 @@ public class LangChainAdapter implements AI {
         double completionCost = (completionTokens / 1000.0) * completionCostPer1K;
 
         return promptCost + completionCost;
+    }
+
+    /**
+     * Helper class to track Qdrant connection state.
+     */
+    private static class QdrantConnectionState {
+        Map<String, EmbeddingStore<TextSegment>> embeddingStores = new java.util.concurrent.ConcurrentHashMap<>();
+        String host;
+        int port;
+        boolean connected = false;
+        String url;
+        String error;
+        io.qdrant.client.QdrantClient qdrantClient; // For collection management
+
+        /**
+         * Get or create an embedding store for a specific collection.
+         * Automatically creates the collection if it doesn't exist.
+         */
+        EmbeddingStore<TextSegment> getOrCreateStore(String collectionName, EmbeddingModel embeddingModel) {
+            return embeddingStores.computeIfAbsent(collectionName, name -> {
+                // Ensure collection exists before creating the store
+                ensureCollectionExists(name, embeddingModel);
+
+                return QdrantEmbeddingStore.builder()
+                        .host(host)
+                        .port(port)
+                        .collectionName(name)
+                        .build();
+            });
+        }
+
+        /**
+         * Ensure a Qdrant collection exists, creating it if necessary.
+         * Made public for use in createCollection.
+         */
+        void ensureCollectionExists(String collectionName, EmbeddingModel embeddingModel) {
+            if (qdrantClient == null) {
+                // Create Qdrant client for collection management
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                        io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+
+            try {
+                // Check if collection exists by trying to get its info
+                qdrantClient.getCollectionInfoAsync(collectionName).get();
+                // If we get here, collection exists
+                return;
+            } catch (java.util.concurrent.ExecutionException e) {
+                // If collection doesn't exist, we'll get an exception and create it
+                Throwable cause = e.getCause();
+                if (cause instanceof io.grpc.StatusRuntimeException) {
+                    io.grpc.StatusRuntimeException grpcEx = (io.grpc.StatusRuntimeException) cause;
+                    if (grpcEx.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                        // Collection doesn't exist, create it
+                        createCollection(collectionName, embeddingModel);
+                        return;
+                    }
+                }
+                // Other errors - rethrow
+                throw new RuntimeException("Failed to check collection existence: " + e.getMessage(), e);
+            } catch (Exception e) {
+                // Check if it's a NOT_FOUND error
+                if (e.getMessage() != null && e.getMessage().contains("doesn't exist")) {
+                    createCollection(collectionName, embeddingModel);
+                    return;
+                }
+                throw new RuntimeException("Failed to check collection existence: " + e.getMessage(), e);
+            }
+        }
+
+        /**
+         * Create a Qdrant collection with the appropriate vector configuration.
+         */
+        private void createCollection(String collectionName, EmbeddingModel embeddingModel) {
+            if (embeddingModel == null) {
+                throw new IllegalStateException("EmbeddingModel not configured - cannot determine vector dimension for collection creation");
+            }
+
+            try {
+                // Get embedding dimension from the model
+                int dimension = embeddingModel.dimension();
+
+                // Create collection configuration using gRPC API
+                io.qdrant.client.grpc.Collections.VectorParams vectorParams = io.qdrant.client.grpc.Collections.VectorParams.newBuilder()
+                        .setSize(dimension)
+                        .setDistance(io.qdrant.client.grpc.Collections.Distance.Cosine)
+                        .build();
+
+                io.qdrant.client.grpc.Collections.VectorsConfig vectorsConfig = io.qdrant.client.grpc.Collections.VectorsConfig.newBuilder()
+                        .setParams(vectorParams)
+                        .build();
+
+                io.qdrant.client.grpc.Collections.CreateCollection createCollection = io.qdrant.client.grpc.Collections.CreateCollection.newBuilder()
+                        .setCollectionName(collectionName)
+                        .setVectorsConfig(vectorsConfig)
+                        .build();
+
+                // Create the collection
+                qdrantClient.createCollectionAsync(createCollection).get();
+
+                System.out.println("✅ Created Qdrant collection: " + collectionName + " (dimension: " + dimension + ")");
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create Qdrant collection '" + collectionName + "': " + e.getMessage(), e);
+            }
+        }
+
+        /**
+         * Close the Qdrant client when done.
+         */
+        void close() {
+            if (qdrantClient != null) {
+                try {
+                    qdrantClient.close();
+                } catch (Exception e) {
+                    // Ignore errors on close
+                }
+            }
+        }
+
+        /**
+         * Delete a collection.
+         */
+        void deleteCollection(String collectionName) {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                        io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+
+            try {
+                qdrantClient.deleteCollectionAsync(collectionName).get();
+                // Remove from cache
+                embeddingStores.remove(collectionName);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to delete collection '" + collectionName + "': " + e.getMessage(), e);
+            }
+        }
+
+        /**
+         * List all collections.
+         */
+        java.util.List<String> listCollections() {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                        io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+
+            try {
+                java.util.List<String> collections = qdrantClient.listCollectionsAsync().get();
+                return collections;
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to list collections: " + e.getMessage(), e);
+            }
+        }
+
+        /**
+         * Get collection statistics.
+         */
+        com.akilisha.oss.roya.plugins.ai.rag.CollectionStats getCollectionStats(String collectionName) {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                        io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+
+            try {
+                io.qdrant.client.grpc.Collections.CollectionInfo info =
+                        qdrantClient.getCollectionInfoAsync(collectionName).get();
+
+                long vectorCount = info.getPointsCount();
+                int vectorSize = (int) info.getConfig().getParams().getVectorsConfig().getParams().getSize();
+                String status = info.getStatus().name();
+
+                java.util.Map<String, Object> metadata = new java.util.HashMap<>();
+                metadata.put("points_count", vectorCount);
+                metadata.put("vector_size", vectorSize);
+                metadata.put("status", status);
+
+                return new com.akilisha.oss.roya.plugins.ai.rag.CollectionStats(
+                        collectionName,
+                        vectorCount,
+                        vectorSize,
+                        status,
+                        metadata
+                );
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to get collection stats for '" + collectionName + "': " + e.getMessage(), e);
+            }
+        }
+
+        /**
+         * Check if a collection exists.
+         */
+        boolean collectionExists(String collectionName) {
+            if (qdrantClient == null) {
+                qdrantClient = new io.qdrant.client.QdrantClient(
+                        io.qdrant.client.QdrantGrpcClient.newBuilder(host, port, false).build()
+                );
+            }
+
+            try {
+                qdrantClient.getCollectionInfoAsync(collectionName).get();
+                return true;
+            } catch (java.util.concurrent.ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof io.grpc.StatusRuntimeException) {
+                    io.grpc.StatusRuntimeException grpcEx = (io.grpc.StatusRuntimeException) cause;
+                    if (grpcEx.getStatus().getCode() == io.grpc.Status.Code.NOT_FOUND) {
+                        return false;
+                    }
+                }
+                // Other errors - assume doesn't exist
+                return false;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * Agent builder implementation.
+     */
+    private static class AgentBuilderImpl implements AgentBuilder {
+        Object chatModel;
+        java.util.List<Object> tools;
+        String systemPrompt;
+
+        @Override
+        public AgentBuilder model(Object chatLanguageModel) {
+            this.chatModel = chatLanguageModel;
+            return this;
+        }
+
+        @Override
+        public AgentBuilder tools(java.util.List<Object> tools) {
+            this.tools = tools;
+            return this;
+        }
+
+        @Override
+        public AgentBuilder systemPrompt(String prompt) {
+            this.systemPrompt = prompt;
+            return this;
+        }
     }
 }
 

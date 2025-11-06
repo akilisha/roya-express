@@ -193,6 +193,12 @@ public class UnifiedAIService implements AI {
     public <T> T provider(Class<T> providerType) {
         // Try each library in order of preference
         // Developers can access underlying libraries directly
+        
+        // Special case: return LangChainAdapter instance if requested
+        if (providerType.isInstance(langChain)) {
+            return providerType.cast(langChain);
+        }
+        
         T provider = langChain.provider(providerType);
         if (provider != null) return provider;
 

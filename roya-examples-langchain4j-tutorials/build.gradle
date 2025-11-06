@@ -12,6 +12,9 @@ dependencies {
     // LangChain4j core (for Prompt and PromptTemplate types)
     implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
     implementation "dev.langchain4j:langchain4j-code-execution-engine-judge0:1.8.0-beta15"
+    implementation "dev.langchain4j:langchain4j-mcp:1.8.0-beta15"  // For MCP GitHub example
+    implementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.8.0-beta15"  // For Customer Support Agent
+    implementation "dev.langchain4j:langchain4j-open-ai:${langchain4jVersion}"  // For OpenAiTokenizer
 
     // JOOQ for database operations (used in Tutorial 09: Persistent Memory)
     implementation "org.jooq:jooq:${jooqVersion}"
@@ -162,6 +165,112 @@ tasks.register('runTutorial11', JavaExec) {
     if (apiKey != null && !apiKey.isEmpty()) {
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
+    }
+}
+
+tasks.register('runTutorial12', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Tutorial 12: RAG with Documents'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.tutorial12_rag_documents.Tutorial12RAGDocuments'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+    
+    // Pass Qdrant URL from environment (default: http://localhost:6333)
+    String qdrantUrl = System.getenv('QDRANT_URL')
+    if (qdrantUrl != null && !qdrantUrl.isEmpty()) {
+        environment 'QDRANT_URL', qdrantUrl
+    }
+}
+
+tasks.register('runCoffeeShopAssistant', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Coffee Shop Assistant (Helidon example ported to Roya)'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.coffee_shop_assistant.CoffeeShopAssistant'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+    
+    // Pass Qdrant URL from environment (default: http://localhost:6333)
+    String qdrantUrl = System.getenv('QDRANT_URL')
+    if (qdrantUrl != null && !qdrantUrl.isEmpty()) {
+        environment 'QDRANT_URL', qdrantUrl
+    }
+}
+
+tasks.register('runMcpGithubExample', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run MCP GitHub Tools Example'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.mcp_github.McpGithubExample'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+    
+    // Pass GitHub token from environment (optional, for private repos)
+    String githubToken = System.getenv('GITHUB_PERSONAL_ACCESS_TOKEN')
+    if (githubToken != null && !githubToken.isEmpty()) {
+        environment 'GITHUB_PERSONAL_ACCESS_TOKEN', githubToken
+    }
+}
+
+tasks.register('runCustomerSupportAgent', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Customer Support Agent Example'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.customer_support_agent.CustomerSupportAgent'
+    classpath = sourceSets.main.runtimeClasspath
+    executable = 'D:/Users/kamikazi/.sdkman/candidates/java/23.0.2-graalce/bin/java'
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+    
+    // Optional: Pass document path as argument
+    if (project.hasProperty('documentPath')) {
+        args = [project.property('documentPath')]
+    }
+}
+
+tasks.register('runCustomerInquiryWorkflow', JavaExec) {
+    group = 'langchain4j-tutorials'
+    description = 'Run Customer Inquiry Processing Workflow Demo'
+    mainClass = 'com.akilisha.oss.roya.examples.langchain4j.workflow_demo.CustomerInquiryWorkflow'
+    classpath = sourceSets.main.runtimeClasspath
+    executable = 'D:/Users/kamikazi/.sdkman/candidates/java/23.0.2-graalce/bin/java'
+    jvmArgs = ['--enable-preview']
+
+    // Pass API keys from environment
+    String apiKey = System.getenv('OPENAI_API_KEY')
+    if (apiKey != null && !apiKey.isEmpty()) {
+        environment 'OPENAI_API_KEY', apiKey
+        systemProperty 'ai.openai.apiKey', apiKey
+    }
+    
+    // Pass Qdrant URL from environment (default: http://localhost:6333)
+    String qdrantUrl = System.getenv('QDRANT_URL')
+    if (qdrantUrl != null && !qdrantUrl.isEmpty()) {
+        environment 'QDRANT_URL', qdrantUrl
     }
 }
 
