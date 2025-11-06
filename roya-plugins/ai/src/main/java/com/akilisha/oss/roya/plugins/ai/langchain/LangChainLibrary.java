@@ -3,14 +3,11 @@ package com.akilisha.oss.roya.plugins.ai.langchain;
 import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.library.AILibrary;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryConfig;
-import dev.langchain4j.model.anthropic.AnthropicChatModel;
-import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
+import com.akilisha.oss.roya.plugins.ai.llm.ChatModelFactory;
+import com.akilisha.oss.roya.plugins.ai.llm.EmbeddingModelFactory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiChatModel;
-import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.vertexai.VertexAiChatModel;
 
 /**
@@ -46,41 +43,24 @@ public class LangChainLibrary implements AILibrary {
     }
 
     private ChatModel createChatModel(AILibraryConfig config) {
-        // Try OpenAI first
-        var openaiConfig = config.provider("openai");
-        if (openaiConfig.isPresent()) {
-            var providerConfig = openaiConfig.get();
-            String modelName = getModelName(providerConfig, "gpt-3.5-turbo");
-            return OpenAiChatModel.builder()
-                    .apiKey(providerConfig.apiKey())
-                    .modelName(modelName)
-                    .build();
-        }
-
-        // Try Anthropic
-        var anthropicConfig = config.provider("anthropic");
-        if (anthropicConfig.isPresent()) {
-            var providerConfig = anthropicConfig.get();
-            String modelName = getModelName(providerConfig, "claude-3-haiku-20240307");
-            return AnthropicChatModel.builder()
-                    .apiKey(providerConfig.apiKey())
-                    .modelName(modelName)
-                    .build();
-        }
-
-        // Try Gemini (Vertex AI)
+        // Use ChatModelFactory for uniform provider selection with intelligent fallback
+        // Priority: Ollama (default) -> Mistral -> OpenAI -> Anthropic
+        // Gemini (Vertex AI) is handled separately as it requires special configuration
+        
+        // Try Gemini (Vertex AI) first if configured (requires special handling)
         var geminiConfig = config.provider("gemini");
         if (geminiConfig.isPresent()) {
             return createGeminiChatModel(geminiConfig.get());
         }
 
-        throw new IllegalArgumentException(
-                "No provider configured. Configure either 'openai', 'anthropic', or 'gemini' in providers."
-        );
+        // Use factory for all other providers (Ollama, Mistral, OpenAI, Anthropic)
+        return ChatModelFactory.createChatModel(config);
     }
 
     /**
      * Extract model name from provider config options, with fallback to default.
+     * Note: This is only used for Gemini (Vertex AI) which requires special handling.
+     * All other providers use ChatModelFactory.getModelName().
      */
     private String getModelName(AILibraryConfig.ProviderConfig config, String defaultModel) {
         var options = config.options();
@@ -124,48 +104,17 @@ public class LangChainLibrary implements AILibrary {
 
 
     private EmbeddingModel createEmbeddingModel(AILibraryConfig config) {
-        // Try OpenAI embeddings
-        var openaiConfig = config.provider("openai");
-        if (openaiConfig.isPresent()) {
-            return OpenAiEmbeddingModel.builder()
-                    .apiKey(openaiConfig.get().apiKey())
-                    .modelName("text-embedding-3-small")
-                    .build();
-        }
-
-        throw new IllegalArgumentException(
-                "No embedding provider configured. Configure 'openai' in providers."
-        );
+        // Use EmbeddingModelFactory for uniform provider selection with intelligent fallback
+        // Priority: OpenAI (if API key available) -> AllMiniLmL6V2EmbeddingModel (default, local)
+        return EmbeddingModelFactory.createEmbeddingModel(config);
     }
 
     /**
      * Create StreamingChatModel from provider config.
-     * Mirrors createChatModel but uses streaming-specific implementations.
+     * Uses ChatModelFactory for uniform provider selection.
      */
     private StreamingChatModel createStreamingChatModel(AILibraryConfig config) {
-        // Try OpenAI first
-        var openaiConfig = config.provider("openai");
-        if (openaiConfig.isPresent()) {
-            var providerConfig = openaiConfig.get();
-            String modelName = getModelName(providerConfig, "gpt-3.5-turbo");
-            return OpenAiStreamingChatModel.builder()
-                    .apiKey(providerConfig.apiKey())
-                    .modelName(modelName)
-                    .build();
-        }
-
-        // Try Anthropic
-        var anthropicConfig = config.provider("anthropic");
-        if (anthropicConfig.isPresent()) {
-            var providerConfig = anthropicConfig.get();
-            String modelName = getModelName(providerConfig, "claude-3-haiku-20240307");
-            return AnthropicStreamingChatModel.builder()
-                    .apiKey(providerConfig.apiKey())
-                    .modelName(modelName)
-                    .build();
-        }
-
-        // Try Gemini (Vertex AI)
+        // Try Gemini (Vertex AI) first if configured
         // Note: VertexAiChatModel in 1.8.0-beta15 does NOT implement StreamingChatModel.
         // Streaming is not currently supported for Gemini in this version.
         var geminiConfig = config.provider("gemini");
@@ -174,8 +123,8 @@ public class LangChainLibrary implements AILibrary {
             return null;
         }
 
-        // Return null if no provider configured (streaming will be disabled)
-        return null;
+        // Use factory for all other providers (Ollama, Mistral, OpenAI, Anthropic)
+        return ChatModelFactory.createStreamingChatModel(config);
     }
 
 }

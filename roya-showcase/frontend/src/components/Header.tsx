@@ -7,7 +7,6 @@ export function Header() {
     { href: '/', label: 'Home' },
     { href: '/tutorials', label: 'Tutorials' },
     { href: '/examples', label: 'Examples' },
-    { href: '/playground', label: 'Playground' },
     { href: '/architecture', label: 'Architecture' },
     { href: '/docs', label: 'Docs' }
   ];

@@ -1,17 +1,21 @@
-import { Link } from 'wouter';
+import { Link, useRoute } from 'wouter';
 
 interface Example {
+  id: string;
   title: string;
   description: string;
   tags: string[];
   code: string;
-  demo?: string;
   highlights?: string[];
 }
 
 export function Examples() {
+  const [, params] = useRoute('/examples/:id');
+  const exampleId = params?.id;
+
   const examples: Example[] = [
     {
+      id: 'workflow',
       title: 'Customer Inquiry Workflow',
       description: 'Multi-step AI orchestration showcasing Roya Workflow + LangChain4j',
       tags: ['Workflow', 'Multi-Step', 'Orchestration'],
@@ -29,10 +33,10 @@ export function Examples() {
     .edge("webhook", "extract")
     .edge("extract", "rag")
     .edge("rag", "generate")
-    .build();`,
-      demo: '/examples/workflow'
+    .build();`
     },
     {
+      id: 'coffee-shop',
       title: 'Coffee Shop Assistant',
       description: 'RAG-powered assistant with chat memory and tools',
       tags: ['RAG', 'Memory', 'Tools'],
@@ -41,10 +45,10 @@ ChatMemory memory = memoryProvider.getOrCreate(conversationId);
 RAGResponse response = ai.ragApi().ask(question, 
     RAGOptions.builder().collection("menu-items").build());
 MyService service = ai.aiService(MyService.class,
-    builder -> builder.tools(new MenuTools()));`,
-      demo: '/examples/coffee-shop'
+    builder -> builder.tools(new MenuTools()));`
     },
     {
+      id: 'customer-support',
       title: 'Customer Support Agent',
       description: 'Complete document processing pipeline with RAG',
       tags: ['RAG', 'Document Processing'],
@@ -54,10 +58,10 @@ ai.vectors().indexPath("customer-support",
 
 // Query with RAG
 RAGResponse answer = ai.ragApi().ask(question,
-    RAGOptions.builder().collection("customer-support").build());`,
-      demo: '/examples/customer-support'
+    RAGOptions.builder().collection("customer-support").build());`
     },
     {
+      id: 'mcp-github',
       title: 'MCP GitHub Example',
       description: 'Model Context Protocol integration with GitHub tools',
       tags: ['MCP', 'External Tools'],
@@ -68,11 +72,63 @@ MCPClient mcpClient = MCPClient.builder()
 
 // Use in AI Service
 MyService service = ai.aiService(MyService.class,
-    builder -> builder.toolProvider(mcpToolProvider));`,
-      demo: '/examples/mcp-github'
+    builder -> builder.toolProvider(mcpToolProvider));`
     }
   ];
 
+  // Show detail view when an example is selected
+  if (exampleId) {
+    const example = examples.find(e => e.id === exampleId);
+    
+    return (
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="mb-6">
+          <Link href="/examples" class="text-blue-600 hover:text-blue-700 mb-4 inline-block">
+            ← Back to Examples
+          </Link>
+          <h1 class="text-3xl font-bold mb-2">{example?.title}</h1>
+          <p class="text-gray-600 mb-4">{example?.description}</p>
+          
+          <div class="flex flex-wrap gap-2 mb-6">
+            {example?.tags.map(tag => (
+              <span class="px-2 py-1 rounded text-sm bg-blue-100 text-blue-600">
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {example?.highlights && (
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h3 class="font-semibold text-blue-900 mb-2">Highlights</h3>
+              <ul class="text-sm text-blue-800 space-y-1">
+                {example.highlights.map(highlight => (
+                  <li class="flex items-start">
+                    <span class="text-blue-500 mr-2">•</span>
+                    <span>{highlight}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div class="bg-gray-800 px-4 py-2">
+            <span class="text-white text-sm font-medium">Java Code</span>
+          </div>
+          <pre class="bg-gray-900 text-green-400 p-6 overflow-x-auto"><code>{example?.code}</code></pre>
+        </div>
+
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p class="text-sm text-blue-800">
+            <strong>💡 Tip:</strong> Copy this code and run it locally with the full Roya framework to see it in action.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show list view
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-8">
@@ -103,7 +159,10 @@ MyService service = ai.aiService(MyService.class,
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {examples.map((example, idx) => (
-          <div class={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow ${idx === 0 ? 'border-2 border-blue-300' : ''}`}>
+          <Link
+            href={`/examples/${example.id}`}
+            class={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow block ${idx === 0 ? 'border-2 border-blue-300' : ''}`}
+          >
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
                 <div class="flex items-center mb-2">
@@ -138,21 +197,10 @@ MyService service = ai.aiService(MyService.class,
               </pre>
             </div>
             
-            <div class="flex gap-2">
-              <a
-                href={example.demo || '#'}
-                class="text-blue-600 hover:text-blue-700 font-semibold text-sm"
-              >
-                View Demo →
-              </a>
-              <a
-                href="/playground"
-                class="text-gray-600 hover:text-gray-900 text-sm"
-              >
-                Try in Playground
-              </a>
+            <div class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+              View Demo →
             </div>
-          </div>
+          </Link>
         ))}
       </div>
       

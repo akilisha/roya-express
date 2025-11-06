@@ -36,6 +36,68 @@ Additional context
 
 ---
 
+## Middleware Implementation Gaps
+
+### Static File Serving Middleware
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 8 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+The `Static` middleware is currently a stub that just passes through. It should serve static files from a directory.
+
+**Current State**:
+```java
+// Just passes through - doesn't serve files
+return (req, res, next) -> {
+    next.handle(req, res);
+};
+```
+
+**Acceptance Criteria**:
+- Serve files from specified directory
+- Support index file fallback
+- Respect dotfiles option
+- Set proper Content-Type headers
+- Handle 404 for missing files
+
+**Notes**:
+Not critical for API-first framework, but useful for serving frontend assets.
+
+---
+
+### Compression Middleware - Actual Compression
+**Category**: Enhancement  
+**Priority**: P2-Medium  
+**Estimated Effort**: 6 hours  
+**Proposed For**: Future  
+**Status**: New
+
+**Description**:
+The `Compression` middleware sets the `Content-Encoding: gzip` header but doesn't actually compress the response body.
+
+**Current State**:
+```java
+// Sets header but doesn't compress body
+res.header("Content-Encoding", "gzip");
+```
+
+**Acceptance Criteria**:
+- Actually compress response body using GZIP
+- Only compress if client accepts gzip
+- Respect filter function
+- Handle streaming responses
+
+**Dependencies**:
+- Need to wrap Response output stream with GZIPOutputStream
+
+**Notes**:
+Header is set but body isn't compressed - misleading behavior.
+
+---
+
 ## Documentation & Marketing (Phase 11)
 
 ### Phase 11: Documentation & Examples - Marketing & Showcasing Plan

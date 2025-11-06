@@ -1,6 +1,4 @@
-import { signal } from '@preact/signals';
-import { useRoute } from 'wouter';
-import { CodeEditor } from '../components/CodeEditor';
+import { useRoute, Link } from 'wouter';
 
 export function Tutorials() {
   const [, params] = useRoute('/tutorials/:id');
@@ -114,14 +112,13 @@ RAGResponse response = ai.ragApi().ask("Question?",
 
   if (tutorialId) {
     const tutorial = tutorials.find(t => t.id === tutorialId);
-    const code = signal(tutorial?.code || '');
     
     return (
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="mb-6">
-          <a href="/tutorials" class="text-blue-600 hover:text-blue-700 mb-4 inline-block">
+          <Link href="/tutorials" class="text-blue-600 hover:text-blue-700 mb-4 inline-block">
             ← Back to Tutorials
-          </a>
+          </Link>
           <h1 class="text-3xl font-bold mb-2">Tutorial {tutorialId}: {tutorial?.title}</h1>
           <p class="text-gray-600 mb-4">{tutorial?.description}</p>
         </div>
@@ -130,14 +127,7 @@ RAGResponse response = ai.ragApi().ask("Question?",
           <div class="bg-gray-800 px-4 py-2">
             <span class="text-white text-sm font-medium">Java</span>
           </div>
-          <CodeEditor value={code} language="java" height="400px" />
-        </div>
-        
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 class="font-semibold text-blue-900 mb-2">💡 Try It</h3>
-          <p class="text-blue-800 text-sm">
-            Copy this code to the <a href="/playground" class="underline font-semibold">Playground</a> to run it yourself!
-          </p>
+          <pre class="bg-gray-900 text-green-400 p-6 overflow-x-auto"><code>{tutorial?.code}</code></pre>
         </div>
       </div>
     );

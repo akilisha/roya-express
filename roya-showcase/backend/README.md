@@ -1,68 +1,55 @@
 # Roya Showcase Backend
 
-Backend API server for the Roya Playground code execution service.
+Static file server for the Roya Showcase website. Serves the Preact frontend application.
+
+## Overview
+
+This is a simple Roya server that serves static files from the frontend build directory. In production, this would typically be served by Nginx or a CDN, but this server is useful for development and demonstration purposes.
 
 ## Features
 
-- ✅ Java code compilation and execution
-- ✅ Sandboxed execution (basic - Docker coming soon)
-- ✅ RESTful API endpoints
-- ✅ CORS support for frontend integration
+- ✅ Static file serving from `frontend/dist` directory
+- ✅ SPA routing support (fallback to `index.html`)
+- ✅ Configurable port
+- ✅ Simple and lightweight
 
 ## Running
 
+### Development
+
 ```bash
-# From project root
-./gradlew :roya-showcase:backend:runPlayground
+# Build the frontend first
+cd roya-showcase/frontend
+npm run build
+
+# Then run the backend server
+cd ../..
+./gradlew :roya-showcase:backend:runShowcase
 
 # Or with custom port
-./gradlew :roya-showcase:backend:runPlayground -Dport=8080
+./gradlew :roya-showcase:backend:runShowcase -Dport=3000
 ```
 
-## API Endpoints
+### Production
 
-### `GET /api/health`
-Health check endpoint.
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "service": "roya-playground-api"
-}
-```
-
-### `POST /api/execute`
-Execute Java code.
-
-**Request:**
-```json
-{
-  "code": "public class Main { public static void main(String[] args) { System.out.println(\"Hello, Roya!\"); } }"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "output": "Hello, Roya!\n",
-  "error": ""
-}
-```
+In production, you would typically:
+1. Build the frontend: `cd frontend && npm run build`
+2. Serve `frontend/dist` with Nginx or a CDN
+3. Or use this server if you prefer Java-based serving
 
 ## Architecture
 
-- **CodeExecutionService**: Handles compilation and execution
-- **PlaygroundApi**: REST API endpoints
-- **PlaygroundServer**: Main server entry point
+- **ShowcaseServer**: Main entry point that serves static files
+- Uses Roya's `Static` middleware for file serving
+- Fallback route for SPA routing (all routes → `index.html`)
 
-## Future Enhancements
+## Configuration
 
-- [ ] Docker-based sandboxing
-- [ ] Resource limits (CPU, memory, time)
-- [ ] WebSocket streaming for real-time output
-- [ ] Security restrictions (no file system, network restrictions)
-- [ ] Code caching and reuse
-- [ ] Multi-language support
+- **Port**: Default `8080`, configurable via `-Dport=<port>`
+- **Static Directory**: `roya-showcase/frontend/dist`
 
+## Notes
+
+- The frontend must be built before running the server
+- This server is primarily for development/demo purposes
+- For production, consider using Nginx or a CDN for better performance

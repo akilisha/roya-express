@@ -18,29 +18,35 @@ repositories {
 
 dependencies {
     // Roya framework
-    implementation project(':roya-core')
     implementation project(':roya-api')
+    implementation project(':roya-core')
     
-    // Jackson for JSON
+    // Jackson for JSON (if needed for future API endpoints)
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
 }
 
 application {
-    mainClass = 'com.akilisha.oss.roya.showcase.PlaygroundServer'
+    mainClass = 'com.akilisha.oss.roya.showcase.ShowcaseServer'
 }
 
-tasks.register('runPlayground', JavaExec) {
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.register('runShowcase', JavaExec) {
     group = 'application'
-    description = 'Run the Roya Playground API server'
+    description = 'Run the Roya Showcase static file server'
     mainClass = application.mainClass.get()
     classpath = sourceSets.main.runtimeClasspath
-    
+
     // Default port
     systemProperty 'port', System.getProperty('port', '8080')
-    
+
     // Use Java 23 with preview features if available
     if (file("${System.getProperty('user.home')}/.sdkman/candidates/java/23.0.2-graalce/bin/java").exists()) {
         executable = "${System.getProperty('user.home')}/.sdkman/candidates/java/23.0.2-graalce/bin/java"
+        jvmArgs = ['--enable-preview']
+    } else {
         jvmArgs = ['--enable-preview']
     }
 }

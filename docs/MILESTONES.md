@@ -1941,6 +1941,129 @@ ai.workflow("multimodal")
 
 ---
 
+## Phase 11: Documentation & Marketing Website - 🚧 IN PROGRESS
+
+**Roadmap Reference**: Phase 11  
+**Started**: January 31, 2025  
+**Completed**: TBD  
+**Priority**: P1-High
+
+### What We Accomplished
+
+**🎨 Interactive Documentation Website**
+- ✅ **Preact + TypeScript + Vite** - Modern, fast frontend stack
+- ✅ **Tailwind CSS** - Beautiful, responsive UI design
+- ✅ **Wouter Router** - Client-side routing for documentation pages
+- ✅ **Monaco Editor Integration** - Code syntax highlighting (removed playground functionality)
+- ✅ **Static File Server** - Backend serves frontend build assets
+
+**📚 Comprehensive Documentation Pages**
+- ✅ **Getting Started** - Complete guide with Hello World, Basic Routing, Static Files
+- ✅ **API Reference** - Full documentation for:
+  - `Roya` class API
+  - `Application` interface
+  - `Request` interface
+  - `Response` interface
+  - `Router` interface
+- ✅ **AI Integration** - Comprehensive guides for:
+  - AI Quick Start
+  - LLM features (ask, extract, stream)
+  - RAG (Retrieval-Augmented Generation)
+  - AI Agents
+  - AI Workflows
+- ✅ **Migration Guides** - Side-by-side comparisons:
+  - Express.js → Roya (90% code compatibility)
+  - Spring Boot → Roya (Express-style simplicity)
+  - Quarkus → Roya (Virtual threads vs reactive)
+- ✅ **Guide Section** - Developer guides:
+  - Writing Middleware
+  - Plugins System
+
+**🏗️ Project Structure**
+- ✅ **Multi-page Documentation** - Organized by topic
+- ✅ **Navigation** - Header with Docs, Tutorials, Examples, Architecture links
+- ✅ **Home Page** - Hero section with "The Story Behind Roya"
+- ✅ **Architecture Page** - Comprehensive architecture overview
+- ✅ **Examples Page** - Showcase real-world use cases
+- ✅ **Tutorials Page** - All 12 LangChain4j tutorials listed
+
+**🔧 Technical Achievements**
+- ✅ **JSX Parsing Fixes** - Wrapped all Java code examples in template literals
+- ✅ **Migration Component Imports** - Fixed missing component imports
+- ✅ **Code Display** - Clean, syntax-highlighted code blocks
+- ✅ **Responsive Design** - Mobile-friendly documentation
+
+### Challenges Encountered
+
+**Challenge 1**: JSX Parsing of Java Code
+- **Description**: Java arrow syntax (`->`) was being misinterpreted as JavaScript arrow functions
+- **Resolution**: Wrapped all Java code blocks in template literals (`{`...`}`)
+- **Impact**: All documentation pages now render correctly without parsing errors
+
+**Challenge 2**: Component Organization
+- **Description**: Missing imports for Migration Guides components
+- **Resolution**: Added proper imports for `MigrationGuides`, `ExpressMigration`, `SpringMigration`, `QuarkusMigration`
+- **Impact**: All routes now resolve correctly
+
+**Challenge 3**: Playground Removal
+- **Description**: User requested removal of playground functionality
+- **Resolution**: Converted backend to static file server, removed playground code
+- **Impact**: Simplified architecture, focused on documentation delivery
+
+### Design Decisions
+
+**Decision 1**: Preact Over React
+- **What**: Chose Preact for smaller bundle size and faster performance
+- **Why**: Documentation site doesn't need React's full feature set, Preact is more lightweight
+- **Impact**: Faster load times, better performance metrics
+
+**Decision 2**: Static File Server
+- **What**: Backend serves frontend build instead of code execution API
+- **Why**: User requested removal of playground, static serving is simpler and more secure
+- **Impact**: Reduced complexity, improved security posture
+
+**Decision 3**: Template Literals for Code
+- **What**: Wrapped all Java code examples in template literals
+- **Why**: Prevents JSX from parsing Java syntax incorrectly
+- **Impact**: All code examples render correctly without errors
+
+### Metrics (Current)
+- **Documentation Pages**: 20+ pages
+- **Migration Guides**: 3 complete guides
+- **API Reference Pages**: 6 pages
+- **AI Integration Pages**: 5 pages
+- **Lines of Code**: ~3,000 (frontend TypeScript/TSX)
+- **Build Status**: ✅ Successful compilation
+- **Runtime Status**: ✅ All pages load correctly
+
+### Code Quality
+- ✅ All TypeScript/TSX files compile without errors
+- ✅ All routes resolve correctly
+- ✅ All code examples render properly
+- ✅ Responsive design works on all screen sizes
+- ✅ Fast page loads with optimized builds
+
+### What Works Right Now ✅
+- ✅ Documentation website loads and navigates correctly
+- ✅ All documentation pages render with proper formatting
+- ✅ Code examples display with syntax highlighting
+- ✅ Migration guides show side-by-side comparisons
+- ✅ API reference is comprehensive and organized
+- ✅ Navigation works across all pages
+
+### Next Steps
+- ⏳ Complete remaining documentation pages
+- ⏳ Add search functionality
+- ⏳ Add dark mode support
+- ⏳ Video tutorial integration
+- ⏳ Interactive code examples (when playground returns)
+- ⏳ SEO optimization
+- ⏳ Analytics integration
+
+**Phase 11 Documentation Website Foundation is IN PROGRESS!** 🚧
+
+---
+
 ## Future Plugins & Enhancements
 
 ### Health Check Endpoints

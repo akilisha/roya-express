@@ -70,6 +70,31 @@ public class AIPlugin implements RoyaPlugin {
                 configBuilder.provider("anthropic", AILibraryConfig.ProviderConfig.simple(anthropicKey));
             }
 
+            // Add Ollama provider (default, no API key required if running locally)
+            // Check for explicit configuration, otherwise will use default localhost:11434
+            String ollamaUrl = getConfigValue("ai.ollama.baseUrl", "OLLAMA_BASE_URL", "OLLAMA_HOST");
+            if (ollamaUrl != null && !ollamaUrl.isBlank()) {
+                // If OLLAMA_HOST is set without http://, prepend it
+                if (!ollamaUrl.startsWith("http://") && !ollamaUrl.startsWith("https://")) {
+                    ollamaUrl = "http://" + ollamaUrl + ":11434";
+                }
+                configBuilder.provider("ollama", AILibraryConfig.ProviderConfig.builder()
+                        .endpoint(ollamaUrl)
+                        .build());
+            } else {
+                // No explicit config, but Ollama is the default (will use localhost:11434)
+                // Add empty config to enable Ollama as default
+                configBuilder.provider("ollama", AILibraryConfig.ProviderConfig.builder()
+                        .endpoint("http://localhost:11434")
+                        .build());
+            }
+
+            // Add Mistral AI provider if configured
+            String mistralKey = getConfigValue("ai.mistral.apiKey", "AI_MISTRAL_API_KEY", "MISTRAL_API_KEY");
+            if (mistralKey != null && !mistralKey.isBlank()) {
+                configBuilder.provider("mistral", AILibraryConfig.ProviderConfig.simple(mistralKey));
+            }
+
             // Add Google Gemini provider if configured
             String geminiApiKey = getConfigValue("ai.gemini.apiKey", "AI_GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY");
             String geminiProject = getConfigValue("ai.gemini.project", "AI_GEMINI_PROJECT", "GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID");
@@ -246,10 +271,13 @@ public class AIPlugin implements RoyaPlugin {
 
     private String buildProviderList(String openaiKey, String anthropicKey, String geminiKey) {
         var providers = new java.util.ArrayList<String>();
+        providers.add("ollama"); // Always include Ollama as default
         if (openaiKey != null) providers.add("openai");
         if (anthropicKey != null) providers.add("anthropic");
         if (geminiKey != null) providers.add("gemini");
-        return providers.isEmpty() ? "none" : String.join(", ", providers);
+        String mistralKey = getConfigValue("ai.mistral.apiKey", "AI_MISTRAL_API_KEY", "MISTRAL_API_KEY");
+        if (mistralKey != null) providers.add("mistral");
+        return String.join(", ", providers);
     }
 
     @Override

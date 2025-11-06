@@ -1,171 +1,178 @@
-# Code Execution Backend - Implementation Plan
+# Roya Showcase Backend - Implementation
 
-## ✅ What's Been Built
+## Overview
 
-### Backend Components
+The Roya Showcase backend is a simple static file server built with Roya Framework. It serves the Preact frontend application and provides SPA routing support.
 
-1. **CodeExecutionService** (`backend/src/main/java/.../execution/CodeExecutionService.java`)
-   - Compiles Java code using `javac`
-   - Executes compiled code using `java`
-   - Returns output or error messages
-   - Basic sandboxing (temp directories, cleanup)
+## Architecture
 
-2. **PlaygroundApi** (`backend/src/main/java/.../api/PlaygroundApi.java`)
-   - REST API endpoints:
-     - `GET /api/health` - Health check
-     - `POST /api/execute` - Execute code
-   - CORS support for frontend
-   - JSON body parsing
-
-3. **PlaygroundServer** (`backend/src/main/java/.../PlaygroundServer.java`)
-   - Main entry point
-   - Starts Roya server on port 8080 (configurable)
-
-### Frontend Integration
-
-1. **useCodeExecution Hook** (`frontend/src/hooks/useCodeExecution.ts`)
-   - Calls `/api/execute` endpoint
-   - Handles loading states
-   - Displays output/errors
-   - Uses environment variable `VITE_API_URL` (defaults to `http://localhost:8080`)
-
-## 🚀 How to Run
-
-### 1. Start Backend Server
-
-```bash
-# From project root
-./gradlew :roya-showcase:backend:runPlayground
-
-# Or with custom port
-./gradlew :roya-showcase:backend:runPlayground -Dport=8080
+```
+ShowcaseServer (Main Entry Point)
+    ↓
+Roya Application
+    ↓
+Static Middleware (serves frontend/dist)
+    ↓
+Fallback Route (/* → index.html for SPA routing)
 ```
 
-### 2. Start Frontend
+## Components
+
+### ShowcaseServer
+
+**Location**: `src/main/java/com/akilisha/oss/roya/showcase/ShowcaseServer.java`
+
+Main entry point that:
+1. Creates a Roya application
+2. Configures static file serving from `frontend/dist`
+3. Sets up fallback route for SPA routing
+4. Starts the server on port 8080 (configurable)
+
+**Key Code**:
+```java
+var app = Roya.create();
+
+// Serve static files
+app.use(Static.static_("roya-showcase/frontend/dist"));
+
+// Fallback for SPA routing
+app.get("/*", (req, res, next) -> {
+    res.sendFile(Paths.get("roya-showcase/frontend/dist/index.html"));
+});
+
+app.listen(port);
+```
+
+## Development Workflow
+
+### 1. Build Frontend
 
 ```bash
 cd roya-showcase/frontend
-npm run dev
+npm run build
 ```
 
-### 3. Test
+This creates the `dist` directory with production-ready static files.
 
-1. Open http://localhost:3000/playground
-2. Write some Java code
-3. Click "Run Code"
-4. See output!
+### 2. Run Backend Server
 
-## 📋 Example Code to Test
+```bash
+./gradlew :roya-showcase:backend:runShowcase
+```
 
+The server will:
+- Serve static files from `frontend/dist`
+- Handle SPA routing by falling back to `index.html`
+- Run on port 8080 (or custom port via `-Dport`)
+
+### 3. Access Website
+
+Open `http://localhost:8080` in your browser.
+
+## Static File Serving
+
+Roya's `Static` middleware handles:
+- Serving HTML, CSS, JavaScript files
+- Setting correct Content-Type headers
+- Handling file not found (404)
+
+## SPA Routing Support
+
+The fallback route (`app.get("/*", ...)`) ensures that:
+- Direct navigation to routes like `/docs/api` works
+- Browser refresh on any route works
+- All routes fall back to `index.html` for client-side routing
+
+## Configuration
+
+### Port
+
+Default: `8080`
+
+Custom port:
+```bash
+./gradlew :roya-showcase:backend:runShowcase -Dport=3000
+```
+
+### Static Directory
+
+Hardcoded to: `roya-showcase/frontend/dist`
+
+To change, modify `ShowcaseServer.java`:
 ```java
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, Roya!");
-        System.out.println("Code execution is working!");
+app.use(Static.staticFiles(Paths.get("your/custom/path")));
+```
+
+## Production Considerations
+
+### Current Implementation
+
+- ✅ Simple and lightweight
+- ✅ Works for development and demos
+- ⚠️ Not optimized for high traffic
+
+### Production Recommendations
+
+1. **Use Nginx or CDN**: Better performance and caching
+2. **Enable Compression**: Gzip/Brotli compression
+3. **Add Caching Headers**: Cache static assets
+4. **HTTPS**: Use reverse proxy with SSL termination
+5. **Load Balancing**: For high availability
+
+### Example Nginx Configuration
+
+```nginx
+server {
+    listen 80;
+    server_name showcase.roya.dev;
+    
+    root /path/to/roya-showcase/frontend/dist;
+    index index.html;
+    
+    # Gzip compression
+    gzip on;
+    gzip_types text/css application/javascript application/json;
+    
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # SPA routing
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 }
 ```
 
-## 🔜 Future Enhancements
+## Dependencies
 
-### Phase 1: Basic Improvements
-- [ ] Better error handling and formatting
-- [ ] Support for multiple files/classes
-- [ ] Timeout configuration
-- [ ] Output size limits
+- **roya-api**: Core API interfaces
+- **roya-core**: Core framework implementation
+- **jackson-databind**: JSON support (if needed for future API endpoints)
 
-### Phase 2: Security & Isolation
-- [ ] Docker-based sandboxing
-- [ ] Resource limits (CPU, memory, time)
-- [ ] Security restrictions:
-  - No file system access
-  - No network access
-  - No reflection
-  - Restricted imports
+## Future Enhancements
 
-### Phase 3: Real-time Streaming
-- [ ] WebSocket support for streaming output
-- [ ] Server-Sent Events (SSE) alternative
-- [ ] Progress updates during compilation/execution
+If we need to add API endpoints in the future:
+- Add API routes to `ShowcaseServer`
+- Use Roya's routing and middleware
+- Keep static serving separate from API logic
 
-### Phase 4: Advanced Features
-- [ ] Code caching and reuse
-- [ ] Multi-language support (Kotlin, Scala)
-- [ ] Dependency management (Maven/Gradle)
-- [ ] Interactive REPL mode
+## Troubleshooting
 
-## 🏗️ Architecture
+### Frontend not loading
 
-```
-Frontend (Preact)
-    ↓ HTTP POST /api/execute
-Backend API (Roya)
-    ↓
-CodeExecutionService
-    ↓
-javac → java
-    ↓
-Output/Error
-    ↓ HTTP Response
-Frontend displays result
-```
+1. Ensure frontend is built: `cd frontend && npm run build`
+2. Check that `frontend/dist` directory exists
+3. Verify file paths in `ShowcaseServer.java`
 
-## 🔒 Security Considerations
+### 404 errors on routes
 
-**Current State**: Basic sandboxing
-- Temporary directories
-- Process isolation
-- Timeout limits
+- Ensure fallback route is configured: `app.get("/*", ...)`
+- Check that `index.html` exists in `frontend/dist`
 
-**Production Requirements**:
-- Docker containers for true isolation
-- Resource limits (CPU, memory, disk)
-- Network restrictions
-- File system restrictions
-- Code analysis (block dangerous imports/patterns)
+### Port already in use
 
-## 📝 API Documentation
-
-### POST /api/execute
-
-**Request:**
-```json
-{
-  "code": "public class Main { public static void main(String[] args) { System.out.println(\"Hello\"); } }"
-}
-```
-
-**Response (Success):**
-```json
-{
-  "success": true,
-  "output": "Hello\n",
-  "error": ""
-}
-```
-
-**Response (Error):**
-```json
-{
-  "success": false,
-  "output": "",
-  "error": "Compilation failed:\nerror: cannot find symbol..."
-}
-```
-
-## 🐛 Known Limitations
-
-1. **No dependency management** - Can't use external libraries
-2. **Single class only** - Must be self-contained
-3. **No real-time streaming** - Waits for completion
-4. **Basic sandboxing** - Not production-ready
-5. **No code analysis** - Could execute dangerous code
-
-## ✅ Next Steps
-
-1. Test the basic implementation
-2. Add Docker sandboxing
-3. Implement WebSocket streaming
-4. Add security restrictions
-5. Enhance error messages
-
+- Change port: `-Dport=3000`
+- Or stop the process using port 8080

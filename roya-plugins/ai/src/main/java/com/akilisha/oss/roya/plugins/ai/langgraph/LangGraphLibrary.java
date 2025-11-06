@@ -3,12 +3,11 @@ package com.akilisha.oss.roya.plugins.ai.langgraph;
 import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.library.AILibrary;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryConfig;
-import dev.langchain4j.model.anthropic.AnthropicChatModel;
+import com.akilisha.oss.roya.plugins.ai.llm.ChatModelFactory;
+import com.akilisha.oss.roya.plugins.ai.llm.EmbeddingModelFactory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiChatModel;
-import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 
 /**
  * LangGraph library adapter factory.
@@ -32,14 +31,14 @@ public class LangGraphLibrary implements AILibrary {
 
     @Override
     public AI create(AILibraryConfig config) {
-        // Create ChatModel from provider config (reuse LangChain4j logic)
-        ChatModel chatModel = createChatModel(config);
+        // Create ChatModel from provider config (use ChatModelFactory for uniform selection)
+        ChatModel chatModel = ChatModelFactory.createChatModel(config);
 
         // Create EmbeddingModel from provider config
         EmbeddingModel embeddingModel = createEmbeddingModel(config);
 
-        // TODO: Create StreamingChatModel when needed
-        StreamingChatModel streamingChatModel = null;
+        // Create StreamingChatModel using factory
+        StreamingChatModel streamingChatModel = ChatModelFactory.createStreamingChatModel(config);
 
         // Create LangGraph adapter wrapper
         // LangGraphAdapter uses LangChain4j models for LLM/Embeddings
@@ -47,43 +46,10 @@ public class LangGraphLibrary implements AILibrary {
         return new LangGraphAdapter(chatModel, streamingChatModel, embeddingModel);
     }
 
-    private ChatModel createChatModel(AILibraryConfig config) {
-        // Try OpenAI first
-        var openaiConfig = config.provider("openai");
-        if (openaiConfig.isPresent()) {
-            return OpenAiChatModel.builder()
-                .apiKey(openaiConfig.get().apiKey())
-                .modelName("gpt-3.5-turbo")
-                .build();
-        }
-
-        // Try Anthropic
-        var anthropicConfig = config.provider("anthropic");
-        if (anthropicConfig.isPresent()) {
-            return AnthropicChatModel.builder()
-                .apiKey(anthropicConfig.get().apiKey())
-                .modelName("claude-3-haiku-20240307")
-                .build();
-        }
-
-        throw new IllegalArgumentException(
-            "No provider configured. Configure either 'openai' or 'anthropic' in providers."
-        );
-    }
-
     private EmbeddingModel createEmbeddingModel(AILibraryConfig config) {
-        // Try OpenAI embeddings
-        var openaiConfig = config.provider("openai");
-        if (openaiConfig.isPresent()) {
-            return OpenAiEmbeddingModel.builder()
-                .apiKey(openaiConfig.get().apiKey())
-                .modelName("text-embedding-3-small")
-                .build();
-        }
-
-        throw new IllegalArgumentException(
-            "No embedding provider configured. Configure 'openai' in providers."
-        );
+        // Use EmbeddingModelFactory for uniform provider selection with intelligent fallback
+        // Priority: OpenAI (if API key available) -> AllMiniLmL6V2EmbeddingModel (default, local)
+        return EmbeddingModelFactory.createEmbeddingModel(config);
     }
 }
 
