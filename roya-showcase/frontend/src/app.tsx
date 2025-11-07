@@ -41,7 +41,7 @@ import { QuarkusMigration } from './pages/docs/QuarkusMigration';
 
 export function App() {
   return (
-    <div class="min-h-screen flex flex-col bg-gray-50">
+    <div class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
       <main class="flex-1">
         <Router>
