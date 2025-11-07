@@ -3,29 +3,31 @@ import { Link } from 'wouter';
 export function BasicRouting() {
   return (
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="mb-8">
-        <Link href="/docs/getting-started" class="text-blue-600 hover:underline mb-4 inline-block">
+      <div class="mb-10">
+        <Link href="/docs/getting-started" class="text-roya-primary dark:text-roya-primary hover:underline mb-4 inline-block transition-colors">
           ← Getting Started
         </Link>
-        <h1 class="text-4xl font-bold mb-4">Basic Routing</h1>
-        <p class="text-xl text-gray-600">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-primary dark:text-roya-primary tracking-tight">
+          Basic Routing
+        </h1>
+        <p class="text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Routing refers to determining how an application responds to a client request to a particular endpoint.
         </p>
       </div>
       
-      <div class="space-y-8">
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Route Definition</h2>
-          <p class="text-gray-700 mb-4">
+      <div class="space-y-10">
+        <section class="bg-roya-surface dark:bg-roya-surfaceDark rounded-xl shadow-lg p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-3xl font-bold mb-6 text-roya-text dark:text-roya-textDark">Route Definition</h2>
+          <p class="text-roya-text dark:text-roya-textDark mb-4 text-lg leading-relaxed">
             A route definition takes the following structure:
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`app.METHOD(PATH, HANDLER)`}</code></pre>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`app.METHOD(PATH, HANDLER)`}</code></pre>
           
-          <p class="text-gray-700 mt-4">
+          <p class="text-roya-text dark:text-roya-textDark mt-4 text-lg">
             Where:
           </p>
-          <ul class="list-disc list-inside space-y-2 text-gray-700 mt-2">
+          <ul class="list-disc list-inside space-y-2 text-roya-text dark:text-roya-textDark mt-2">
             <li><strong>app</strong> is an instance of Roya.</li>
             <li><strong>METHOD</strong> is an HTTP request method, in lowercase (get, post, put, delete, etc.).</li>
             <li><strong>PATH</strong> is a path on the server.</li>
@@ -33,25 +35,25 @@ export function BasicRouting() {
           </ul>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Examples</h2>
+        <section class="bg-roya-surface dark:bg-roya-surfaceDark rounded-xl shadow-lg p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-3xl font-bold mb-6 text-roya-text dark:text-roya-textDark">Examples</h2>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Respond to GET Request</h3>
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`app.get("/", (req, res, next) -> {
+          <h3 class="text-2xl font-bold mt-6 mb-3 text-roya-primary dark:text-roya-primary">Respond to GET Request</h3>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`app.get("/", (req, res, next) -> {
     res.send("GET request to the homepage");
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Respond to POST Request</h3>
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`app.post("/", (req, res, next) -> {
+          <h3 class="text-2xl font-bold mt-6 mb-3 text-roya-primary dark:text-roya-primary">Respond to POST Request</h3>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`app.post("/", (req, res, next) -> {
     res.send("POST request to the homepage");
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Route Paths</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Route Paths</h3>
           <p class="text-gray-700 mb-4">
             Route paths can be strings, string patterns, or regular expressions.
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// This route path will match requests to the root route, /.
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`// This route path will match requests to the root route, /.
 app.get("/", (req, res, next) -> {
     res.send("root");
 });
@@ -76,12 +78,12 @@ app.get("/a/", (req, res, next) -> {
     res.send("/a/");
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Route Parameters</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Route Parameters</h3>
           <p class="text-gray-700 mb-4">
             Route parameters are named URL segments used to capture values at specific positions in the URL:
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`app.get("/users/:userId/books/:bookId", (req, res, next) -> {
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`app.get("/users/:userId/books/:bookId", (req, res, next) -> {
     var userId = req.params().get("userId").orElse("unknown");
     var bookId = req.params().get("bookId").orElse("unknown");
     res.json(Map.of("userId", userId, "bookId", bookId));
@@ -92,13 +94,13 @@ app.get("/a/", (req, res, next) -> {
           </p>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Route Handlers</h2>
+        <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Route Handlers</h2>
           <p class="text-gray-700 mb-4">
             You can provide multiple callback functions that behave like middleware to handle a request. The only exception is that these callbacks might invoke <code class="bg-gray-100 px-2 py-1 rounded">next()</code> to bypass the remaining route callbacks. You can use this mechanism to impose pre-conditions on a route, then pass control to subsequent routes if there's no reason to proceed with the current route.
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`app.get("/example/b", 
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`app.get("/example/b", 
     (req, res, next) -> {
         System.out.println("the response will be sent by the next function ...");
         next.handle(req, res);
@@ -109,46 +111,46 @@ app.get("/a/", (req, res, next) -> {
 );`}</code></pre>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Express Path Patterns</h2>
+        <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Express Path Patterns</h2>
           <p class="text-gray-700 mb-4">
             Roya supports all Express.js path patterns for flexible routing:
           </p>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Optional Characters</h3>
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// Matches "acd" or "abcd"
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Optional Characters</h3>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`// Matches "acd" or "abcd"
 app.get("/ab?cd", (req, res, next) -> {
     res.send("ab?cd");
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">One or More</h3>
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// Matches "abcd", "abbcd", "abbbcd", etc.
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">One or More</h3>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`// Matches "abcd", "abbcd", "abbbcd", etc.
 app.get("/ab+cd", (req, res, next) -> {
     res.send("ab+cd");
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Wildcard</h3>
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// Matches anything after /files/
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Wildcard</h3>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`// Matches anything after /files/
 app.get("/files/*", (req, res, next) -> {
     String filePath = req.path().substring(7); // Remove "/files/"
     res.send("File: " + filePath);
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Regex Constraints</h3>
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// Only matches if :id is digits
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Regex Constraints</h3>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`// Only matches if :id is digits
 app.get("/users/:id(\\d+)", (req, res, next) -> {
     String id = req.params().get("id").orElse("unknown");
     res.json(Map.of("userId", id));
 });`}</code></pre>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Nested Routers</h2>
+        <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Nested Routers</h2>
           <p class="text-gray-700 mb-4">
             Organize routes into separate routers and mount them at specific paths. This keeps your code modular and maintainable.
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// Create a router for API routes
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`// Create a router for API routes
 Router apiRouter = Router.create();
 
 apiRouter.get("/users", (req, res, next) -> {
@@ -166,12 +168,12 @@ app.use("/api", apiRouter);
 // GET /api/users → handled by apiRouter
 // GET /api/posts → handled by apiRouter`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Deep Nesting</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Deep Nesting</h3>
           <p class="text-gray-700 mb-4">
             Routers can be nested infinitely deep:
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`Router v1Router = Router.create();
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`Router v1Router = Router.create();
 Router usersRouter = Router.create();
 
 usersRouter.get("/:id", (req, res, next) -> {
@@ -185,13 +187,13 @@ app.use("/api/v1", v1Router);
 // GET /api/v1/users/123 → usersRouter sees /123`}</code></pre>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Middleware Routing</h2>
+        <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Middleware Routing</h2>
           <p class="text-gray-700 mb-4">
             Use middleware at specific paths to apply logic to groups of routes:
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// Logging middleware for all /api routes
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`// Logging middleware for all /api routes
 app.use("/api", (req, res, next) -> {
     System.out.println("API Request: " + req.method() + " " + req.path());
     next.handle(req, res);
@@ -212,13 +214,13 @@ app.get("/api/users", handler);        // Logged, not authenticated
 app.get("/api/admin/users", handler);  // Logged AND authenticated`}</code></pre>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">All HTTP Methods</h2>
+        <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">All HTTP Methods</h2>
           <p class="text-gray-700 mb-4">
             Roya supports all standard HTTP methods:
           </p>
           
-          <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`app.get("/users", handler);      // GET
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`app.get("/users", handler);      // GET
 app.post("/users", handler);     // POST
 app.put("/users/:id", handler);  // PUT
 app.delete("/users/:id", handler); // DELETE
@@ -230,15 +232,15 @@ app.all("/health", (req, res, next) -> {
 });`}</code></pre>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Response Methods</h2>
+        <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Response Methods</h2>
           <p class="text-gray-700 mb-4">
             The methods on the response object (<code class="bg-gray-100 px-2 py-1 rounded">res</code>) can send a response to the client, and terminate the request-response cycle. If none of these methods are called from a route handler, the client request will be left hanging.
           </p>
           
           <table class="w-full mt-4 border-collapse">
             <thead>
-              <tr class="bg-gray-100">
+              <tr class="bg-roya-surface dark:bg-roya-surfaceDark">
                 <th class="border border-gray-300 px-4 py-2 text-left">Method</th>
                 <th class="border border-gray-300 px-4 py-2 text-left">Description</th>
               </tr>

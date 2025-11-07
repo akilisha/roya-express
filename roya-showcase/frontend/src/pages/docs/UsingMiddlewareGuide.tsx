@@ -4,18 +4,18 @@ export function UsingMiddlewareGuide() {
   return (
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-8">
-        <Link href="/docs" class="text-blue-600 hover:underline mb-4 inline-block">
+        <Link href="/docs" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark hover:underline mb-4 inline-block transition-colors">
           ← Documentation
         </Link>
-        <h1 class="text-4xl font-bold mb-4">Using Middleware</h1>
-        <p class="text-xl text-gray-600">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight font-sans">Using Middleware</h1>
+        <p class="text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Learn how to use middleware effectively in Roya. Apply cross-cutting concerns, handle authentication, logging, and more.
         </p>
       </div>
       
       <div class="space-y-8">
         <section class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-8 border-2 border-purple-200">
-          <h2 class="text-2xl font-semibold mb-4">What is Middleware?</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">What is Middleware?</h2>
           <p class="text-gray-700 mb-4">
             Middleware functions are functions that have access to the request object (<code class="bg-gray-100 px-2 py-1 rounded">req</code>), the response object (<code class="bg-gray-100 px-2 py-1 rounded">res</code>), and the next middleware function in the application's request-response cycle.
           </p>
@@ -28,7 +28,7 @@ export function UsingMiddlewareGuide() {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Basic Middleware</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Basic Middleware</h2>
           
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`var app = Roya.create();
 
@@ -42,7 +42,7 @@ app.get("/", (req, res, next) -> {
     res.send("Hello World");
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Middleware Execution Order</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Middleware Execution Order</h3>
           <p class="text-gray-700 mb-4">
             Middleware executes in the order it's registered:
           </p>
@@ -69,7 +69,7 @@ app.get("/", (req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Path-Specific Middleware</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Path-Specific Middleware</h2>
           <p class="text-gray-700 mb-4">
             Apply middleware to specific paths:
           </p>
@@ -96,12 +96,12 @@ app.get("/api/admin/users", handler);  // Logged AND authenticated`}</code></pre
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Built-in Middleware</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Built-in Middleware</h2>
           <p class="text-gray-700 mb-4">
             Roya provides many built-in middleware factories:
           </p>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">JSON Body Parsing</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">JSON Body Parsing</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.core.middleware.Json;
 
 app.use(Json.json());
@@ -113,17 +113,17 @@ app.post("/users", (req, res, next) -> {
     res.json(Map.of("name", name));
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">CORS</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">CORS</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.core.middleware.Cors;
 
 app.use(Cors.cors()); // Enable CORS for all routes`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Request Logging</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Request Logging</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.core.middleware.Morgan;
 
 app.use(Morgan.combined()); // Apache combined log format`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Session Management</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Session Management</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.core.middleware.Session;
 
 app.use(Session.session());
@@ -136,7 +136,7 @@ app.get("/profile", (req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Short-Circuiting</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Short-Circuiting</h2>
           <p class="text-gray-700 mb-4">
             Don't call <code class="bg-gray-100 px-2 py-1 rounded">next()</code> to stop the middleware chain:
           </p>
@@ -162,7 +162,7 @@ app.get("/api/users", (req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Modifying Request/Response</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Modifying Request/Response</h2>
           <p class="text-gray-700 mb-4">
             Middleware can modify request and response objects:
           </p>
@@ -189,7 +189,7 @@ app.get("/", (req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Complete Example</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Complete Example</h2>
           
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.core.middleware.*;
@@ -232,7 +232,7 @@ public class App {
         </section>
         
         <section class="bg-purple-50 border border-purple-200 rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-purple-900 mb-2">💡 Middleware Tips</h3>
+          <h3 class="text-lg font-bold text-roya-primary dark:text-roya-primary mb-2 font-sans">💡 Middleware Tips</h3>
           <ul class="space-y-2 text-purple-800">
             <li><strong>Order matters</strong> - Register middleware in the order you want it to execute</li>
             <li><strong>Call next()</strong> - Always call next() unless you want to stop the chain</li>

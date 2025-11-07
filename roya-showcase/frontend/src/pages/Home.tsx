@@ -5,7 +5,7 @@ export function Home() {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Hero Section */}
       <div class="text-center mb-20">
-        <h1 class="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-roya-primary via-roya-primary to-roya-accent bg-clip-text text-transparent tracking-tight">
+        <h1 class="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-roya-primary via-roya-primary to-roya-accent bg-clip-text text-transparent tracking-tight font-sans">
           Build AI-Powered Apps
         </h1>
         <p class="text-2xl md:text-3xl text-roya-text dark:text-roya-textDark mb-6 max-w-3xl mx-auto font-medium leading-relaxed">
@@ -30,7 +30,7 @@ export function Home() {
           <div class="inline-block bg-roya-accent text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
             ⚡ THE SUPERPOWER
           </div>
-          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-roya-text dark:text-roya-textDark">Roya AI: More Than a LangChain4j Wrapper</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Roya AI: More Than a LangChain4j Wrapper</h2>
           <p class="text-lg md:text-xl text-roya-text dark:text-roya-textDark max-w-3xl mx-auto leading-relaxed">
             Roya AI isn't just integrating LangChain4j—it's a <strong class="text-roya-primary dark:text-roya-primary">workflow orchestration framework</strong>
             that gives AI applications wings to fly. Think <strong class="text-roya-primary dark:text-roya-primary">n8n AI agents</strong>, but with Java's type-safety
@@ -41,7 +41,7 @@ export function Home() {
         <div class="grid md:grid-cols-2 gap-6 mt-8">
           {/* Architecture Layers */}
           <div class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl p-6 shadow-soft dark:shadow-soft-dark border border-roya-border dark:border-roya-borderDark">
-            <h3 class="text-xl font-bold mb-4 flex items-center text-roya-text dark:text-roya-textDark">
+            <h3 class="text-xl font-bold mb-4 flex items-center text-roya-text dark:text-roya-textDark font-sans">
               <span class="text-2xl mr-2">🏗️</span>
               Layered Architecture
             </h3>
@@ -72,7 +72,7 @@ export function Home() {
 
           {/* Key Differentiators */}
           <div class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl p-6 shadow-soft dark:shadow-soft-dark border border-roya-border dark:border-roya-borderDark">
-            <h3 class="text-xl font-bold mb-4 flex items-center text-roya-text dark:text-roya-textDark">
+            <h3 class="text-xl font-bold mb-4 flex items-center text-roya-text dark:text-roya-textDark font-sans">
               <span class="text-2xl mr-2">🚀</span>
               What Makes It Special
             </h3>
@@ -119,13 +119,13 @@ export function Home() {
 
       {/* Features Grid */}
       <div class="mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-roya-text dark:text-roya-textDark">
+        <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-roya-text dark:text-roya-textDark font-sans">
           Key Features
         </h2>
         <div class="grid md:grid-cols-3 gap-6">
           <div class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark hover:border-roya-primary/50 dark:hover:border-roya-primary/50 transition-all duration-300">
             <div class="text-5xl mb-4">🤖</div>
-            <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark">AI Integration</h3>
+            <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark font-sans">AI Integration</h3>
             <p class="text-base text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
               Complete LangChain4j integration: LLM, RAG, embeddings, tools, memory, and AI Services.
             </p>
@@ -133,7 +133,7 @@ export function Home() {
 
           <div class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark hover:border-roya-primary/50 dark:hover:border-roya-primary/50 transition-all duration-300">
             <div class="text-5xl mb-4">⚙️</div>
-            <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark">Workflow Orchestration</h3>
+            <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark font-sans">Workflow Orchestration</h3>
             <p class="text-base text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
               Multi-step AI pipelines with conditional flows, loops, approvals, and error handling.
             </p>
@@ -141,7 +141,7 @@ export function Home() {
 
           <div class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark hover:border-roya-primary/50 dark:hover:border-roya-primary/50 transition-all duration-300">
             <div class="text-5xl mb-4">⚡</div>
-            <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark">Performance</h3>
+            <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark font-sans">Performance</h3>
             <p class="text-base text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
               Built on Helidon Níma with virtual threads. Express.js compatibility with Java performance.
             </p>
@@ -151,7 +151,7 @@ export function Home() {
 
       {/* Comparison Section */}
       <div class="mb-16 bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-lg dark:shadow-soft-dark p-8 md:p-10 border border-roya-border dark:border-roya-borderDark">
-        <h2 class="text-3xl md:text-4xl font-bold text-center mb-10 text-roya-text dark:text-roya-textDark">
+        <h2 class="text-3xl md:text-4xl font-bold text-center mb-10 text-roya-text dark:text-roya-textDark font-sans">
           Roya AI vs. Others
         </h2>
         <div class="overflow-x-auto">
@@ -203,7 +203,7 @@ export function Home() {
       {/* The Story - Inspiration & Design Decisions */}
       <div class="mb-16 bg-gradient-to-br from-roya-primary/10 via-roya-primary/5 to-roya-accent/10 dark:from-roya-primary/20 dark:via-roya-primary/10 dark:to-roya-accent/20 rounded-2xl p-8 md:p-10 border-2 border-roya-primary/30 dark:border-roya-primary/50 shadow-soft dark:shadow-soft-dark">
         <div class="text-center mb-10">
-          <h2 class="text-3xl md:text-4xl font-bold mb-6 text-roya-text dark:text-roya-textDark">The Story Behind Roya</h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-6 text-roya-text dark:text-roya-textDark font-sans">The Story Behind Roya</h2>
           <p class="text-lg md:text-xl text-roya-text dark:text-roya-textDark mb-4 max-w-3xl mx-auto leading-relaxed">
             Roya didn't come out of nowhere—it was born from a desire to bring AI to Java on a <strong class="text-roya-primary dark:text-roya-primary">clean slate</strong>,&nbsp;
             taking full advantage of modern Java's brilliant features: <strong class="text-roya-primary dark:text-roya-primary">virtual threads</strong> for massive concurrency,&nbsp;
@@ -240,7 +240,7 @@ export function Home() {
             <div class="flex items-start">
               <span class="font-mono bg-roya-primary/20 dark:bg-roya-primary/30 text-roya-primary dark:text-roya-primary px-4 py-2 rounded-lg text-sm font-bold mr-4">2</span>
               <div class="flex-1">
-                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark">Not A Traditional Threaded Web Server</h3>
+                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark font-sans">Not A Traditional Threaded Web Server</h3>
                 <p class="text-base text-roya-text dark:text-roya-textDark leading-relaxed">
                   We needed a web server that could leverage Java's <strong class="text-roya-primary dark:text-roya-primary">virtual threads</strong> for massive concurrency.
                   Traditional thread-per-request models wouldn't cut it. <strong class="text-roya-primary dark:text-roya-primary">Helidon Níma</strong> fit perfectly—it's
@@ -258,7 +258,7 @@ export function Home() {
             <div class="flex items-start">
               <span class="font-mono bg-roya-primary/20 dark:bg-roya-primary/30 text-roya-primary dark:text-roya-primary px-4 py-2 rounded-lg text-sm font-bold mr-4">3</span>
               <div class="flex-1">
-                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark">Not Already Existing, Opinionated Frameworks</h3>
+                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark font-sans">Not Already Existing, Opinionated Frameworks</h3>
                 <p class="text-base text-roya-text dark:text-roya-textDark leading-relaxed">
                   We didn't build on <strong class="text-roya-primary dark:text-roya-primary">Spring Boot</strong> or <strong class="text-roya-primary dark:text-roya-primary">Quarkus</strong>, even though they offer
                   their own flavor of generative AI. Why? Because we wanted something <strong class="text-roya-primary dark:text-roya-primary">lightweight</strong>,&nbsp;
@@ -277,7 +277,7 @@ export function Home() {
             <div class="flex items-start">
               <span class="font-mono bg-roya-primary/20 dark:bg-roya-primary/30 text-roya-primary dark:text-roya-primary px-4 py-2 rounded-lg text-sm font-bold mr-4">4</span>
               <div class="flex-1">
-                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark">Fill the Gap: No n8n Equivalent in Java</h3>
+                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark font-sans">Fill the Gap: No n8n Equivalent in Java</h3>
                 <p class="text-base text-roya-text dark:text-roya-textDark leading-relaxed">
                   <strong class="text-roya-primary dark:text-roya-primary">n8n</strong> is amazing for workflow orchestration, but it's Node.js. There was no equivalent
                   in the Java ecosystem for building AI workflow agents with visual/code-first design. We saw this gap
@@ -296,7 +296,7 @@ export function Home() {
             <div class="flex items-start">
               <span class="font-mono bg-roya-primary/20 dark:bg-roya-primary/30 text-roya-primary dark:text-roya-primary px-4 py-2 rounded-lg text-sm font-bold mr-4">5</span>
               <div class="flex-1">
-                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark">Adapt LangChain4j to Fit the Roya Mould</h3>
+                <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark font-sans">Adapt LangChain4j to Fit the Roya Mould</h3>
                 <p class="text-base text-roya-text dark:text-roya-textDark leading-relaxed">
                   <strong class="text-roya-primary dark:text-roya-primary">LangChain4j</strong> was the lowest-level generative AI library available for Java. It provides
                   all the primitives (LLM, RAG, embeddings, tools, memory), but it needed adapting to fit Roya's philosophy.
@@ -325,7 +325,7 @@ export function Home() {
 
       {/* Quick Start */}
       <div class="bg-black dark:bg-black rounded-xl p-8 md:p-10 border-2 border-roya-primary/30 dark:border-roya-primary/50 shadow-soft dark:shadow-soft-dark">
-        <h2 class="text-2xl md:text-3xl font-bold mb-6 text-roya-primary dark:text-roya-primary">Quick Start</h2>
+        <h2 class="text-2xl md:text-3xl font-bold mb-6 text-roya-primary dark:text-roya-primary font-sans">Quick Start</h2>
         <pre class="bg-black dark:bg-black p-6 rounded-lg overflow-x-auto text-sm leading-relaxed border border-roya-borderDark">
 <code class="text-roya-primary dark:text-roya-primary font-mono">{`var app = Roya.create();
 var aiPlugin = new AIPlugin();

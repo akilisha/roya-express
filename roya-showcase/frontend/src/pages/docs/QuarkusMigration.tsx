@@ -3,12 +3,14 @@ import { Link } from 'wouter';
 export function QuarkusMigration() {
   return (
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="mb-8">
-        <Link href="/docs/migration" class="text-blue-600 hover:underline mb-4 inline-block">
+      <div class="mb-10">
+        <Link href="/docs/migration" class="text-roya-primary dark:text-roya-primary hover:underline mb-4 inline-block transition-colors">
           ← Migration Guides
         </Link>
-        <h1 class="text-4xl font-bold mb-4">Migrating from Quarkus</h1>
-        <p class="text-xl text-gray-600">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-primary dark:text-roya-primary tracking-tight">
+          Migrating from Quarkus
+        </h1>
+        <p class="text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Quarkus developers seeking a modern Java web framework - Roya offers virtual threads, FFM, and Express-compatible API.
         </p>
       </div>

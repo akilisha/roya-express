@@ -4,18 +4,18 @@ export function ErrorHandlingGuide() {
   return (
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-8">
-        <Link href="/docs" class="text-blue-600 hover:underline mb-4 inline-block">
+        <Link href="/docs" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark hover:underline mb-4 inline-block transition-colors">
           ← Documentation
         </Link>
-        <h1 class="text-4xl font-bold mb-4">Error Handling</h1>
-        <p class="text-xl text-gray-600">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight font-sans">Error Handling</h1>
+        <p class="text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Handle errors gracefully with Express-compatible error handlers. Catch exceptions, provide meaningful responses, and maintain application stability.
         </p>
       </div>
       
       <div class="space-y-8">
         <section class="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-8 border-2 border-red-200">
-          <h2 class="text-2xl font-semibold mb-4">Why Error Handling?</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Why Error Handling?</h2>
           <ul class="space-y-2 text-gray-700">
             <li>✅ <strong>Graceful Degradation</strong> - Don't crash on unexpected errors</li>
             <li>✅ <strong>User-Friendly Messages</strong> - Return meaningful error responses</li>
@@ -26,7 +26,7 @@ export function ErrorHandlingGuide() {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Error Handler Basics</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Error Handler Basics</h2>
           <p class="text-gray-700 mb-4">
             Error handlers have 4 parameters (vs 3 for regular handlers). They catch exceptions thrown by handlers or passed via <code class="bg-gray-100 px-2 py-1 rounded">next.error()</code>.
           </p>
@@ -37,7 +37,7 @@ app.useErrorHandler((error, req, res, next) -> {
     res.status(500).json(Map.of("error", error.getMessage()));
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Express Comparison</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Express Comparison</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <h4 class="font-semibold mb-2">Express.js</h4>
@@ -59,7 +59,7 @@ app.useErrorHandler((error, req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Propagating Errors</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Propagating Errors</h2>
           <p class="text-gray-700 mb-4">
             Use <code class="bg-gray-100 px-2 py-1 rounded">next.error()</code> to explicitly pass errors to error handlers:
           </p>
@@ -79,7 +79,7 @@ app.useErrorHandler((error, req, res, next) -> {
     res.json(user);
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Automatic Exception Catching</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Automatic Exception Catching</h3>
           <p class="text-gray-700 mb-4">
             Uncaught exceptions are automatically caught and passed to error handlers:
           </p>
@@ -95,7 +95,7 @@ app.useErrorHandler((error, req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Multiple Error Handlers</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Multiple Error Handlers</h2>
           <p class="text-gray-700 mb-4">
             You can register multiple error handlers. They execute in order until one handles the error:
           </p>
@@ -128,7 +128,7 @@ app.useErrorHandler((error, req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Error Types</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Error Types</h2>
           <p class="text-gray-700 mb-4">
             Handle different error types with specific responses:
           </p>
@@ -163,7 +163,7 @@ app.useErrorHandler((error, req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Complete Example</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Complete Example</h2>
           
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.plugins.database.Database;
@@ -230,7 +230,7 @@ public class UserAPI {
         </section>
         
         <section class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-blue-900 mb-2">💡 Best Practices</h3>
+          <h3 class="text-lg font-bold text-roya-primary dark:text-roya-primary mb-2 font-sans">💡 Best Practices</h3>
           <ul class="space-y-2 text-blue-800">
             <li><strong>Always handle errors</strong> - Don't let exceptions crash your app</li>
             <li><strong>Log errors</strong> - Use logging middleware or error handlers to track issues</li>

@@ -4,18 +4,18 @@ export function MiddlewareGuide() {
   return (
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-8">
-        <Link href="/docs" class="text-blue-600 hover:underline mb-4 inline-block">
+        <Link href="/docs" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark hover:underline mb-4 inline-block transition-colors">
           ← Documentation
         </Link>
-        <h1 class="text-4xl font-bold mb-4">Writing Middleware</h1>
-        <p class="text-xl text-gray-600">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight font-sans">Writing Middleware</h1>
+        <p class="text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Middleware functions are functions that have access to the request object (<code class="bg-gray-100 px-2 py-1 rounded">req</code>), the response object (<code class="bg-gray-100 px-2 py-1 rounded">res</code>), and the next middleware function in the application's request-response cycle.
         </p>
       </div>
       
       <div class="space-y-8">
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">What is Middleware?</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">What is Middleware?</h2>
           <p class="text-gray-700 mb-4">
             Middleware functions can perform the following tasks:
           </p>
@@ -28,7 +28,7 @@ export function MiddlewareGuide() {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Example</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Example</h2>
           <p class="text-gray-700 mb-4">
             Here is an example of a simple "Hello World" Roya application, with one middleware function:
           </p>
@@ -46,7 +46,7 @@ app.get("/", (req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Middleware Function</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Middleware Function</h2>
           <p class="text-gray-700 mb-4">
             Middleware functions are functions that take three parameters:
           </p>
@@ -66,7 +66,7 @@ public interface Handler {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Application-Level Middleware</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Application-Level Middleware</h2>
           <p class="text-gray-700 mb-4">
             Bind application-level middleware to an instance of the app object by using the <code class="bg-gray-100 px-2 py-1 rounded">app.use()</code> and <code class="bg-gray-100 px-2 py-1 rounded">app.METHOD()</code> functions, where <code class="bg-gray-100 px-2 py-1 rounded">METHOD</code> is the HTTP method of the request that the middleware function handles (such as GET, PUT, or POST) in lowercase.
           </p>
@@ -93,7 +93,7 @@ app.get("/user/:id", (req, res, next) -> {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Router-Level Middleware</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Router-Level Middleware</h2>
           <p class="text-gray-700 mb-4">
             Router-level middleware works in the same way as application-level middleware, except it is bound to an instance of <code class="bg-gray-100 px-2 py-1 rounded">Router</code>.
           </p>
@@ -113,7 +113,7 @@ app.use("/", router);`}</code></pre>
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Error-Handling Middleware</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Error-Handling Middleware</h2>
           <p class="text-gray-700 mb-4">
             Error-handling middleware always takes <strong>four</strong> arguments. You must provide four arguments to identify it as an error-handling middleware function. Even if you don't need to use the <code class="bg-gray-100 px-2 py-1 rounded">next</code> object, you must specify it to maintain the signature. Otherwise, the <code class="bg-gray-100 px-2 py-1 rounded">next</code> object will be interpreted as regular middleware and will fail to handle errors.
           </p>

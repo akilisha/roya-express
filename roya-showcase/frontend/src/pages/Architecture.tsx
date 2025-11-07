@@ -30,20 +30,20 @@ export function Architecture() {
       </div>
 
       {/* Architecture Diagram */}
-      <div class="mb-12 bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-2xl font-bold mb-6">Three-Layer Architecture</h2>
+      <div class="mb-12 bg-roya-surface dark:bg-roya-surfaceDark rounded-xl shadow-lg p-8 border border-roya-border dark:border-roya-borderDark">
+        <h2 class="text-3xl md:text-4xl font-bold mb-8 text-roya-text dark:text-roya-textDark">Three-Layer Architecture</h2>
         
-        <div class="space-y-4">
+        <div class="space-y-6">
           {/* Layer 3 */}
-          <div class="border-2 border-purple-300 rounded-lg p-6 bg-purple-50">
+          <div class="border-2 border-roya-primary/50 dark:border-roya-primary rounded-xl p-6 bg-gradient-to-br from-roya-primary/10 to-roya-primary/5 dark:from-roya-primary/20 dark:to-roya-primary/10">
             <div class="flex items-center mb-4">
-              <span class="font-mono bg-purple-600 text-white px-3 py-1 rounded mr-4">Layer 3</span>
-              <h3 class="text-xl font-semibold">Roya Workflow Orchestration</h3>
+              <span class="font-mono bg-roya-primary text-white px-3 py-1 rounded mr-4">Layer 3</span>
+              <h3 class="text-2xl font-bold text-roya-text dark:text-roya-textDark">Roya Workflow Orchestration</h3>
             </div>
-            <p class="text-gray-700 mb-4">
-              The <strong>superpower layer</strong>. This is what makes Roya AI more than just a LangChain4j wrapper.
+            <p class="text-roya-textMuted dark:text-roya-textMutedDark mb-4 text-lg">
+              The <strong class="text-roya-primary dark:text-roya-primary">superpower layer</strong>. This is what makes Roya AI more than just a LangChain4j wrapper.
             </p>
-            <ul class="list-disc list-inside space-y-2 text-gray-700 ml-8">
+            <ul class="list-disc list-inside space-y-2 text-roya-text dark:text-roya-textDark ml-8">
               <li><strong>Multi-step AI pipelines</strong> - Chain LLM calls, RAG queries, extractions, and more</li>
               <li><strong>Conditional flows</strong> - Branch based on AI responses or data conditions</li>
               <li><strong>Loops & iterations</strong> - Process batches, retry logic, parallel execution</li>
@@ -51,8 +51,8 @@ export function Architecture() {
               <li><strong>Error handling</strong> - Circuit breakers, fallbacks, graceful degradation</li>
               <li><strong>Cost tracking</strong> - Monitor and enforce AI API budgets</li>
             </ul>
-            <div class="mt-4 p-4 bg-white rounded border border-purple-200">
-              <p class="text-sm text-gray-600 mb-2"><strong>Example:</strong></p>
+            <div class="mt-4 p-4 bg-roya-bg dark:bg-roya-bgDark rounded-lg border border-roya-border dark:border-roya-borderDark">
+              <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark mb-2"><strong>Example:</strong></p>
               <pre class="text-xs bg-gray-900 text-green-400 p-3 rounded overflow-x-auto"><code>{`Workflow workflow = ai.workflow("customer-support")
     .trigger("webhook", WebhookTrigger.builder()
         .path("/api/inquiry").build())
@@ -67,16 +67,16 @@ export function Architecture() {
           </div>
 
           {/* Layer 2 */}
-          <div class="border-2 border-blue-300 rounded-lg p-6 bg-blue-50">
+          <div class="border-2 border-roya-accent/50 dark:border-roya-accent rounded-xl p-6 bg-gradient-to-br from-roya-accent/10 to-roya-accent/5 dark:from-roya-accent/20 dark:to-roya-accent/10">
             <div class="flex items-center mb-4">
-              <span class="font-mono bg-blue-600 text-white px-3 py-1 rounded mr-4">Layer 2</span>
-              <h3 class="text-xl font-semibold">LangChain4j Integration</h3>
+              <span class="font-mono bg-roya-accent text-white px-3 py-1 rounded mr-4">Layer 2</span>
+              <h3 class="text-2xl font-bold text-roya-text dark:text-roya-textDark">LangChain4j Integration</h3>
             </div>
-            <p class="text-gray-700 mb-4">
+            <p class="text-roya-textMuted dark:text-roya-textMutedDark mb-4 text-lg">
               Complete integration with LangChain4j's AI capabilities. This is the foundation that provides 
               all the AI primitives.
             </p>
-            <ul class="list-disc list-inside space-y-2 text-gray-700 ml-8">
+            <ul class="list-disc list-inside space-y-2 text-roya-text dark:text-roya-textDark ml-8">
               <li><strong>LLM calls</strong> - OpenAI, Anthropic, Gemini, local models</li>
               <li><strong>RAG (Retrieval-Augmented Generation)</strong> - Qdrant, Pinecone, in-memory stores</li>
               <li><strong>Embeddings</strong> - Text-to-vector conversion for semantic search</li>
@@ -86,8 +86,8 @@ export function Architecture() {
               <li><strong>Streaming</strong> - Token-by-token responses via SSE</li>
               <li><strong>Multimodal</strong> - Image, audio, video, PDF processing</li>
             </ul>
-            <div class="mt-4 p-4 bg-white rounded border border-blue-200">
-              <p class="text-sm text-gray-600 mb-2"><strong>Example:</strong></p>
+            <div class="mt-4 p-4 bg-roya-bg dark:bg-roya-bgDark rounded-lg border border-roya-border dark:border-roya-borderDark">
+              <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark mb-2"><strong>Example:</strong></p>
               <pre class="text-xs bg-gray-900 text-green-400 p-3 rounded overflow-x-auto"><code>{`AI ai = app.services().get(AI.class);
 
 // Simple LLM call
@@ -107,23 +107,23 @@ MyService service = ai.aiService(MyService.class);`}</code></pre>
           </div>
 
           {/* Layer 1 */}
-          <div class="border-2 border-gray-300 rounded-lg p-6 bg-gray-50">
+          <div class="border-2 border-roya-border dark:border-roya-borderDark rounded-xl p-6 bg-roya-surface dark:bg-roya-surfaceDark">
             <div class="flex items-center mb-4">
-              <span class="font-mono bg-gray-600 text-white px-3 py-1 rounded mr-4">Layer 1</span>
-              <h3 class="text-xl font-semibold">Roya Framework</h3>
+              <span class="font-mono bg-gray-600 dark:bg-gray-700 text-white px-3 py-1 rounded mr-4">Layer 1</span>
+              <h3 class="text-2xl font-bold text-roya-text dark:text-roya-textDark">Roya Framework</h3>
             </div>
-            <p class="text-gray-700 mb-4">
+            <p class="text-roya-textMuted dark:text-roya-textMutedDark mb-4 text-lg">
               The Express.js-compatible HTTP framework built on Helidon Níma with virtual threads.
             </p>
-            <ul class="list-disc list-inside space-y-2 text-gray-700 ml-8">
+            <ul class="list-disc list-inside space-y-2 text-roya-text dark:text-roya-textDark ml-8">
               <li><strong>Express-compatible API</strong> - Familiar syntax for Express.js developers</li>
               <li><strong>Virtual threads</strong> - Millions of concurrent connections</li>
               <li><strong>Plugin system</strong> - Modular, extensible architecture</li>
               <li><strong>Middleware</strong> - JSON parsing, CORS, authentication, logging</li>
               <li><strong>Type-safe routing</strong> - Compile-time route validation</li>
             </ul>
-            <div class="mt-4 p-4 bg-white rounded border border-gray-200">
-              <p class="text-sm text-gray-600 mb-2"><strong>Example:</strong></p>
+            <div class="mt-4 p-4 bg-roya-bg dark:bg-roya-bgDark rounded-lg border border-roya-border dark:border-roya-borderDark">
+              <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark mb-2"><strong>Example:</strong></p>
               <pre class="text-xs bg-gray-900 text-green-400 p-3 rounded overflow-x-auto"><code>{`var app = Roya.create();
 
 app.use(Json.json());
@@ -141,15 +141,15 @@ app.listen(3000);`}</code></pre>
       </div>
 
       {/* Comparison with n8n */}
-      <div class="mb-12 bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-2xl font-bold mb-6">Roya AI vs. n8n AI Agents</h2>
+      <div class="mb-12 bg-roya-surface dark:bg-roya-surfaceDark rounded-xl shadow-lg p-8 border border-roya-border dark:border-roya-borderDark">
+        <h2 class="text-3xl md:text-4xl font-bold mb-8 text-roya-text dark:text-roya-textDark">Roya AI vs. n8n AI Agents</h2>
         <div class="grid md:grid-cols-2 gap-6">
-          <div class="border-2 border-gray-200 rounded-lg p-6">
-            <h3 class="text-lg font-semibold mb-4 flex items-center">
+          <div class="border-2 border-roya-border dark:border-roya-borderDark rounded-xl p-6 bg-roya-bg dark:bg-roya-bgDark">
+            <h3 class="text-xl font-bold mb-4 flex items-center text-roya-text dark:text-roya-textDark">
               <span class="text-2xl mr-2">🎨</span>
               n8n AI Agents
             </h3>
-            <ul class="space-y-2 text-sm text-gray-700">
+            <ul class="space-y-2 text-sm text-roya-text dark:text-roya-textDark">
               <li>✓ Visual workflow designer</li>
               <li>✓ Node.js runtime</li>
               <li>✓ Low-code/no-code approach</li>
@@ -159,12 +159,12 @@ app.listen(3000);`}</code></pre>
             </ul>
           </div>
           
-          <div class="border-2 border-blue-300 rounded-lg p-6 bg-blue-50">
-            <h3 class="text-lg font-semibold mb-4 flex items-center">
+          <div class="border-2 border-roya-primary/50 dark:border-roya-primary rounded-xl p-6 bg-gradient-to-br from-roya-primary/10 to-roya-primary/5 dark:from-roya-primary/20 dark:to-roya-primary/10">
+            <h3 class="text-xl font-bold mb-4 flex items-center text-roya-text dark:text-roya-textDark">
               <span class="text-2xl mr-2">☕</span>
               Roya AI Workflows
             </h3>
-            <ul class="space-y-2 text-sm text-gray-700">
+            <ul class="space-y-2 text-sm text-roya-text dark:text-roya-textDark">
               <li>✓ Code-first workflow design</li>
               <li>✓ Java runtime (virtual threads)</li>
               <li>✓ Type-safe at compile-time</li>
@@ -174,22 +174,22 @@ app.listen(3000);`}</code></pre>
             </ul>
           </div>
         </div>
-        <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <p class="text-sm text-gray-700">
-            <strong>💡 The Key Difference:</strong> n8n is great for visual, low-code workflows. 
-            Roya AI is for developers who want <strong>type-safe, code-first AI workflows</strong> with 
+        <div class="mt-6 p-4 bg-roya-accent/10 dark:bg-roya-accent/20 border border-roya-accent/30 dark:border-roya-accent/50 rounded-lg">
+          <p class="text-sm text-roya-text dark:text-roya-textDark">
+            <strong class="text-roya-primary dark:text-roya-primary">💡 The Key Difference:</strong> n8n is great for visual, low-code workflows. 
+            Roya AI is for developers who want <strong class="text-roya-primary dark:text-roya-primary">type-safe, code-first AI workflows</strong> with 
             Java's performance and ecosystem.
           </p>
         </div>
       </div>
 
       {/* Real-World Example */}
-      <div class="bg-gray-900 text-white rounded-lg p-8">
-        <h2 class="text-2xl font-bold mb-4">Real-World Example: Customer Support Workflow</h2>
-        <p class="text-gray-300 mb-6">
+      <div class="bg-gray-900 text-white rounded-xl p-8 border-2 border-gray-700">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6 text-roya-primary">Real-World Example: Customer Support Workflow</h2>
+        <p class="text-gray-300 mb-6 text-lg">
           This example shows how Roya AI's workflow orchestration layer enables complex, multi-step AI pipelines:
         </p>
-        <pre class="bg-gray-800 p-4 rounded overflow-x-auto text-sm"><code>{`// 1. Webhook trigger receives customer inquiry
+        <pre class="bg-gray-800 p-4 rounded-lg overflow-x-auto text-sm border border-gray-700"><code>{`// 1. Webhook trigger receives customer inquiry
 Workflow workflow = ai.workflow("customer-support")
     .trigger("webhook", WebhookTrigger.builder()
         .path("/api/inquiry")
@@ -231,7 +231,7 @@ Workflow workflow = ai.workflow("customer-support")
 
       {/* CTA */}
       <div class="text-center mt-12">
-        <Link href="/examples" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-block">
+        <Link href="/examples" class="bg-roya-primary text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-roya-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl inline-block">
           See More Workflow Examples →
         </Link>
       </div>

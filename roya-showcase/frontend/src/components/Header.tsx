@@ -55,7 +55,7 @@ export function Header() {
               )}
             </button>
             <a
-              href="https://github.com/your-org/roya"
+              href="https://github.com/akilisha/roya-express"
               target="_blank"
               rel="noopener noreferrer"
               class="text-roya-textMuted dark:text-roya-textMutedDark hover:text-roya-primary dark:hover:text-roya-primary transition-colors duration-200"

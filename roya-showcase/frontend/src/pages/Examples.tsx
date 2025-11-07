@@ -17,62 +17,264 @@ export function Examples() {
     {
       id: 'workflow',
       title: 'Customer Inquiry Workflow',
-      description: 'Multi-step AI orchestration showcasing Roya Workflow + LangChain4j',
+      description: 'Multi-step AI orchestration that ingests customer emails, retrieves answers with RAG, and drafts personalized responses.',
       tags: ['Workflow', 'Multi-Step', 'Orchestration'],
       highlights: [
-        'Webhook trigger → Extract → RAG → Generate',
-        'Shows workflow orchestration (Layer 3)',
-        'Combines LangChain4j primitives (Layer 2)'
+        'Webhook trigger → Extraction → RAG → LLM response',
+        'Combines Roya Workflow nodes with LangChain4j AI Services',
+        'Demonstrates document indexing + contextual response generation'
       ],
       code: `Workflow workflow = ai.workflow("customer-inquiry")
     .trigger("webhook", WebhookTrigger.builder()
-        .path("/api/inquiry").method("POST").build())
-    .action("extract", ExtractNode.<InquiryDetails>builder(...))
-    .action("rag", RAGNode.builder(...))
-    .action("generate", LLMActionNode.builder(...))
+        .path("/api/inquiry")
+        .method("POST")
+        .signingKey(env("WEBHOOK_SECRET"))
+        .build())
+    .extract("extract", CustomerInquiry.class, builder -> builder
+        .systemPrompt("Extract contact, topic, sentiment, priority")
+        .inputKey("body")
+        .outputKey("inquiry"))
+    .rag("knowledge", builder -> builder
+        .collection("support-kb")
+        .question("Given {{extract.inquiry}}, retrieve relevant policies")
+        .minScore(0.65)
+        .outputKey("context"))
+    .llm("draft", builder -> builder
+        .systemPrompt("You are a friendly support agent")
+        .userPrompt("Inquiry: {{extract.inquiry}}\nContext: {{knowledge.context}}")
+        .outputKey("response"))
     .edge("webhook", "extract")
-    .edge("extract", "rag")
-    .edge("rag", "generate")
-    .build();`
+    .edge("extract", "knowledge")
+    .edge("knowledge", "draft")
+    .build();
+
+app.post("/api/inquiry", (req, res, next) -> {
+    workflow.execute(Map.of("body", req.body()));
+    res.status(202).json(Map.of("status", "queued"));
+});`
     },
     {
       id: 'coffee-shop',
       title: 'Coffee Shop Assistant',
-      description: 'RAG-powered assistant with chat memory and tools',
+      description: 'Conversational assistant that remembers guests, recommends drinks, and browses menu knowledge with RAG + tools.',
       tags: ['RAG', 'Memory', 'Tools'],
-      code: `// Full RAG + Memory + Tools example
+      highlights: [
+        'LangChain4j AI Service with chat memory + function tools',
+        'Menu documents indexed in Qdrant for contextual answers',
+        'Dynamic specials fetched from an HTTP API tool'
+      ],
+      code: `interface BaristaAssistant {
+    @SystemMessage("You are a helpful barista")
+    @UserMessage("{{question}}")
+    String chat(@V("question") String question);
+}
+
+record DrinkSuggestion(String name, String reason, List<String> pairings) {}
+
+class MenuTools {
+    @Tool("List today specials")
+    List<String> specials() { return http.get("https://menu/api/specials"); }
+}
+
 ChatMemory memory = memoryProvider.getOrCreate(conversationId);
-RAGResponse response = ai.ragApi().ask(question, 
-    RAGOptions.builder().collection("menu-items").build());
-MyService service = ai.aiService(MyService.class,
-    builder -> builder.tools(new MenuTools()));`
+BaristaAssistant assistant = ai.aiService(BaristaAssistant.class, builder -> builder
+    .memory(memory)
+    .tools(new MenuTools())
+    .retrieval(builder1 -> builder1
+        .collection("coffee-menu")
+        .documentScoreThreshold(0.6)));
+
+String answer = assistant.chat("What should I drink if I love chocolate?");`
     },
     {
       id: 'customer-support',
       title: 'Customer Support Agent',
-      description: 'Complete document processing pipeline with RAG',
-      tags: ['RAG', 'Document Processing'],
-      code: `// Index documents
-ai.vectors().indexPath("customer-support", 
-    Path.of("docs/"), ChunkingOptions.medium());
+      description: 'Document ingestion + persistent memory agent that answers policy questions and keeps conversation history.',
+      tags: ['RAG', 'Persistent Memory', 'Database'],
+      highlights: [
+        'Persistent ChatMemory stored via Database plugin',
+        'On-demand document ingestion with chunking presets',
+        'REST API exposing /ask and /chat endpoints'
+      ],
+      code: `PersistentChatMemoryProvider memoryProvider = new PersistentChatMemoryProvider(database);
 
-// Query with RAG
-RAGResponse answer = ai.ragApi().ask(question,
-    RAGOptions.builder().collection("customer-support").build());`
+ai.vectors().indexPath("customer-support",
+    Path.of("docs/policies"),
+    AI.ChunkingOptions.markdown());
+
+CustomerSupportAgentService agent = ai.aiService(CustomerSupportAgentService.class, cfg -> {
+    cfg.memory(memoryProvider.getOrCreate("support"));
+    cfg.retrieval(retrieval -> retrieval.collection("customer-support"));
+});
+
+app.post("/chat/:id", (req, res, next) -> {
+    String conversationId = req.params().get("id").orElseThrow();
+    String question = (String) req.get("body").get("question");
+    ChatMemory memory = memoryProvider.getOrCreate(conversationId);
+    String reply = agent.chatWithMemory(memory, question);
+    res.json(Map.of("reply", reply));
+});`
     },
     {
       id: 'mcp-github',
-      title: 'MCP GitHub Example',
-      description: 'Model Context Protocol integration with GitHub tools',
-      tags: ['MCP', 'External Tools'],
-      code: `// Discover MCP tools
-MCPClient mcpClient = MCPClient.builder()
-    .server("github", "https://mcp-server.example.com")
+      title: 'MCP GitHub Analyst',
+      description: 'Model Context Protocol client that summarizes Git history and opens issues with LangChain tools.',
+      tags: ['MCP', 'External Tools', 'Agents'],
+      highlights: [
+        'Connects to GitHub MCP server via STDIO transport',
+        'Converts MCP tool definitions into LangChain tools automatically',
+        'Streams summaries and file diffs back to the user'
+      ],
+      code: `MCPClient client = MCPClient.builder()
+    .server("github", "docker run --rm github-mcp")
+    .cacheDuration(Duration.ofMinutes(10))
     .build();
 
-// Use in AI Service
-MyService service = ai.aiService(MyService.class,
-    builder -> builder.toolProvider(mcpToolProvider));`
+List<ToolSpecification> tools = client.discoverTools("github");
+
+interface GitAnalyst {
+    @SystemMessage("Summarize repository activity")
+    String summarizeCommits(String repo, String branch);
+}
+
+GitAnalyst analyst = ai.aiService(GitAnalyst.class, builder -> builder
+    .toolSpecifications(tools));
+
+String summary = analyst.summarizeCommits("akilisha/roya-express", "main");`
+    },
+    {
+      id: 'travel-agent',
+      title: 'Adaptive Travel Agent',
+      description: 'Agentic trip planner that interviews the traveler, checks weather, hunts flight deals, and guides booking with human approvals.',
+      tags: ['Agents', 'MCP', 'Human-in-the-loop'],
+      highlights: [
+        'Conversation-driven requirements capture',
+        'Weather + flight deal lookups via MCP and REST tools',
+        'Workflow branches for traveler approval and booking'
+      ],
+      code: `interface TravelConcierge {
+    @SystemMessage("You are a proactive travel planner")
+    String planTrip(String travelerProfile);
+}
+
+class TravelTools {
+    @Tool("Check weather for a destination")
+    WeatherReport weather(String city, LocalDate start, LocalDate end) { ... }
+
+    @Tool("Search flight bundles")
+    List<FlightBundle> flights(String origin, String destination, LocalDate start, LocalDate end) { ... }
+}
+
+Workflow travelWorkflow = ai.workflow("adaptive-travel")
+    .trigger("start", ChatTrigger.builder()
+        .path("/travel-agent")
+        .welcomeMessage("Tell me about the trip you're dreaming of!")
+        .build())
+    .llm("intake", builder -> builder
+        .systemPrompt("Interview the traveler and summarize constraints")
+        .inputKey("chat.message")
+        .outputKey("profile"))
+    .agent("research", builder -> builder
+        .systemPrompt("Given {{intake.profile}}, expand options")
+        .tools(new TravelTools())
+        .outputKey("bundles"))
+    .approval("confirm", approval -> approval
+        .prompt("Traveler, do any of these itineraries look good?\n{{research.bundles}}"))
+    .llm("booking", builder -> builder
+        .systemPrompt("Summarize the confirmed plan and collect booking info")
+        .inputKey("confirm.response")
+        .outputKey("nextSteps"))
+    .edge("start", "intake")
+    .edge("intake", "research")
+    .edge("research", "confirm")
+    .edge("confirm", "booking")
+    .build();`
+    },
+    {
+      id: 'smart-marketplace',
+      title: 'Uberlist Marketplace Assistant',
+      description: 'Conversational marketplace that tailors search results, runs comparisons across sources, and routes buyers to sellers.',
+      tags: ['Marketplace', 'RAG', 'Agents'],
+      highlights: [
+        'Conversational search with dynamic filters and faceted results',
+        'RAG-powered item summaries + cross-store availability checks',
+        'Guided negotiation and seller hand-off via workflow nodes'
+      ],
+      code: `Workflow marketplace = ai.workflow("smart-marketplace")
+    .trigger("chat", ChatTrigger.builder()
+        .path("/uberlist")
+        .welcomeMessage("Hi! What are you hunting for today?")
+        .build())
+    .llm("understand", builder -> builder
+        .systemPrompt("Extract product intent, budget, condition preferences")
+        .inputKey("chat.message")
+        .outputKey("criteria"))
+    .rag("inventory", builder -> builder
+        .collection("classifieds")
+        .question("Find items matching {{understand.criteria}}")
+        .outputKey("listings"))
+    .agent("augment", builder -> builder
+        .systemPrompt("For each listing, fetch competitor pricing and nearby store availability")
+        .tools(new MarketplaceTools())
+        .outputKey("enriched"))
+    .llm("present", builder -> builder
+        .systemPrompt("Act as a personal shopper. Present top matches and next steps")
+        .userPrompt("Criteria: {{understand.criteria}}\nListings: {{augment.enriched}}")
+        .outputKey("summary"))
+    .approval("handoff", approval -> approval
+        .prompt("Ready to contact a seller? I'll share your info when you confirm."))
+    .edge("chat", "understand")
+    .edge("understand", "inventory")
+    .edge("inventory", "augment")
+    .edge("augment", "present")
+    .edge("present", "handoff")
+    .build();`
+    },
+    {
+      id: 'sre-copilot',
+      title: 'SRE Incident Copilot',
+      description: 'Operations assistant that triages alerts, surfaces runbooks, asks for human approval, and orchestrates remediation tasks.',
+      tags: ['DevOps', 'Monitoring', 'Human Approval'],
+      highlights: [
+        'Ingests alert payloads and enriches them with metrics + logs',
+        'RAG against runbooks, past incidents, and Slack transcripts',
+        'Guided mitigation with approval gates and postmortem draft'
+      ],
+      code: `Workflow incident = ai.workflow("incident-copilot")
+    .trigger("alert", WebhookTrigger.builder()
+        .path("/alerts")
+        .method("POST")
+        .build())
+    .extract("classify", IncidentContext.class, builder -> builder
+        .systemPrompt("Parse alert JSON and summarize the incident context")
+        .inputKey("body")
+        .outputKey("context"))
+    .rag("runbook", builder -> builder
+        .collection("sre-runbooks")
+        .question("Given {{classify.context}}, retrieve mitigation steps")
+        .outputKey("steps"))
+    .llm("plan", builder -> builder
+        .systemPrompt("Create a step-by-step remediation plan with owners")
+        .userPrompt("Incident: {{classify.context}}\nRunbook: {{runbook.steps}}")
+        .outputKey("plan"))
+    .approval("execute", approval -> approval
+        .prompt("Execute this plan?\n{{plan.plan}}"))
+    .agent("automate", builder -> builder
+        .systemPrompt("Run automation for approved steps and collect outputs")
+        .tools(new DevOpsTools())
+        .inputKey("execute.response")
+        .outputKey("automation"))
+    .llm("postmortem", builder -> builder
+        .systemPrompt("Draft an incident summary for the postmortem doc")
+        .userPrompt("Context: {{classify.context}}\nPlan: {{plan.plan}}\nExecution: {{automate.automation}}")
+        .outputKey("summary"))
+    .edge("alert", "classify")
+    .edge("classify", "runbook")
+    .edge("runbook", "plan")
+    .edge("plan", "execute")
+    .edge("execute", "automate")
+    .edge("automate", "postmortem")
+    .build();`
     }
   ];
 
@@ -209,8 +411,8 @@ MyService service = ai.aiService(MyService.class,
             </div>
             
             <div class="bg-black dark:bg-black rounded-lg p-4 mb-4 overflow-x-auto border border-roya-borderDark">
-              <pre class="text-xs text-roya-primary font-mono">
-                <code>{example.code.split('\n')[0]}...</code>
+              <pre class="text-xs text-roya-primary font-mono leading-snug">
+                <code>{example.code.split('\n').slice(0, 3).join('\n')}...</code>
               </pre>
             </div>
             

@@ -120,7 +120,7 @@ RAGResponse response = ai.ragApi().ask("Question?",
             <span>←</span>
             <span>Back to Tutorials</span>
           </Link>
-          <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
+          <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight font-sans">
             Tutorial {tutorialId}: {tutorial?.title}
           </h1>
           <p class="text-lg text-roya-textMuted dark:text-roya-textMutedDark mb-6 leading-relaxed">
@@ -141,7 +141,7 @@ RAGResponse response = ai.ragApi().ask("Question?",
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-10">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight font-sans">
           Roya Tutorials
         </h1>
         <p class="text-lg md:text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">

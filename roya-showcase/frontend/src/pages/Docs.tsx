@@ -1,8 +1,47 @@
-import { Link, useLocation } from 'wouter';
+import { Link } from 'wouter';
 import { useState } from 'preact/hooks';
 
+const docsIndex = [
+  {
+    title: 'Documentation Overview',
+    description: 'Landing page for Roya documentation and guides',
+    href: '/docs',
+    category: 'Overview'
+  },
+  // Getting Started
+  { title: 'Hello World', description: 'Build your first Roya application', href: '/docs/getting-started/hello-world', category: 'Getting Started' },
+  { title: 'Basic Routing', description: 'Define routes the Express way in Java', href: '/docs/getting-started/basic-routing', category: 'Getting Started' },
+  { title: 'Static Files', description: 'Serve assets and static content', href: '/docs/getting-started/static-files', category: 'Getting Started' },
+  { title: 'Getting Started Examples', description: 'Real-world starter examples for Roya', href: '/docs/getting-started/examples', category: 'Getting Started' },
+  // API Reference
+  { title: 'Roya API', description: 'Create and configure Roya applications', href: '/docs/api/roya', category: 'API Reference' },
+  { title: 'Application Interface', description: 'Express-compatible application methods', href: '/docs/api/application', category: 'API Reference' },
+  { title: 'Request Interface', description: 'HTTP request helpers and accessors', href: '/docs/api/request', category: 'API Reference' },
+  { title: 'Response Interface', description: 'Send responses, headers, and JSON', href: '/docs/api/response', category: 'API Reference' },
+  { title: 'Router Interface', description: 'Nested routers and route mounting', href: '/docs/api/router', category: 'API Reference' },
+  { title: 'AI Interface', description: 'First-class AI/LLM integration in Roya', href: '/docs/api/ai', category: 'API Reference' },
+  { title: 'RoyaPlugin Interface', description: 'Extend Roya with plugins, services, and lifecycle hooks', href: '/docs/api/roya-plugin', category: 'API Reference' },
+  // Guide
+  { title: 'Guide: Writing Middleware', description: 'Create custom middleware in Roya', href: '/docs/guide/writing-middleware', category: 'Guide' },
+  { title: 'Guide: Using Middleware', description: 'Compose middleware stacks effectively', href: '/docs/guide/using-middleware', category: 'Guide' },
+  { title: 'Guide: Error Handling', description: 'Handling exceptions and error middleware', href: '/docs/guide/error-handling', category: 'Guide' },
+  { title: 'Guide: Database Integration', description: 'Work with the database plugin and JOOQ', href: '/docs/guide/database', category: 'Guide' },
+  { title: 'Guide: Plugins', description: 'Understand plugin architecture and usage', href: '/docs/guide/plugins', category: 'Guide' },
+  // AI Integration
+  { title: 'AI Quick Start', description: 'Add AI to your Roya app in minutes', href: '/docs/ai/quick-start', category: 'AI Integration' },
+  { title: 'AI LLM', description: 'Ask, extract, and stream with LLMs', href: '/docs/ai/llm', category: 'AI Integration' },
+  { title: 'AI RAG', description: 'Retrieval-Augmented Generation APIs', href: '/docs/ai/rag', category: 'AI Integration' },
+  { title: 'AI Agents', description: 'Tool-enabled agents and LangGraph integration', href: '/docs/ai/agents', category: 'AI Integration' },
+  { title: 'AI Workflows', description: 'Multi-step AI workflow orchestration', href: '/docs/ai/workflows', category: 'AI Integration' },
+  // Migration Guides
+  { title: 'Migrate from Express.js', description: 'Bring Express apps to Roya', href: '/docs/migration/express', category: 'Migration Guides' },
+  { title: 'Migrate from Spring Boot', description: 'Move Spring workloads onto Roya', href: '/docs/migration/spring', category: 'Migration Guides' },
+  { title: 'Migrate from Quarkus', description: 'Adopt Roya from Quarkus projects', href: '/docs/migration/quarkus', category: 'Migration Guides' }
+];
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export function Docs() {
-  const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   
   const sections = [
@@ -39,7 +78,8 @@ export function Docs() {
         { title: 'Application', href: '/docs/api/application' },
         { title: 'Request', href: '/docs/api/request' },
         { title: 'Response', href: '/docs/api/response' },
-        { title: 'Router', href: '/docs/api/router' }
+        { title: 'Router', href: '/docs/api/router' },
+        { title: 'RoyaPlugin', href: '/docs/api/roya-plugin' }
       ]
     },
     {
@@ -66,16 +106,47 @@ export function Docs() {
     }
   ];
   
+  const query = searchQuery.trim().toLowerCase();
+
   // Filter sections based on search query
   const filteredSections = sections.filter(section => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
+    if (!query) return true;
     return (
       section.title.toLowerCase().includes(query) ||
       section.description.toLowerCase().includes(query) ||
       section.subsections.some(sub => sub.title.toLowerCase().includes(query))
     );
   });
+  
+  const searchResults = query
+    ? docsIndex.filter(item =>
+        item.title.toLowerCase().includes(query) ||
+        item.description.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query)
+      ).slice(0, 10)
+    : [];
+  
+  const highlight = (text: string) => {
+    if (!query) return text;
+    const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+    const parts = text.split(regex);
+    return (
+      <>
+        {parts.map((part, idx) => (
+          idx % 2 === 1 ? (
+            <span
+              key={`${part}-${idx}`}
+              class="bg-roya-primary/20 dark:bg-roya-primary/30 text-roya-primary dark:text-roya-primary px-1 rounded"
+            >
+              {part}
+            </span>
+          ) : (
+            <span key={idx}>{part}</span>
+          )
+        ))}
+      </>
+    );
+  };
   
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -105,6 +176,37 @@ export function Docs() {
             </svg>
           </div>
         </div>
+        
+        {query && (
+          <div class="mt-6 bg-roya-bg dark:bg-roya-surfaceDark border border-roya-border dark:border-roya-borderDark rounded-xl shadow-soft dark:shadow-soft-dark">
+            {searchResults.length === 0 ? (
+              <div class="p-6 text-roya-textMuted dark:text-roya-textMutedDark">
+                No documentation matches "{searchQuery}"
+              </div>
+            ) : (
+              <ul class="divide-y divide-roya-border dark:divide-roya-borderDark">
+                {searchResults.map(result => (
+                  <li key={result.href}>
+                    <Link
+                      href={result.href}
+                      class="block p-4 hover:bg-roya-surface dark:hover:bg-roya-surfaceDark transition-colors duration-150"
+                    >
+                      <p class="text-sm uppercase tracking-wide text-roya-textMuted dark:text-roya-textMutedDark mb-1">
+                        {result.category}
+                      </p>
+                      <p class="text-lg font-semibold text-roya-text dark:text-roya-textDark">
+                        {highlight(result.title)}
+                      </p>
+                      <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark mt-1">
+                        {highlight(result.description)}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
       
       {filteredSections.length === 0 ? (

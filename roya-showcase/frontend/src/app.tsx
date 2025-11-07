@@ -6,12 +6,14 @@ import { Docs } from './pages/Docs';
 import { Architecture } from './pages/Architecture';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { AnalyticsTracker } from './components/AnalyticsTracker';
 
 // Getting Started
 import { GettingStarted } from './pages/docs/GettingStarted';
 import { HelloWorld } from './pages/docs/HelloWorld';
 import { BasicRouting } from './pages/docs/BasicRouting';
 import { StaticFiles } from './pages/docs/StaticFiles';
+import { GettingStartedExamples } from './pages/docs/GettingStartedExamples';
 
 // API Reference
 import { ApiReference } from './pages/docs/ApiReference';
@@ -20,6 +22,8 @@ import { ApplicationApi } from './pages/docs/ApplicationApi';
 import { RequestApi } from './pages/docs/RequestApi';
 import { ResponseApi } from './pages/docs/ResponseApi';
 import { RouterApi } from './pages/docs/RouterApi';
+import { AIApi } from './pages/docs/AIApi';
+import { RoyaPluginApi } from './pages/docs/RoyaPluginApi';
 
 // AI Integration
 import { AIIntegration } from './pages/docs/AIIntegration';
@@ -30,6 +34,7 @@ import { AgentsDocs } from './pages/docs/AgentsDocs';
 import { WorkflowsDocs } from './pages/docs/WorkflowsDocs';
 
 // Guide
+import { Guide } from './pages/docs/Guide';
 import { MiddlewareGuide } from './pages/docs/MiddlewareGuide';
 import { PluginsGuide } from './pages/docs/PluginsGuide';
 import { DatabaseGuide } from './pages/docs/DatabaseGuide';
@@ -48,6 +53,7 @@ export function App() {
       <Header />
       <main class="flex-1">
         <Router>
+          <AnalyticsTracker />
           <Route path="/" component={Home} />
           <Route path="/tutorials" component={Tutorials} />
           <Route path="/tutorials/:id" component={Tutorials} />
@@ -63,6 +69,7 @@ export function App() {
           <Route path="/docs/getting-started/hello-world" component={HelloWorld} />
           <Route path="/docs/getting-started/basic-routing" component={BasicRouting} />
           <Route path="/docs/getting-started/static-files" component={StaticFiles} />
+          <Route path="/docs/getting-started/examples" component={GettingStartedExamples} />
           
           {/* API Reference */}
           <Route path="/docs/api" component={ApiReference} />
@@ -71,6 +78,8 @@ export function App() {
           <Route path="/docs/api/request" component={RequestApi} />
           <Route path="/docs/api/response" component={ResponseApi} />
           <Route path="/docs/api/router" component={RouterApi} />
+          <Route path="/docs/api/ai" component={AIApi} />
+          <Route path="/docs/api/roya-plugin" component={RoyaPluginApi} />
           
           {/* AI Integration */}
           <Route path="/docs/ai" component={AIIntegration} />
@@ -81,6 +90,7 @@ export function App() {
           <Route path="/docs/ai/workflows" component={WorkflowsDocs} />
           
           {/* Guide */}
+          <Route path="/docs/guide" component={Guide} />
           <Route path="/docs/guide/writing-middleware" component={MiddlewareGuide} />
           <Route path="/docs/guide/using-middleware" component={UsingMiddlewareGuide} />
           <Route path="/docs/guide/error-handling" component={ErrorHandlingGuide} />

@@ -4,18 +4,18 @@ export function DatabaseGuide() {
   return (
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-8">
-        <Link href="/docs" class="text-blue-600 hover:underline mb-4 inline-block">
+        <Link href="/docs" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark hover:underline mb-4 inline-block transition-colors">
           ← Documentation
         </Link>
-        <h1 class="text-4xl font-bold mb-4">Database Guide</h1>
-        <p class="text-xl text-gray-600">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight font-sans">Database Guide</h1>
+        <p class="text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Type-safe database access with JOOQ, connection pooling with HikariCP, and migrations with Flyway.
         </p>
       </div>
       
       <div class="space-y-8">
         <section class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-8 border-2 border-blue-200">
-          <h2 class="text-2xl font-semibold mb-4">Why Roya Database Plugin?</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Why Roya Database Plugin?</h2>
           <ul class="space-y-2 text-gray-700">
             <li>✅ <strong>Type-Safe SQL</strong> - JOOQ generates Java classes from your database schema</li>
             <li>✅ <strong>Virtual Thread Optimized</strong> - HikariCP configured for massive concurrency</li>
@@ -26,14 +26,14 @@ export function DatabaseGuide() {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Installation</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Installation</h2>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Gradle</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Gradle</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`dependencies {
     implementation 'com.akilisha.oss.roya:roya-plugins-database:1.0.0-SNAPSHOT'
 }`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Maven</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Maven</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`<dependency>
     <groupId>com.akilisha.oss.roya</groupId>
     <artifactId>roya-plugins-database</artifactId>
@@ -42,9 +42,9 @@ export function DatabaseGuide() {
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Setup</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Setup</h2>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">1. Register the Plugin</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">1. Register the Plugin</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.plugins.database.DatabasePlugin;
 
@@ -61,7 +61,7 @@ public class Main {
     }
 }`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">2. Configure Database Connection</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">2. Configure Database Connection</h3>
           <p class="text-gray-700 mb-4">
             Set environment variables or system properties:
           </p>
@@ -77,9 +77,9 @@ DB_PASSWORD=secret
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Basic Usage</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Basic Usage</h2>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Get Database Service</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Get Database Service</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`app.get("/users", (req, res, next) -> {
     Database db = req.get(Database.class);
     
@@ -91,7 +91,7 @@ DB_PASSWORD=secret
     res.json(users);
 });`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Type-Safe Queries</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Type-Safe Queries</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`// Select with conditions
 List<User> adults = db.dsl()
     .selectFrom(Tables.USERS)
@@ -122,7 +122,7 @@ db.dsl()
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Transactions</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Transactions</h2>
           <p class="text-gray-700 mb-4">
             Execute multiple operations atomically. Transactions are automatically committed on success or rolled back on error.
           </p>
@@ -154,12 +154,12 @@ db.dsl()
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Migrations</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Migrations</h2>
           <p class="text-gray-700 mb-4">
             Flyway automatically runs migrations from <code class="bg-gray-100 px-2 py-1 rounded">src/main/resources/db/migration</code> on startup.
           </p>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Migration Files</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Migration Files</h3>
           <p class="text-gray-700 mb-4">
             Create SQL migration files with versioned names:
           </p>
@@ -176,19 +176,19 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_age ON users(age);`}</code></pre>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Manual Migration</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Manual Migration</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`Database db = req.get(Database.class);
 int migrationsApplied = db.migrate();
 System.out.println("Applied " + migrationsApplied + " migrations");`}</code></pre>
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Code Generation</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Code Generation</h2>
           <p class="text-gray-700 mb-4">
             Generate type-safe Java classes from your database schema using JOOQ.
           </p>
           
-          <h3 class="text-xl font-semibold mt-6 mb-3">Generate Model Classes</h3>
+          <h3 class="text-xl font-bold mt-6 mb-3 text-roya-text dark:text-roya-textDark font-sans">Generate Model Classes</h3>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`Database db = req.get(Database.class);
 int classesGenerated = db.generateModel();
 System.out.println("Generated " + classesGenerated + " classes");`}</code></pre>
@@ -199,7 +199,7 @@ System.out.println("Generated " + classesGenerated + " classes");`}</code></pre>
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Connection Pool Stats</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Connection Pool Stats</h2>
           <p class="text-gray-700 mb-4">
             Monitor your database connection pool for performance tuning:
           </p>
@@ -218,7 +218,7 @@ System.out.println("Generated " + classesGenerated + " classes");`}</code></pre>
         </section>
         
         <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Complete Example</h2>
+          <h2 class="text-2xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Complete Example</h2>
           
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.Roya;
 import com.akilisha.oss.roya.plugins.database.DatabasePlugin;
@@ -285,7 +285,7 @@ public class UserAPI {
         </section>
         
         <section class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-blue-900 mb-2">💡 Virtual Threads Advantage</h3>
+          <h3 class="text-lg font-bold text-roya-primary dark:text-roya-primary mb-2 font-sans">💡 Virtual Threads Advantage</h3>
           <p class="text-blue-800">
             The Database plugin is optimized for virtual threads. HikariCP connection pool is configured with smaller pool sizes (max 20 connections) because virtual threads are lightweight. You can handle thousands of concurrent database requests with just a few physical connections.
           </p>
