@@ -115,19 +115,24 @@ RAGResponse response = ai.ragApi().ask("Question?",
     
     return (
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="mb-6">
-          <Link href="/tutorials" class="text-blue-600 hover:text-blue-700 mb-4 inline-block">
-            ← Back to Tutorials
+        <div class="mb-8">
+          <Link href="/tutorials" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark mb-6 inline-flex items-center gap-2 font-medium transition-colors">
+            <span>←</span>
+            <span>Back to Tutorials</span>
           </Link>
-          <h1 class="text-3xl font-bold mb-2">Tutorial {tutorialId}: {tutorial?.title}</h1>
-          <p class="text-gray-600 mb-4">{tutorial?.description}</p>
+          <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
+            Tutorial {tutorialId}: {tutorial?.title}
+          </h1>
+          <p class="text-lg text-roya-textMuted dark:text-roya-textMutedDark mb-6 leading-relaxed">
+            {tutorial?.description}
+          </p>
         </div>
         
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div class="bg-gray-800 px-4 py-2">
-            <span class="text-white text-sm font-medium">Java</span>
+        <div class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-lg dark:shadow-soft-dark overflow-hidden border border-roya-border dark:border-roya-borderDark">
+          <div class="bg-black dark:bg-black px-4 py-3 border-b border-roya-borderDark">
+            <span class="text-roya-primary text-sm font-bold uppercase tracking-wide">Java</span>
           </div>
-          <pre class="bg-gray-900 text-green-400 p-6 overflow-x-auto"><code>{tutorial?.code}</code></pre>
+          <pre class="bg-black dark:bg-black text-roya-primary p-6 overflow-x-auto font-mono text-sm leading-relaxed"><code>{tutorial?.code}</code></pre>
         </div>
       </div>
     );
@@ -135,9 +140,11 @@ RAGResponse response = ai.ragApi().ask("Question?",
 
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-2">Roya Tutorials</h1>
-        <p class="text-gray-600">
+      <div class="mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
+          Roya Tutorials
+        </h1>
+        <p class="text-lg md:text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Showing feature parity with LangChain4j. All 12 tutorials working in Roya.
         </p>
       </div>
@@ -146,12 +153,18 @@ RAGResponse response = ai.ragApi().ask("Question?",
         {tutorials.map(tutorial => (
           <a
             href={`/tutorials/${tutorial.id}`}
-            class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow block"
+            class="group bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-6 hover:shadow-lg dark:hover:shadow-glow-green transition-all duration-300 block border border-roya-border dark:border-roya-borderDark hover:border-roya-primary/50 dark:hover:border-roya-primary/50"
           >
-            <div class="text-sm text-blue-600 mb-2 font-semibold">Tutorial {tutorial.id}</div>
-            <h3 class="text-xl font-semibold mb-2">{tutorial.title}</h3>
-            <p class="text-gray-600 mb-4">{tutorial.description}</p>
-            <div class="text-sm text-gray-500 bg-gray-50 p-2 rounded font-mono text-xs overflow-hidden">
+            <div class="text-sm text-roya-primary dark:text-roya-primary mb-3 font-bold uppercase tracking-wide">
+              Tutorial {tutorial.id}
+            </div>
+            <h3 class="text-xl font-bold mb-3 text-roya-text dark:text-roya-textDark group-hover:text-roya-primary dark:group-hover:text-roya-primary transition-colors">
+              {tutorial.title}
+            </h3>
+            <p class="text-base text-roya-textMuted dark:text-roya-textMutedDark mb-4 leading-relaxed">
+              {tutorial.description}
+            </p>
+            <div class="text-xs text-roya-textMuted dark:text-roya-textMutedDark bg-black dark:bg-black p-3 rounded-lg font-mono border border-roya-borderDark overflow-hidden">
               {tutorial.code.split('\n')[0]}...
             </div>
           </a>

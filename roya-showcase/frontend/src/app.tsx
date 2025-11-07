@@ -32,6 +32,9 @@ import { WorkflowsDocs } from './pages/docs/WorkflowsDocs';
 // Guide
 import { MiddlewareGuide } from './pages/docs/MiddlewareGuide';
 import { PluginsGuide } from './pages/docs/PluginsGuide';
+import { DatabaseGuide } from './pages/docs/DatabaseGuide';
+import { ErrorHandlingGuide } from './pages/docs/ErrorHandlingGuide';
+import { UsingMiddlewareGuide } from './pages/docs/UsingMiddlewareGuide';
 
 // Migration Guides
 import { MigrationGuides } from './pages/docs/MigrationGuides';
@@ -41,7 +44,7 @@ import { QuarkusMigration } from './pages/docs/QuarkusMigration';
 
 export function App() {
   return (
-    <div class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen flex flex-col bg-roya-surface dark:bg-roya-bgDark transition-colors duration-300">
       <Header />
       <main class="flex-1">
         <Router>
@@ -79,6 +82,9 @@ export function App() {
           
           {/* Guide */}
           <Route path="/docs/guide/writing-middleware" component={MiddlewareGuide} />
+          <Route path="/docs/guide/using-middleware" component={UsingMiddlewareGuide} />
+          <Route path="/docs/guide/error-handling" component={ErrorHandlingGuide} />
+          <Route path="/docs/guide/database" component={DatabaseGuide} />
           <Route path="/docs/guide/plugins" component={PluginsGuide} />
           
           {/* Migration Guides */}

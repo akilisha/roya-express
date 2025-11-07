@@ -4,16 +4,16 @@ export function GettingStarted() {
   return (
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="mb-8">
-        <h1 class="text-4xl font-bold mb-4">Getting Started</h1>
-        <p class="text-xl text-gray-600">
+        <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Getting Started</h1>
+        <p class="text-xl text-gray-600 dark:text-gray-300">
           Get up and running with Roya in minutes. If you know Express.js, you already know Roya.
         </p>
       </div>
       
       <div class="space-y-8">
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Installation</h2>
-          <p class="text-gray-700 mb-4">
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900 p-8 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Installation</h2>
+          <p class="text-gray-700 dark:text-gray-300 mb-4">
             Roya requires <strong>Java 21+</strong> (LTS). That's it!
           </p>
           
@@ -30,10 +30,10 @@ export function GettingStarted() {
 </dependency>`}</code></pre>
         </section>
         
-        <section class="bg-white rounded-lg shadow-md p-8">
-          <h2 class="text-2xl font-semibold mb-4">Quick Start</h2>
-          <p class="text-gray-700 mb-4">
-            Create a file named <code class="bg-gray-100 px-2 py-1 rounded">Main.java</code>:
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900 p-8 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Quick Start</h2>
+          <p class="text-gray-700 dark:text-gray-300 mb-4">
+            Create a file named <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-900 dark:text-gray-100">Main.java</code>:
           </p>
           
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto"><code>{`import com.akilisha.oss.roya.Roya;

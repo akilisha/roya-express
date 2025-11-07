@@ -82,29 +82,34 @@ MyService service = ai.aiService(MyService.class,
     
     return (
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="mb-6">
-          <Link href="/examples" class="text-blue-600 hover:text-blue-700 mb-4 inline-block">
-            ← Back to Examples
+        <div class="mb-8">
+          <Link href="/examples" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark mb-6 inline-flex items-center gap-2 font-medium transition-colors">
+            <span>←</span>
+            <span>Back to Examples</span>
           </Link>
-          <h1 class="text-3xl font-bold mb-2">{example?.title}</h1>
-          <p class="text-gray-600 mb-4">{example?.description}</p>
+          <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
+            {example?.title}
+          </h1>
+          <p class="text-lg text-roya-textMuted dark:text-roya-textMutedDark mb-6 leading-relaxed">
+            {example?.description}
+          </p>
           
           <div class="flex flex-wrap gap-2 mb-6">
             {example?.tags.map(tag => (
-              <span class="px-2 py-1 rounded text-sm bg-blue-100 text-blue-600">
+              <span class="px-3 py-1 rounded-full text-sm font-medium bg-roya-primary/10 text-roya-primary dark:bg-roya-primary/20 dark:text-roya-primary border border-roya-primary/20 dark:border-roya-primary/30">
                 {tag}
               </span>
             ))}
           </div>
 
           {example?.highlights && (
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 class="font-semibold text-blue-900 mb-2">Highlights</h3>
-              <ul class="text-sm text-blue-800 space-y-1">
+            <div class="bg-gradient-to-br from-roya-primary/10 to-roya-accent/10 dark:from-roya-primary/20 dark:to-roya-accent/20 border-2 border-roya-primary/30 dark:border-roya-primary/50 rounded-xl p-6 mb-8 shadow-soft dark:shadow-soft-dark">
+              <h3 class="font-bold text-lg text-roya-text dark:text-roya-textDark mb-3">Highlights</h3>
+              <ul class="text-sm text-roya-textMuted dark:text-roya-textMutedDark space-y-2">
                 {example.highlights.map(highlight => (
                   <li class="flex items-start">
-                    <span class="text-blue-500 mr-2">•</span>
-                    <span>{highlight}</span>
+                    <span class="text-roya-primary mr-3 font-bold">•</span>
+                    <span class="leading-relaxed">{highlight}</span>
                   </li>
                 ))}
               </ul>
@@ -112,16 +117,16 @@ MyService service = ai.aiService(MyService.class,
           )}
         </div>
         
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div class="bg-gray-800 px-4 py-2">
-            <span class="text-white text-sm font-medium">Java Code</span>
+        <div class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-lg dark:shadow-soft-dark overflow-hidden border border-roya-border dark:border-roya-borderDark">
+          <div class="bg-black dark:bg-black px-4 py-3 border-b border-roya-borderDark">
+            <span class="text-roya-primary text-sm font-bold uppercase tracking-wide">Java Code</span>
           </div>
-          <pre class="bg-gray-900 text-green-400 p-6 overflow-x-auto"><code>{example?.code}</code></pre>
+          <pre class="bg-black dark:bg-black text-roya-primary p-6 overflow-x-auto font-mono text-sm leading-relaxed"><code>{example?.code}</code></pre>
         </div>
 
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p class="text-sm text-blue-800">
-            <strong>💡 Tip:</strong> Copy this code and run it locally with the full Roya framework to see it in action.
+        <div class="mt-8 bg-gradient-to-r from-roya-primary/10 to-roya-accent/10 dark:from-roya-primary/20 dark:to-roya-accent/20 border-2 border-roya-primary/30 dark:border-roya-primary/50 rounded-xl p-6 shadow-soft dark:shadow-soft-dark">
+          <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
+            <strong class="text-roya-text dark:text-roya-textDark">💡 Tip:</strong> Copy this code and run it locally with the full Roya framework to see it in action.
           </p>
         </div>
       </div>
@@ -131,25 +136,29 @@ MyService service = ai.aiService(MyService.class,
   // Show list view
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-2">Real-World Examples</h1>
-        <p class="text-gray-600">
-          Production-ready examples showcasing Roya's capabilities, especially the 
-          <Link href="/architecture" class="text-blue-600 hover:text-blue-700 underline font-semibold">workflow orchestration superpower</Link>.
+      <div class="mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
+          Real-World Examples
+        </h1>
+        <p class="text-lg md:text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
+          Production-ready examples showcasing Roya's capabilities, especially the{' '}
+          <Link href="/architecture" class="text-roya-primary dark:text-roya-primary font-semibold underline decoration-2 underline-offset-2 hover:text-roya-primaryDark dark:hover:text-roya-primary transition-colors">
+            workflow orchestration superpower
+          </Link>.
         </p>
       </div>
 
       {/* Highlight the Workflow Example */}
-      <div class="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border-2 border-blue-200">
-        <div class="flex items-start">
-          <span class="text-3xl mr-4">⭐</span>
-          <div>
-            <h3 class="text-xl font-semibold mb-2">Featured: Workflow Orchestration</h3>
-            <p class="text-gray-700 mb-3">
-              The <strong>Customer Inquiry Workflow</strong> example below demonstrates Roya AI's unique capability: 
+      <div class="mb-10 bg-gradient-to-br from-roya-primary/10 via-roya-primary/5 to-roya-accent/10 dark:from-roya-primary/20 dark:via-roya-primary/10 dark:to-roya-accent/20 rounded-2xl p-8 border-2 border-roya-primary/30 dark:border-roya-primary/50 shadow-soft dark:shadow-soft-dark backdrop-blur-sm">
+        <div class="flex items-start gap-4">
+          <div class="text-4xl">⭐</div>
+          <div class="flex-1">
+            <h3 class="text-2xl font-bold mb-3 text-roya-text dark:text-roya-textDark">Featured: Workflow Orchestration</h3>
+            <p class="text-base text-roya-text dark:text-roya-textDark mb-3 leading-relaxed">
+              The <strong class="text-roya-primary dark:text-roya-primary">Customer Inquiry Workflow</strong> example below demonstrates Roya AI's unique capability: 
               combining LangChain4j's AI primitives with Roya Workflow's orchestration to create multi-step AI pipelines.
             </p>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
               This is what makes Roya AI more than just a LangChain4j wrapper—it's a <strong>workflow orchestrator</strong> 
               similar to n8n AI agents, but with Java's type-safety and performance.
             </p>
@@ -161,21 +170,29 @@ MyService service = ai.aiService(MyService.class,
         {examples.map((example, idx) => (
           <Link
             href={`/examples/${example.id}`}
-            class={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow block ${idx === 0 ? 'border-2 border-blue-300' : ''}`}
+            class={`group bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-6 hover:shadow-lg dark:hover:shadow-glow-green transition-all duration-300 block border border-roya-border dark:border-roya-borderDark ${idx === 0 ? 'border-2 border-roya-primary dark:border-roya-primary ring-2 ring-roya-primary/20 dark:ring-roya-primary/30' : 'hover:border-roya-primary/50 dark:hover:border-roya-primary/50'}`}
           >
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <div class="flex items-center mb-2">
-                  {idx === 0 && <span class="bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-bold mr-2">FEATURED</span>}
-                  <h3 class="text-xl font-semibold">{example.title}</h3>
+                <div class="flex items-center gap-2 mb-3">
+                  {idx === 0 && (
+                    <span class="bg-roya-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm">
+                      Featured
+                    </span>
+                  )}
+                  <h3 class="text-xl font-bold text-roya-text dark:text-roya-textDark group-hover:text-roya-primary dark:group-hover:text-roya-primary transition-colors">
+                    {example.title}
+                  </h3>
                 </div>
-                <p class="text-gray-600 mb-4">{example.description}</p>
+                <p class="text-base text-roya-textMuted dark:text-roya-textMutedDark mb-4 leading-relaxed">
+                  {example.description}
+                </p>
                 {example.highlights && (
-                  <ul class="text-sm text-gray-600 mb-4 space-y-1">
+                  <ul class="text-sm text-roya-textMuted dark:text-roya-textMutedDark mb-4 space-y-2">
                     {example.highlights.map(highlight => (
                       <li class="flex items-start">
-                        <span class="text-green-500 mr-2">•</span>
-                        <span>{highlight}</span>
+                        <span class="text-roya-primary mr-2 font-bold">•</span>
+                        <span class="leading-relaxed">{highlight}</span>
                       </li>
                     ))}
                   </ul>
@@ -185,35 +202,37 @@ MyService service = ai.aiService(MyService.class,
             
             <div class="flex flex-wrap gap-2 mb-4">
               {example.tags.map(tag => (
-                <span class={`px-2 py-1 rounded text-sm ${idx === 0 ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+                <span class={`px-3 py-1 rounded-full text-xs font-medium ${idx === 0 ? 'bg-roya-primary/10 text-roya-primary dark:bg-roya-primary/20 dark:text-roya-primary' : 'bg-roya-surface dark:bg-roya-surfaceDark text-roya-textMuted dark:text-roya-textMutedDark border border-roya-border dark:border-roya-borderDark'}`}>
                   {tag}
                 </span>
               ))}
             </div>
             
-            <div class="bg-gray-900 rounded p-3 mb-4 overflow-x-auto">
-              <pre class="text-xs text-green-400 font-mono">
+            <div class="bg-black dark:bg-black rounded-lg p-4 mb-4 overflow-x-auto border border-roya-borderDark">
+              <pre class="text-xs text-roya-primary font-mono">
                 <code>{example.code.split('\n')[0]}...</code>
               </pre>
             </div>
             
-            <div class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
-              View Demo →
+            <div class="flex items-center text-roya-primary dark:text-roya-primary font-semibold text-sm group-hover:gap-2 transition-all">
+              <span>View Demo</span>
+              <span class="group-hover:translate-x-1 transition-transform">→</span>
             </div>
           </Link>
         ))}
       </div>
       
-      <div class="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-        <h3 class="text-xl font-semibold text-blue-900 mb-2">
+      <div class="mt-12 bg-gradient-to-r from-roya-primary/10 to-roya-accent/10 dark:from-roya-primary/20 dark:to-roya-accent/20 border-2 border-roya-primary/30 dark:border-roya-primary/50 rounded-2xl p-8 text-center shadow-soft dark:shadow-soft-dark">
+        <h3 class="text-2xl font-bold text-roya-text dark:text-roya-textDark mb-3">
           Want to understand the architecture?
         </h3>
-        <p class="text-blue-800 mb-4">
-          Learn how Roya AI combines <strong>LangChain4j</strong> with <strong>Roya Workflow</strong> 
+        <p class="text-base text-roya-textMuted dark:text-roya-textMutedDark mb-6 max-w-2xl mx-auto leading-relaxed">
+          Learn how Roya AI combines <strong class="text-roya-primary dark:text-roya-primary">LangChain4j</strong> with <strong class="text-roya-primary dark:text-roya-primary">Roya Workflow</strong> 
           to create something unique.
         </p>
-        <Link href="/architecture" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-block">
-          View Architecture →
+        <Link href="/architecture" class="inline-flex items-center gap-2 bg-roya-primary hover:bg-roya-primaryDark text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-glow-green transition-all duration-300">
+          <span>View Architecture</span>
+          <span>→</span>
         </Link>
       </div>
     </div>

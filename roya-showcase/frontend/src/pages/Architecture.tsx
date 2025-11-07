@@ -3,22 +3,26 @@ import { Link } from 'wouter';
 export function Architecture() {
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-2">Roya AI Architecture</h1>
-        <p class="text-gray-600">
+      <div class="mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
+          Roya AI Architecture
+        </h1>
+        <p class="text-lg md:text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Understanding the layered architecture that makes Roya AI unique.
         </p>
       </div>
 
       {/* The Superpower Section */}
-      <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border-2 border-blue-200 mb-12">
-        <div class="text-center mb-6">
-          <div class="inline-block bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-sm font-bold mb-4">
+      <div class="bg-gradient-to-br from-roya-primary/10 via-roya-primary/5 to-roya-accent/10 dark:from-roya-primary/20 dark:via-roya-primary/10 dark:to-roya-accent/20 rounded-2xl p-8 md:p-10 border-2 border-roya-primary/30 dark:border-roya-primary/50 shadow-soft dark:shadow-soft-dark mb-12">
+        <div class="text-center mb-8">
+          <div class="inline-block bg-roya-accent text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-6 shadow-sm">
             ⚡ THE SUPERPOWER
           </div>
-          <h2 class="text-3xl font-bold mb-4">Not Just a Wrapper—A Workflow Orchestrator</h2>
-          <p class="text-lg text-gray-700 max-w-3xl mx-auto">
-            Roya AI combines <strong>LangChain4j's AI capabilities</strong> with <strong>Roya Workflow's orchestration</strong> 
+          <h2 class="text-3xl md:text-4xl font-bold mb-6 text-roya-primary dark:text-roya-primary">
+            Not Just a Wrapper—A Workflow Orchestrator
+          </h2>
+          <p class="text-lg md:text-xl text-roya-text dark:text-roya-textDark max-w-3xl mx-auto leading-relaxed">
+            Roya AI combines <strong class="text-roya-primary dark:text-roya-primary">LangChain4j's AI capabilities</strong> with <strong class="text-roya-primary dark:text-roya-primary">Roya Workflow's orchestration</strong> 
             to create something unique: a type-safe, code-first AI workflow framework that rivals n8n's visual agents, 
             but with Java's performance and safety guarantees.
           </p>
