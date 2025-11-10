@@ -1,0 +1,504 @@
+warning: in the working copy of 'roya-examples-supportdesk/src/main/java/com/akilisha/oss/roya/examples/supportdesk/SupportDeskApplication.java', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/docs/MILESTONES.md b/docs/MILESTONES.md[m
+[1mindex 943d92a..e44786d 100644[m
+[1m--- a/docs/MILESTONES.md[m
+[1m+++ b/docs/MILESTONES.md[m
+[36m@@ -1997,6 +1997,19 @@[m [mai.workflow("multimodal")[m
+ - ✅ **Responsive Design** - Mobile-friendly documentation[m
+ - ✅ **Full-Text Docs Search** - Client-side search with highlighting across docs, guides, API, and examples[m
+ [m
+[32m+[m[32m**🆕 November 2025 Additions**[m
+[32m+[m[32m- ✅ **Support Desk Acceptance Automation**[m[41m  [m
+[32m+[m[32m  - Added `scripts/supportdesk_acceptance.ps1` for idempotent end-to-end verification[m[41m  [m
+[32m+[m[32m  - Expanded `docs/SUPPORTDESK_ACCEPTANCE.md` with manual `curl` walkthroughs and expected JSON payloads[m
+[32m+[m[32m- ✅ **Support Desk Example Hardening**[m[41m  [m
+[32m+[m[32m  - Eliminated Helidon `OffsetSeconds` serialization failures (Morgan timestamp + timestamptz casting)[m[41m  [m
+[32m+[m[32m  - Fixed duplicate `customer_id` ambiguity in RAG queries[m[41m  [m
+[32m+[m[32m  - Resolved LangChain4j AI service configuration (parameter binding + `AIResponse` removal) for reliable drafted replies[m
+[32m+[m[32m- ✅ **AI Provider Expansion**[m[41m  [m
+[32m+[m[32m  - Added first-class Hugging Face Inference support alongside OpenAI, Ollama, Mistral, Gemini[m[41m  [m
+[32m+[m[32m  - Updated acceptance docs, GA instrumentation, and cache wiring to recognise the new provider[m
+[32m+[m[32m- ✅ **Google Analytics Live** – Hard-coded GA tag applied across docs site and showcase app with route tracking component[m
+[32m+[m
+ ### Challenges Encountered[m
+ [m
+ **Challenge 1**: JSX Parsing of Java Code[m
+[1mdiff --git a/docs/ROADMAP.md b/docs/ROADMAP.md[m
+[1mindex 4168319..21bae3a 100644[m
+[1m--- a/docs/ROADMAP.md[m
+[1m+++ b/docs/ROADMAP.md[m
+[36m@@ -404,17 +404,11 @@[m [mint id = req.param("id", Integer.class);     # ⏳ Returns String for now[m
+ - ✅ Caching reduces duplicate calls by 90%+[m
+ [m
+ ### Deliverables[m
+[31m-- ✅ `plugin/ai/AIPlugin.java` - AI plugin[m
+[32m+[m[32m- ✅ `plugin/ai/AIPlugin.java` - Unified AI plugin and provider registry[m
+ - ✅ `plugin/ai/AI.java` - AI service interface[m
+[31m-- ✅ `plugin/ai/providers/OpenAIClient.java` - OpenAI integration[m
+[31m-- ✅ `plugin/ai/AIServiceImpl.java` - Orchestration with caching & token counting[m
+[31m-- ✅ `plugin/ai/LLMResponse.java` - Response with cost tracking[m
+[31m-- ✅ Native Health/Tracing enabled (Helidon)[m
+[31m-  - Health endpoints via Helidon Health (`/health`, `/health/live`, `/health/ready`)[m
+[31m-  - Tracing wiring via Helidon Tracing (backend configured by env/props)[m
+[31m-- ✅ Structured request logging (Morgan JSON)[m
+[31m-  - Logstash-compatible JSON logs with trace/request IDs and redaction[m
+[31m-- ✅ `plugin/ai/providers/LLMProvider.java` - Provider abstraction[m
+[32m+[m[32m- ✅ Provider integrations: OpenAI, Gemini, Ollama, Mistral, Hugging Face (Inference API)[m
+[32m+[m[32m- ✅ Response orchestration with caching & token counting[m
+[32m+[m[32m- ✅ Structured logging + Helidon health/tracing wiring[m
+ - ✅ Integration with Cache plugin for response caching[m
+ - ✅ Comprehensive test suite (28 tests, 100% passing)[m
+ [m
+[36m@@ -478,6 +472,11 @@[m [mint id = req.param("id", Integer.class);     # ⏳ Returns String for now[m
+ - ✅ **Workflow Demo**: Customer Inquiry Processing Workflow showcasing multi-step AI orchestration[m
+ - ✅ **Framework Refinement**: Zero reflection, type-safe AI Services, native LangChain4j primitives[m
+ [m
+[32m+[m[32m### Enhancements (November 2025)[m
+[32m+[m[32m- ✅ Hugging Face Inference provider wiring (`-Dai.provider=huggingface`, embeddings support)[m
+[32m+[m[32m- ✅ Provider override cleanup (system properties + env vars) for OpenAI / Ollama / Mistral / Gemini / Hugging Face[m
+[32m+[m[32m- ✅ Support Desk reference example stabilized (timestamptz casting, Morgan UTC logs, LangChain4j service bindings)[m
+[32m+[m
+ ---[m
+ [m
+ ## Phase 7: Vector Store & RAG - ✅ COMPLETE[m
+[36m@@ -729,6 +728,7 @@[m [mBased on completed foundation work, the following items are recommended for the[m
+ - [x] Implement documentation search ✅[m
+ - [x] Add analytics instrumentation ✅[m
+ - [x] Create additional example applications ✅[m
+[32m+[m[32m- [x] Publish Support Desk acceptance checklist and automation ✅[m
+ - [ ] Complete remaining documentation pages (database deep-dive, production guide)[m
+ - [ ] Record video tutorials[m
+ - [ ] Generate API docs from Javadoc[m
+[1mdiff --git a/docs/SUPPORTDESK_ACCEPTANCE.md b/docs/SUPPORTDESK_ACCEPTANCE.md[m
+[1mindex 11de219..8d142c7 100644[m
+[1m--- a/docs/SUPPORTDESK_ACCEPTANCE.md[m
+[1m+++ b/docs/SUPPORTDESK_ACCEPTANCE.md[m
+[36m@@ -28,6 +28,234 @@[m [mSet the following when using Hugging Face Inference as the AI backend:[m
+ Any of the options can also be supplied as environment variables[m
+ (`AI_HUGGINGFACE_API_KEY`, `HUGGINGFACE_MODEL_ID`, etc.).[m
+ [m
+[32m+[m[32m---[m
+[32m+[m
+[32m+[m[32m## Manual Acceptance Flow[m
+[32m+[m
+[32m+[m[32mRun these calls from a clean database (or adapt IDs accordingly). Replace values in angle brackets as needed.[m
+[32m+[m
+[32m+[m[32m> All examples assume the service is listening on `http://localhost:8079`.[m
+[32m+[m
+[32m+[m[32m### 1. Health probe[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl http://localhost:8079/health[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mExpected (timestamp will vary):[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "timestamp": "2025-11-10T17:25:14.003082600Z",[m
+[32m+[m[32m  "service": "support-desk",[m
+[32m+[m[32m  "status": "ok"[m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### 2. List customers (should be empty on a fresh DB)[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl http://localhost:8079/api/customers[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "customers": [][m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### 3. Create customer[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl -X POST http://localhost:8079/api/customers ^[m
+[32m+[m[32m  -H "Content-Type: application/json" ^[m
+[32m+[m[32m  -d "{""email"":""qa+acme@example.com"",""name"":""QA Acme"",""company"":""Acme Corp""}"[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mSuccess → HTTP 201 and the created record:[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "id": "4e6d05b3-5c9a-4f4c-9f47-6dd4c2c4c01a",[m
+[32m+[m[32m  "email": "qa+acme@example.com",[m
+[32m+[m[32m  "name": "QA Acme",[m
+[32m+[m[32m  "company": "Acme Corp",[m
+[32m+[m[32m  "createdAt": "2025-11-10T17:26:03.821231Z"[m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mCapture the `id` for subsequent steps (call it `<CUSTOMER_ID>`).[m
+[32m+[m
+[32m+[m[32m### 4. Create ticket[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl -X POST http://localhost:8079/api/tickets ^[m
+[32m+[m[32m  -H "Content-Type: application/json" ^[m
+[32m+[m[32m  -d "{""customerId"":""<CUSTOMER_ID>"",""subject"":""Printer offline"",""body"":""The marketing printer is not responding"",""priority"":""high""}"[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mSuccess → HTTP 201 and ticket payload:[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "id": "9d5f8f51-0756-452b-b9e5-8390f36c1d5a",[m
+[32m+[m[32m  "customerId": "4e6d05b3-5c9a-4f4c-9f47-6dd4c2c4c01a",[m
+[32m+[m[32m  "subject": "Printer offline",[m
+[32m+[m[32m  "body": "The marketing printer is not responding",[m
+[32m+[m[32m  "status": "open",[m
+[32m+[m[32m  "priority": "high",[m
+[32m+[m[32m  "assignedTo": null,[m
+[32m+[m[32m  "createdAt": "2025-11-10T17:27:14.115126Z",[m
+[32m+[m[32m  "updatedAt": "2025-11-10T17:27:14.115126Z"[m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mKeep the `id` as `<TICKET_ID>`.[m
+[32m+[m
+[32m+[m[32m### 5. List tickets[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl http://localhost:8079/api/tickets[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "tickets": [[m
+[32m+[m[32m    {[m
+[32m+[m[32m      "id": "<TICKET_ID>",[m
+[32m+[m[32m      "customerId": "<CUSTOMER_ID>",[m
+[32m+[m[32m      "subject": "Printer offline",[m
+[32m+[m[32m      "body": "The marketing printer is not responding",[m
+[32m+[m[32m      "status": "open",[m
+[32m+[m[32m      "priority": "high",[m
+[32m+[m[32m      "assignedTo": null,[m
+[32m+[m[32m      "createdAt": "2025-11-10T17:27:14.115126Z",[m
+[32m+[m[32m      "updatedAt": "2025-11-10T17:27:14.115126Z"[m
+[32m+[m[32m    }[m
+[32m+[m[32m  ][m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mFilters (`?status=`, `?priority=`) should narrow the list as expected.[m
+[32m+[m
+[32m+[m[32m### 6. Fetch ticket details[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl http://localhost:8079/api/tickets/<TICKET_ID>[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "ticket": {[m
+[32m+[m[32m    "id": "<TICKET_ID>",[m
+[32m+[m[32m    "customerId": "<CUSTOMER_ID>",[m
+[32m+[m[32m    "subject": "Printer offline",[m
+[32m+[m[32m    "body": "The marketing printer is not responding",[m
+[32m+[m[32m    "status": "open",[m
+[32m+[m[32m    "priority": "high",[m
+[32m+[m[32m    "assignedTo": null,[m
+[32m+[m[32m    "createdAt": "2025-11-10T17:27:14.115126Z",[m
+[32m+[m[32m    "updatedAt": "2025-11-10T17:27:14.115126Z"[m
+[32m+[m[32m  },[m
+[32m+[m[32m  "customer": {[m
+[32m+[m[32m    "id": "<CUSTOMER_ID>",[m
+[32m+[m[32m    "email": "qa+acme@example.com",[m
+[32m+[m[32m    "name": "QA Acme",[m
+[32m+[m[32m    "company": "Acme Corp",[m
+[32m+[m[32m    "createdAt": "2025-11-10T17:26:03.821231Z"[m
+[32m+[m[32m  },[m
+[32m+[m[32m  "messages": [[m
+[32m+[m[32m    {[m
+[32m+[m[32m      "id": "d97e7f5f-6c8d-490a-9c99-5b9d4234f8dc",[m
+[32m+[m[32m      "author": "customer",[m
+[32m+[m[32m      "message": "The marketing printer is not responding",[m
+[32m+[m[32m      "createdAt": "2025-11-10T17:27:14.115126Z"[m
+[32m+[m[32m    }[m
+[32m+[m[32m  ][m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### 7. Assign the ticket[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl -X POST http://localhost:8079/api/tickets/<TICKET_ID>/assign ^[m
+[32m+[m[32m  -H "Content-Type: application/json" ^[m
+[32m+[m[32m  -d "{""assignee"":""l2-escalation""}"[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mExpected response (status stays `open`, assignee changes):[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "id": "<TICKET_ID>",[m
+[32m+[m[32m  "customerId": "<CUSTOMER_ID>",[m
+[32m+[m[32m  "subject": "Printer offline",[m
+[32m+[m[32m  "body": "The marketing printer is not responding",[m
+[32m+[m[32m  "status": "open",[m
+[32m+[m[32m  "priority": "high",[m
+[32m+[m[32m  "assignedTo": "l2-escalation",[m
+[32m+[m[32m  "createdAt": "2025-11-10T17:27:14.115126Z",[m
+[32m+[m[32m  "updatedAt": "2025-11-10T17:29:02.441882Z"[m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### 8. Update ticket status[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl -X POST http://localhost:8079/api/tickets/<TICKET_ID>/status ^[m
+[32m+[m[32m  -H "Content-Type: application/json" ^[m
+[32m+[m[32m  -d "{""status"":""in_progress""}"[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mResponse with new status:[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "id": "<TICKET_ID>",[m
+[32m+[m[32m  "customerId": "<CUSTOMER_ID>",[m
+[32m+[m[32m  "subject": "Printer offline",[m
+[32m+[m[32m  "body": "The marketing printer is not responding",[m
+[32m+[m[32m  "status": "in_progress",[m
+[32m+[m[32m  "priority": "high",[m
+[32m+[m[32m  "assignedTo": "l2-escalation",[m
+[32m+[m[32m  "createdAt": "2025-11-10T17:27:14.115126Z",[m
+[32m+[m[32m  "updatedAt": "2025-11-10T17:30:01.028312Z"[m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### 9. AI-drafted reply[m
+[32m+[m
+[32m+[m[32m> Requires configured AI provider (e.g. OpenAI, Hugging Face). Without credentials the endpoint returns HTTP 503 and JSON `{"error":"AI features are disabled - configure AI credentials."}`.[m
+[32m+[m
+[32m+[m[32m```[m
+[32m+[m[32mcurl -X POST http://localhost:8079/api/tickets/<TICKET_ID>/reply ^[m
+[32m+[m[32m  -H "Content-Type: application/json" ^[m
+[32m+[m[32m  -d "{""prompt"":""Draft a short update for the requester."" }"[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mSuccessful (example with Hugging Face provider):[m
+[32m+[m
+[32m+[m[32m```json[m
+[32m+[m[32m{[m
+[32m+[m[32m  "ticket": {[m
+[32m+[m[32m    "id": "<TICKET_ID>",[m
+[32m+[m[32m    "customerId": "<CUSTOMER_ID>",[m
+[32m+[m[32m    "subject": "Printer offline",[m
+[32m+[m[32m    "body": "The marketing printer is not responding",[m
+[32m+[m[32m    "status": "in_progress",[m
+[32m+[m[32m    "priority": "high",[m
+[32m+[m[32m    "assignedTo": "l2-escalation",[m
+[32m+[m[32m    "createdAt": "2025-11-10T17:27:14.115126Z",[m
+[32m+[m[32m    "updatedAt": "2025-11-10T17:30:01.028312Z"[m
+[32m+[m[32m  },[m
+[32m+[m[32m  "reply": "Hi QA Acme,\n\nWe've restarted the print server and are monitoring the job queue. Please retry within the next 10 minutes and let us know if the issue persists.\n\nRegards,\nSupport",[m
+[32m+[m[32m  "summary": "• Restarted the print server\n• Monitoring print queue for errors\n• Awaiting confirmation from marketing team",[m
+[32m+[m[32m  "citations": "Printer onboarding checklist - https://kb.acme.internal/print/onboarding\nTroubleshooting: network printers - https://kb.acme.internal/print/network"[m
+[32m+[m[32m}[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m---[m
+[32m+[m
+ ### What the script validates[m
+ [m
+ 1. `/health` responds with `status: "ok"`.[m
+[1mdiff --git a/roya-examples-supportdesk/src/main/java/com/akilisha/oss/roya/examples/supportdesk/SupportDeskApplication.java b/roya-examples-supportdesk/src/main/java/com/akilisha/oss/roya/examples/supportdesk/SupportDeskApplication.java[m
+[1mindex 766077a..18c9e51 100644[m
+[1m--- a/roya-examples-supportdesk/src/main/java/com/akilisha/oss/roya/examples/supportdesk/SupportDeskApplication.java[m
+[1m+++ b/roya-examples-supportdesk/src/main/java/com/akilisha/oss/roya/examples/supportdesk/SupportDeskApplication.java[m
+[36m@@ -3,7 +3,6 @@[m [mpackage com.akilisha.oss.roya.examples.supportdesk;[m
+ import com.akilisha.oss.roya.Roya;[m
+ import com.akilisha.oss.roya.plugins.ai.AI;[m
+ import com.akilisha.oss.roya.plugins.ai.AI.ChunkingOptions;[m
+[31m-import com.akilisha.oss.roya.plugins.ai.AIResponse;[m
+ import com.akilisha.oss.roya.plugins.ai.RAGOptions;[m
+ import com.akilisha.oss.roya.plugins.ai.RAGResponse;[m
+ import com.akilisha.oss.roya.core.middleware.BodyParser;[m
+[36m@@ -25,6 +24,7 @@[m [mimport com.akilisha.oss.roya.plugins.email.EmailResult;[m
+ import dev.langchain4j.memory.chat.MessageWindowChatMemory;[m
+ import dev.langchain4j.service.SystemMessage;[m
+ import dev.langchain4j.service.UserMessage;[m
+[32m+[m[32mimport dev.langchain4j.service.V;[m
+ import org.jooq.Record;[m
+ [m
+ import java.net.URISyntaxException;[m
+[36m@@ -33,14 +33,9 @@[m [mimport java.nio.file.Path;[m
+ import java.nio.file.Paths;[m
+ import java.time.Instant;[m
+ import java.time.LocalDate;[m
+[32m+[m[32mimport java.time.OffsetDateTime;[m
+ import java.time.ZoneOffset;[m
+[31m-import java.util.ArrayList;[m
+[31m-import java.util.LinkedHashMap;[m
+[31m-import java.util.List;[m
+[31m-import java.util.Map;[m
+[31m-import java.util.NoSuchElementException;[m
+[31m-import java.util.Optional;[m
+[31m-import java.util.UUID;[m
+[32m+[m[32mimport java.util.*;[m
+ import java.util.concurrent.CompletableFuture;[m
+ import java.util.stream.Collectors;[m
+ [m
+[36m@@ -331,7 +326,7 @@[m [mpublic class SupportDeskApplication {[m
+                 TicketDetails ticket = tickets.getTicket(id)[m
+                     .orElseThrow(() -> new NoSuchElementException("Ticket not found"));[m
+ [m
+[31m-                TicketReply reply = supportAgent.draftReply(ticket, prompt);[m
+[32m+[m[32m            TicketReply reply = supportAgent.draftReply(ticket, prompt);[m
+                 tickets.recordMessage(ticket.ticket().id(), "agent", reply.reply());[m
+                 ticketCache.cacheSummary(ticket.ticket().id(), reply.summary());[m
+                 notifications.notify(ticket.customer().email(), "Reply drafted for ticket " + ticket.ticket().subject(), reply.reply());[m
+[36m@@ -379,7 +374,7 @@[m [mpublic class SupportDeskApplication {[m
+                 "body", body,[m
+                 "status", status.name(),[m
+                 "priority", priority.name(),[m
+[31m-                "assignedTo", assignedTo,[m
+[32m+[m[32m                "assignedTo", Optional.ofNullable(assignedTo).orElse(""),[m
+                 "createdAt", createdAt,[m
+                 "updatedAt", updatedAt[m
+             );[m
+[36m@@ -420,9 +415,10 @@[m [mpublic class SupportDeskApplication {[m
+         Customer createCustomer(String email, String name, String company) {[m
+             UUID id = UUID.randomUUID();[m
+             Instant created = Instant.now();[m
+[32m+[m[32m            String createdTimestamp = toTimestamp(created);[m
+             database.transaction(ctx -> {[m
+[31m-                ctx.execute("insert into support_customers (id, email, name, company, created_at) values (?, ?, ?, ?, ?)",[m
+[31m-                    id, email, name, company, created);[m
+[32m+[m[32m                ctx.execute("insert into support_customers (id, email, name, company, created_at) values (?, ?, ?, ?, ?::timestamptz)",[m
+[32m+[m[32m                    id, email, name, company, createdTimestamp);[m
+                 return null;[m
+             });[m
+             return new Customer(id, email, name, company, created);[m
+[36m@@ -442,11 +438,12 @@[m [mpublic class SupportDeskApplication {[m
+         Ticket createTicket(UUID customerId, String subject, String body, String priority) {[m
+             UUID id = UUID.randomUUID();[m
+             Instant now = Instant.now();[m
+[32m+[m[32m            String timestamp = toTimestamp(now);[m
+             database.transaction(ctx -> {[m
+[31m-                ctx.execute("insert into support_tickets (id, customer_id, subject, body, status, priority, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)",[m
+[31m-                    id, customerId, subject, body, TicketStatus.open.name(), TicketPriority.valueOf(priority.toLowerCase()).name(), now, now);[m
+[31m-                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?)",[m
+[31m-                    UUID.randomUUID(), id, "customer", body, now);[m
+[32m+[m[32m                ctx.execute("insert into support_tickets (id, customer_id, subject, body, status, priority, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?::timestamptz, ?::timestamptz)",[m
+[32m+[m[32m                    id, customerId, subject, body, TicketStatus.open.name(), TicketPriority.valueOf(priority.toLowerCase()).name(), timestamp, timestamp);[m
+[32m+[m[32m                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?::timestamptz)",[m
+[32m+[m[32m                    UUID.randomUUID(), id, "customer", body, timestamp);[m
+                 return null;[m
+             });[m
+             return new Ticket(id, customerId, subject, body, TicketStatus.open, TicketPriority.valueOf(priority.toLowerCase()), null, now, now);[m
+[36m@@ -476,7 +473,7 @@[m [mpublic class SupportDeskApplication {[m
+         Optional<TicketDetails> getTicket(UUID id) {[m
+             Record record = database.dsl().fetchOne("""[m
+                 select t.id as ticket_id,[m
+[31m-                       t.customer_id,[m
+[32m+[m[32m                       t.customer_id as ticket_customer_id,[m
+                        t.subject,[m
+                        t.body,[m
+                        t.status,[m
+[36m@@ -500,7 +497,7 @@[m [mpublic class SupportDeskApplication {[m
+ [m
+             Ticket ticket = new Ticket([m
+                 record.get("ticket_id", UUID.class),[m
+[31m-                record.get("customer_id", UUID.class),[m
+[32m+[m[32m                record.get("ticket_customer_id", UUID.class),[m
+                 record.get("subject", String.class),[m
+                 record.get("body", String.class),[m
+                 TicketStatus.valueOf(record.get("status", String.class)),[m
+[36m@@ -530,30 +527,36 @@[m [mpublic class SupportDeskApplication {[m
+         }[m
+ [m
+         Ticket assignTicket(UUID id, String assignee) {[m
+[32m+[m[32m            Instant now = Instant.now();[m
+[32m+[m[32m            String timestamp = toTimestamp(now);[m
+             database.transaction(ctx -> {[m
+[31m-                ctx.execute("update support_tickets set assigned_to = ?, updated_at = now() where id = ?", assignee, id);[m
+[31m-                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?)",[m
+[31m-                    UUID.randomUUID(), id, "system", "Ticket assigned to " + assignee, Instant.now());[m
+[32m+[m[32m                ctx.execute("update support_tickets set assigned_to = ?, updated_at = ?::timestamptz where id = ?", assignee, timestamp, id);[m
+[32m+[m[32m                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?::timestamptz)",[m
+[32m+[m[32m                    UUID.randomUUID(), id, "system", "Ticket assigned to " + assignee, timestamp);[m
+                 return null;[m
+             });[m
+             return getTicket(id).map(TicketDetails::ticket).orElseThrow();[m
+         }[m
+ [m
+         Ticket updateStatus(UUID id, String status) {[m
+[32m+[m[32m            Instant now = Instant.now();[m
+[32m+[m[32m            String timestamp = toTimestamp(now);[m
+             database.transaction(ctx -> {[m
+[31m-                ctx.execute("update support_tickets set status = ?, updated_at = now() where id = ?", status, id);[m
+[31m-                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?)",[m
+[31m-                    UUID.randomUUID(), id, "system", "Status changed to " + status, Instant.now());[m
+[32m+[m[32m                ctx.execute("update support_tickets set status = ?, updated_at = ?::timestamptz where id = ?", status, timestamp, id);[m
+[32m+[m[32m                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?::timestamptz)",[m
+[32m+[m[32m                    UUID.randomUUID(), id, "system", "Status changed to " + status, timestamp);[m
+                 return null;[m
+             });[m
+             return getTicket(id).map(TicketDetails::ticket).orElseThrow();[m
+         }[m
+ [m
+         void recordMessage(UUID ticketId, String author, String message) {[m
+[32m+[m[32m            Instant now = Instant.now();[m
+[32m+[m[32m            String timestamp = toTimestamp(now);[m
+             database.transaction(ctx -> {[m
+[31m-                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?)",[m
+[31m-                    UUID.randomUUID(), ticketId, author, message, Instant.now());[m
+[31m-                ctx.execute("update support_tickets set updated_at = now() where id = ?", ticketId);[m
+[32m+[m[32m                ctx.execute("insert into support_ticket_messages (id, ticket_id, author, message, created_at) values (?, ?, ?, ?, ?::timestamptz)",[m
+[32m+[m[32m                    UUID.randomUUID(), ticketId, author, message, timestamp);[m
+[32m+[m[32m                ctx.execute("update support_tickets set updated_at = ?::timestamptz where id = ?", timestamp, ticketId);[m
+                 return null;[m
+             });[m
+         }[m
+[36m@@ -584,6 +587,10 @@[m [mpublic class SupportDeskApplication {[m
+             }[m
+             return Instant.now();[m
+         }[m
+[32m+[m
+[32m+[m[32m        private String toTimestamp(Instant instant) {[m
+[32m+[m[32m            return instant.atOffset(ZoneOffset.UTC).toString();[m
+[32m+[m[32m        }[m
+     }[m
+ [m
+     static class TicketCache {[m
+[36m@@ -670,20 +677,27 @@[m [mpublic class SupportDeskApplication {[m
+                 .filter(line -> line != null && !line.isBlank())[m
+                 .collect(Collectors.joining("\n")) : "";[m
+ [m
+[31m-            AIResponse<String> draft = assistant.compose(ticketContext, knowledge, operatorPrompt);[m
+[31m-            String summary = assistant.summarise(ticketContext, draft.data());[m
+[32m+[m[32m            String draft = assistant.compose(ticketContext, knowledge, operatorPrompt);[m
+[32m+[m[32m            String summary = assistant.summarise(ticketContext, draft);[m
+ [m
+[31m-            return new TicketReply(draft.data(), summary, citations);[m
+[32m+[m[32m            return new TicketReply(draft, summary, citations);[m
+         }[m
+ [m
+         interface SupportAssistant {[m
+             @SystemMessage("You are a senior customer support engineer. Draft empathetic, actionable replies.")[m
+[31m-            @UserMessage("Ticket Context:\n{{ticket}}\n\nKnowledge:\n{{knowledge}}\n\nOperator Instructions: {{prompt}}\n\nRespond with a full email to the customer.")[m
+[31m-            AIResponse<String> compose(String ticket, String knowledge, String prompt);[m
+[32m+[m[32m            @UserMessage("Ticket Context:\n{{ticket}}\n\nKnowledge:\n{{knowledge}}\n\nOperator Instructions:\n{{prompt}}\n\nRespond with a full email to the customer.")[m
+[32m+[m[32m            String compose([m
+[32m+[m[32m                    @V("ticket") String ticket,[m
+[32m+[m[32m                    @V("knowledge") String knowledge,[m
+[32m+[m[32m                    @V("prompt") String prompt[m
+[32m+[m[32m            );[m
+ [m
+             @SystemMessage("You are a concise technical writer. Summarise tickets for hand-off notes.")[m
+             @UserMessage("Ticket Context:\n{{ticket}}\n\nDraft Reply:\n{{reply}}\n\nSummarise in 3 bullet points.")[m
+[31m-            String summarise(String ticket, String reply);[m
+[32m+[m[32m            String summarise([m
+[32m+[m[32m                    @V("ticket") String ticket,[m
+[32m+[m[32m                    @V("reply") String reply[m
+[32m+[m[32m            );[m
+         }[m
+     }[m
+ [m

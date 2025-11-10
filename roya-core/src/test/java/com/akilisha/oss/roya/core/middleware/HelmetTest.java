@@ -27,6 +27,7 @@ class HelmetTest {
         mockRequest = mock(Request.class);
         mockResponse = mock(Response.class);
         mockNext = mock(Next.class);
+        when(mockResponse.header(anyString(), anyString())).thenReturn(mockResponse);
     }
 
     @Test
@@ -39,7 +40,7 @@ class HelmetTest {
         middleware.handle(mockRequest, mockResponse, mockNext);
 
         verify(mockResponse).header("X-Content-Type-Options", "nosniff");
-        verify(mockResponse).header("X-Frame-Options", anyString());
+        verify(mockResponse).header(eq("X-Frame-Options"), anyString());
         verify(mockResponse).header("X-XSS-Protection", "0");
         verify(mockNext).handle(mockRequest, mockResponse);
     }
@@ -53,7 +54,7 @@ class HelmetTest {
         Handler middleware = Helmet.helmet();
         middleware.handle(mockRequest, mockResponse, mockNext);
 
-        verify(mockResponse).header("Strict-Transport-Security", anyString());
+        verify(mockResponse).header(eq("Strict-Transport-Security"), anyString());
     }
 
     @Test

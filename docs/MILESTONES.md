@@ -1997,6 +1997,30 @@ ai.workflow("multimodal")
 - ✅ **Responsive Design** - Mobile-friendly documentation
 - ✅ **Full-Text Docs Search** - Client-side search with highlighting across docs, guides, API, and examples
 
+**🆕 November 2025 Additions**
+- ✅ **Support Desk Acceptance Automation**  
+  - Added `scripts/supportdesk_acceptance.ps1` for idempotent end-to-end verification  
+  - Expanded `docs/SUPPORTDESK_ACCEPTANCE.md` with manual `curl` walkthroughs and expected JSON payloads
+- ✅ **Support Desk Example Hardening**  
+  - Eliminated Helidon `OffsetSeconds` serialization failures (Morgan timestamp + timestamptz casting)  
+  - Fixed duplicate `customer_id` ambiguity in RAG queries  
+  - Resolved LangChain4j AI service configuration (parameter binding + `AIResponse` removal) for reliable drafted replies
+- ✅ **Aggregated API Reference**  
+  - Added root `aggregateJavadoc` Gradle task producing combined Javadoc at `build/docs/javadoc`  
+  - New `npm run sync:javadoc` helper copies the output into `roya-showcase/frontend/public/javadoc` for deployment  
+  - `ApiReference` page and docs landing page link directly to the hosted HTML bundle
+- ✅ **Deep-Dive Documentation**  
+  - Added Database Internals guide (pooling, migrations, config precedence, secrets hierarchy, transactional patterns)  
+  - Added Production guide covering deployment topologies, observability, scaling, and DigitalOcean workflows
+- ✅ **AI Provider Expansion**  
+  - Added first-class Hugging Face Inference support alongside OpenAI, Ollama, Mistral, Gemini  
+  - Updated acceptance docs, GA instrumentation, and cache wiring to recognise the new provider
+- ✅ **Config & Secrets Precedence Refinement**  
+  - Builders now expose `override`, `fallback`, and source toggles for deterministic configuration layering  
+  - Added focused unit suites (`ConfigMiddlewareTest`, `SecretsMiddlewareTest`) covering precedence and Vault detection
+- ✅ **Google Analytics Live** – Hard-coded GA tag applied across docs site and showcase app with route tracking component
+- ✅ **SEO Foundations** – Route-aware `<Seo />` component, sitemap automation, and robots.txt
+
 ### Challenges Encountered
 
 **Challenge 1**: JSX Parsing of Java Code
@@ -2056,11 +2080,10 @@ ai.workflow("multimodal")
 - ✅ Navigation works across all pages
 
 ### Next Steps
-- ⏳ Complete remaining documentation pages (database internals, production playbook)
-- ⏳ Video tutorial integration
-- ⏳ Interactive code examples (when playground returns)
-- ⏳ SEO optimization & sitemap
-- ⏳ Metrics/analytics dashboards (post-GA instrumentation)
+- ⏳ Produce the “Zero-to-Hero” video tutorial series and embed on docs landing pages
+- ⏳ Automate aggregated Javadoc publishing in CI/CD (artifact upload + DigitalOcean deploy hook)
+- ⏳ Re-introduce curated interactive snippets once the playground infrastructure returns
+- ⏳ Build lightweight analytics dashboards on top of GA data (docs engagement, conversion)
 
 **Phase 11 Documentation Website Foundation is IN PROGRESS!** 🚧
 

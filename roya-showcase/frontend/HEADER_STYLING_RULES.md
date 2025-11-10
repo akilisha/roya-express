@@ -66,3 +66,7 @@ class="text-xl font-bold text-roya-primary dark:text-roya-primary font-sans mb-3
 - ❌ Headers without dark mode variants
 - ❌ Inconsistent font sizes
 
+
+
+
+

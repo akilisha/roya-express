@@ -27,20 +27,22 @@ public final class SecretsMiddleware {
                         // Prefer Vault if configured; fallback to Config
                         Config cfg = services.has(Config.class) ? services.get(Config.class) : null;
                         boolean vaultEnabled = cfg != null && cfg.get("vault.url").asString().isPresent() && cfg.get("vault.token").asString().isPresent();
-                        if (vaultEnabled) {
-                            services.singleton(Secrets.class, () -> new VaultBackedSecrets(
-                                cfg.get("vault.url").asString().get(),
-                                cfg.get("vault.token").asString().get(),
-                                cfg.get("vault.kvMount").asString().orElse("secret")
-                            ));
-                        } else {
-                            // Register Secrets backed by Helidon Config
-                            services.singleton(Secrets.class, () -> new ConfigBackedSecrets(cfg));
-                        }
+                        services.singleton(Secrets.class, () -> createSecrets(cfg, vaultEnabled));
                     }
                 }
                 next.handle(req, res);
             };
+        }
+
+        Secrets createSecrets(Config cfg, boolean vaultEnabled) {
+            if (vaultEnabled) {
+                return new VaultBackedSecrets(
+                    cfg.get("vault.url").asString().get(),
+                    cfg.get("vault.token").asString().get(),
+                    cfg.get("vault.kvMount").asString().orElse("secret")
+                );
+            }
+            return new ConfigBackedSecrets(cfg);
         }
     }
 

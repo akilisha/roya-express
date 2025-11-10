@@ -404,17 +404,11 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - ✅ Caching reduces duplicate calls by 90%+
 
 ### Deliverables
-- ✅ `plugin/ai/AIPlugin.java` - AI plugin
+- ✅ `plugin/ai/AIPlugin.java` - Unified AI plugin and provider registry
 - ✅ `plugin/ai/AI.java` - AI service interface
-- ✅ `plugin/ai/providers/OpenAIClient.java` - OpenAI integration
-- ✅ `plugin/ai/AIServiceImpl.java` - Orchestration with caching & token counting
-- ✅ `plugin/ai/LLMResponse.java` - Response with cost tracking
-- ✅ Native Health/Tracing enabled (Helidon)
-  - Health endpoints via Helidon Health (`/health`, `/health/live`, `/health/ready`)
-  - Tracing wiring via Helidon Tracing (backend configured by env/props)
-- ✅ Structured request logging (Morgan JSON)
-  - Logstash-compatible JSON logs with trace/request IDs and redaction
-- ✅ `plugin/ai/providers/LLMProvider.java` - Provider abstraction
+- ✅ Provider integrations: OpenAI, Gemini, Ollama, Mistral, Hugging Face (Inference API)
+- ✅ Response orchestration with caching & token counting
+- ✅ Structured logging + Helidon health/tracing wiring
 - ✅ Integration with Cache plugin for response caching
 - ✅ Comprehensive test suite (28 tests, 100% passing)
 
@@ -477,6 +471,11 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 - ✅ **Real-World Examples**: Coffee Shop Assistant, MCP GitHub Example, Customer Support Agent
 - ✅ **Workflow Demo**: Customer Inquiry Processing Workflow showcasing multi-step AI orchestration
 - ✅ **Framework Refinement**: Zero reflection, type-safe AI Services, native LangChain4j primitives
+
+### Enhancements (November 2025)
+- ✅ Hugging Face Inference provider wiring (`-Dai.provider=huggingface`, embeddings support)
+- ✅ Provider override cleanup (system properties + env vars) for OpenAI / Ollama / Mistral / Gemini / Hugging Face
+- ✅ Support Desk reference example stabilized (timestamptz casting, Morgan UTC logs, LangChain4j service bindings)
 
 ---
 
@@ -712,9 +711,10 @@ Based on completed foundation work, the following items are recommended for the 
 - ✅ Getting Started guide ✅
 - ✅ Middleware guide ✅
 - ⏳ Routing guide (basic docs done, needs expansion)
-- ⏳ Database guide (needs creation)
+- ✅ Database guide ✅
 - ✅ AI/RAG guide ✅
 - ✅ 10+ example applications (enhanced + new agentic demos)
+- ✅ Aggregated API reference (Gradle `aggregateJavadoc` task)
 - ⏳ 5+ video tutorials (planned)
 - ✅ Express migration guide ✅
 - ✅ Spring Boot migration guide ✅
@@ -729,10 +729,12 @@ Based on completed foundation work, the following items are recommended for the 
 - [x] Implement documentation search ✅
 - [x] Add analytics instrumentation ✅
 - [x] Create additional example applications ✅
-- [ ] Complete remaining documentation pages (database deep-dive, production guide)
+- [x] Publish Support Desk acceptance checklist and automation ✅
+- [x] Generate aggregated API docs from Javadoc (`./gradlew aggregateJavadoc`)
+- [x] Complete remaining documentation pages (database deep-dive, production guide)
+- [x] Link aggregated Javadoc from docs site (`npm run sync:javadoc`, `/javadoc/index.html`)
 - [ ] Record video tutorials
-- [ ] Generate API docs from Javadoc
-- [ ] Add SEO metadata/sitemap automation
+- [x] Add SEO metadata/sitemap automation
 - [ ] Get community feedback on docs
 
 ---

@@ -24,34 +24,25 @@ declare global {
   }
 }
 
-const GA_MEASUREMENT_ID = import.meta.env?.VITE_GA_MEASUREMENT_ID;
+const DEFAULT_GA_MEASUREMENT_ID = 'G-R0FBHWNZFP';
+const GA_MEASUREMENT_ID = import.meta.env?.VITE_GA_MEASUREMENT_ID ?? DEFAULT_GA_MEASUREMENT_ID;
 
 /**
  * Initialize Google Analytics
  */
 export function initAnalytics() {
-  if (!GA_MEASUREMENT_ID) {
-    console.log('Google Analytics not configured (VITE_GA_MEASUREMENT_ID not set)');
+  if (typeof window === 'undefined') {
     return;
   }
 
-  // Initialize dataLayer
-  const dataLayer = (window.dataLayer = window.dataLayer || []);
-  window.gtag = function (...args) {
-    dataLayer.push(args);
-  };
-  window.gtag('js', new Date());
+  if (typeof window.gtag !== 'function') {
+    console.warn('Google Analytics snippet not loaded yet. Ensure gtag.js is included in index.html.');
+    return;
+  }
+
   window.gtag('config', GA_MEASUREMENT_ID, {
     page_path: window.location.pathname,
   });
-
-  // Load Google Analytics script
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-  document.head.appendChild(script);
-
-  console.log('Google Analytics initialized');
 }
 
 /**

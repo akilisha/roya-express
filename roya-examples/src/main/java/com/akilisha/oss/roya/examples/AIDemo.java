@@ -82,7 +82,7 @@ public class AIDemo {
                 AI ai = req.get(AI.class);
 
                 @SuppressWarnings("unchecked")
-                Map<String, Object> body = (Map<String, Object>) req.get("body");
+                Map<String, Object> body = req.get("body");
 
                 String systemPrompt = (String) body.getOrDefault("systemPrompt", "You are a helpful assistant.");
                 String userMessage = (String) body.get("userMessage");

@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import { useState } from 'preact/hooks';
+import { Seo } from '../components/Seo';
 
 const docsIndex = [
   {
@@ -21,12 +22,15 @@ const docsIndex = [
   { title: 'Router Interface', description: 'Nested routers and route mounting', href: '/docs/api/router', category: 'API Reference' },
   { title: 'AI Interface', description: 'First-class AI/LLM integration in Roya', href: '/docs/api/ai', category: 'API Reference' },
   { title: 'RoyaPlugin Interface', description: 'Extend Roya with plugins, services, and lifecycle hooks', href: '/docs/api/roya-plugin', category: 'API Reference' },
+  { title: 'Aggregated Javadoc', description: 'Generated API reference hosted inside the docs site', href: '/javadoc/index.html', category: 'API Reference' },
   // Guide
   { title: 'Guide: Writing Middleware', description: 'Create custom middleware in Roya', href: '/docs/guide/writing-middleware', category: 'Guide' },
   { title: 'Guide: Using Middleware', description: 'Compose middleware stacks effectively', href: '/docs/guide/using-middleware', category: 'Guide' },
   { title: 'Guide: Error Handling', description: 'Handling exceptions and error middleware', href: '/docs/guide/error-handling', category: 'Guide' },
   { title: 'Guide: Database Integration', description: 'Work with the database plugin and JOOQ', href: '/docs/guide/database', category: 'Guide' },
+  { title: 'Guide: Database Internals', description: 'Understand pooling, migrations, and secrets precedence', href: '/docs/guide/database-internals', category: 'Guide' },
   { title: 'Guide: Plugins', description: 'Understand plugin architecture and usage', href: '/docs/guide/plugins', category: 'Guide' },
+  { title: 'Guide: Production Hardening', description: 'Deployment checklist, observability, and scaling guidance', href: '/docs/guide/production', category: 'Guide' },
   // AI Integration
   { title: 'AI Quick Start', description: 'Add AI to your Roya app in minutes', href: '/docs/ai/quick-start', category: 'AI Integration' },
   { title: 'AI LLM', description: 'Ask, extract, and stream with LLMs', href: '/docs/ai/llm', category: 'AI Integration' },
@@ -65,8 +69,10 @@ export function Docs() {
         { title: 'Writing Middleware', href: '/docs/guide/writing-middleware' },
         { title: 'Using Middleware', href: '/docs/guide/using-middleware' },
         { title: 'Error Handling', href: '/docs/guide/error-handling' },
-        { title: 'Database', href: '/docs/guide/database' },
-        { title: 'Plugins', href: '/docs/guide/plugins' }
+        { title: 'Database Integration', href: '/docs/guide/database' },
+        { title: 'Database Internals', href: '/docs/guide/database-internals' },
+        { title: 'Plugins', href: '/docs/guide/plugins' },
+        { title: 'Production Hardening', href: '/docs/guide/production' }
       ]
     },
     {
@@ -79,7 +85,8 @@ export function Docs() {
         { title: 'Request', href: '/docs/api/request' },
         { title: 'Response', href: '/docs/api/response' },
         { title: 'Router', href: '/docs/api/router' },
-        { title: 'RoyaPlugin', href: '/docs/api/roya-plugin' }
+        { title: 'RoyaPlugin', href: '/docs/api/roya-plugin' },
+        { title: 'Full Javadoc', href: '/javadoc/index.html' }
       ]
     },
     {
@@ -150,6 +157,10 @@ export function Docs() {
   
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Seo
+        title="Documentation"
+        description="Explore Roya's getting started guides, API reference, AI integration walkthroughs, and migration guides."
+      />
       <div class="mb-10">
         <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">Documentation</h1>
         <p class="text-lg md:text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">

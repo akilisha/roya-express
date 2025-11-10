@@ -172,7 +172,7 @@ public final class Morgan {
      * Format log line in Apache combined format.
      */
     private static String formatCombined(Request req, Response res, long duration) {
-        String timestamp = LocalDateTime.now().format(TIME_FORMATTER);
+        String timestamp = OffsetDateTime.now(ZoneOffset.UTC).format(TIME_FORMATTER);
         String referer = req.headers().get("Referer").orElse("-");
         String userAgent = req.headers().get("User-Agent").orElse("-");
 

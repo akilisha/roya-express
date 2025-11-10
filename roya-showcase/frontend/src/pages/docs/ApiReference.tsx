@@ -49,6 +49,23 @@ export function ApiReference() {
         <p class="text-xl text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
           Complete API documentation for Roya Framework. If you know Express.js, this will look familiar.
         </p>
+        <div class="mt-6 p-4 bg-roya-primary/10 dark:bg-roya-primary/20 border border-roya-primary/30 dark:border-roya-primary/40 rounded-xl">
+          <p class="text-sm text-roya-text dark:text-roya-textDark leading-relaxed">
+            <strong class="text-roya-primary dark:text-roya-primary">Looking for full Javadoc?</strong> Run
+            <code class="font-mono text-xs bg-black/70 text-roya-primary px-2 py-1 rounded ml-1 mr-1">./gradlew aggregateJavadoc</code>
+            to generate aggregated API docs under <code class="font-mono text-xs">build/docs/javadoc</code>. Then copy them into the docs site
+            with <code class="font-mono text-xs bg-black/70 text-roya-primary px-2 py-1 rounded ml-1 mr-1">npm run sync:javadoc</code> from <code class="font-mono text-xs">roya-showcase/frontend</code>.
+            The files will be published to <code class="font-mono text-xs">public/javadoc</code> and available at <code class="font-mono text-xs">/javadoc/index.html</code>.
+          </p>
+          <a
+            href="/javadoc/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-4 inline-flex items-center px-3 py-2 text-sm font-semibold rounded-md bg-roya-primary text-white hover:bg-roya-primary/90 transition-colors"
+          >
+            Open Aggregated Javadoc
+          </a>
+        </div>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

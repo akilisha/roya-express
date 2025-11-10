@@ -18,13 +18,13 @@ import com.akilisha.oss.roya.plugins.database.Database;
 
 /**
  * AI plugin - unified AI/LLM integration orchestrating multiple libraries.
- *
+ * <p>
  * Unified Architecture: All three libraries (LangChain, LangGraph, Google ADK) work together
  * through a single unified AI interface. Each library contributes its strengths:
  * - LangChain4j: LLM primitives (chat, embeddings), tool integration
  * - LangGraph4j: Stateful agent workflows, multi-node graphs, context management
  * - Google ADK: High-level agent orchestration, multi-agent systems
- *
+ * <p>
  * Operations automatically delegate to the best library, while developers can also
  * access libraries directly for advanced use cases.
  */
@@ -58,6 +58,24 @@ public class AIPlugin implements RoyaPlugin {
             // Build library configuration (shared across all libraries)
             var configBuilder = AILibraryConfig.builder().caching(enableCache);
 
+            // Allow explicit provider override via system property or env var
+            String providerOverride = System.getProperty("ai.provider");
+            if (providerOverride == null || providerOverride.isBlank()) {
+                providerOverride = System.getenv("AI_PROVIDER");
+            }
+            if (providerOverride != null && !providerOverride.isBlank()) {
+                configBuilder.libraryOption("provider", providerOverride.toLowerCase());
+            }
+
+            // Allow explicit embedding provider override
+            String embeddingProviderOverride = System.getProperty("ai.embeddingProvider");
+            if (embeddingProviderOverride == null || embeddingProviderOverride.isBlank()) {
+                embeddingProviderOverride = System.getenv("AI_EMBEDDING_PROVIDER");
+            }
+            if (embeddingProviderOverride != null && !embeddingProviderOverride.isBlank()) {
+                configBuilder.libraryOption("embeddingProvider", embeddingProviderOverride.toLowerCase());
+            }
+
             // Add OpenAI provider if configured
             String openaiKey = getConfigValue("ai.openai.apiKey", "AI_OPENAI_API_KEY", "OPENAI_API_KEY");
             if (openaiKey != null && !openaiKey.isBlank()) {
@@ -68,6 +86,65 @@ public class AIPlugin implements RoyaPlugin {
             String anthropicKey = getConfigValue("ai.anthropic.apiKey", "AI_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY");
             if (anthropicKey != null && !anthropicKey.isBlank()) {
                 configBuilder.provider("anthropic", AILibraryConfig.ProviderConfig.simple(anthropicKey));
+            }
+
+            // Add Hugging Face provider if configured
+            String huggingFaceKey = getConfigValue(
+                    "ai.huggingface.apiKey",
+                    "AI_HUGGINGFACE_API_KEY",
+                    "HUGGINGFACE_API_KEY",
+                    "HF_API_KEY"
+            );
+            if (huggingFaceKey != null && !huggingFaceKey.isBlank()) {
+                var huggingFaceBuilder = AILibraryConfig.ProviderConfig.builder()
+                        .apiKey(huggingFaceKey);
+
+                String huggingFaceEndpoint = getConfigValue(
+                        "ai.huggingface.endpoint",
+                        "AI_HUGGINGFACE_ENDPOINT",
+                        "HUGGINGFACE_ENDPOINT"
+                );
+                if (huggingFaceEndpoint != null && !huggingFaceEndpoint.isBlank()) {
+                    huggingFaceBuilder.endpoint(huggingFaceEndpoint);
+                }
+
+                setOptionalOption(huggingFaceBuilder, "model", getConfigValue(
+                        "ai.huggingface.modelId",
+                        "AI_HUGGINGFACE_MODEL_ID",
+                        "HUGGINGFACE_MODEL_ID"
+                ));
+
+                setOptionalOption(huggingFaceBuilder, "task", getConfigValue(
+                        "ai.huggingface.task",
+                        "AI_HUGGINGFACE_TASK",
+                        "HUGGINGFACE_TASK"
+                ));
+
+                setOptionalOption(huggingFaceBuilder, "temperature", parseDouble(getConfigValue(
+                        "ai.huggingface.temperature",
+                        "AI_HUGGINGFACE_TEMPERATURE",
+                        "HUGGINGFACE_TEMPERATURE"
+                )));
+
+                setOptionalOption(huggingFaceBuilder, "maxNewTokens", parseInteger(getConfigValue(
+                        "ai.huggingface.maxNewTokens",
+                        "AI_HUGGINGFACE_MAX_NEW_TOKENS",
+                        "HUGGINGFACE_MAX_NEW_TOKENS"
+                )));
+
+                setOptionalOption(huggingFaceBuilder, "waitForModel", parseBoolean(getConfigValue(
+                        "ai.huggingface.waitForModel",
+                        "AI_HUGGINGFACE_WAIT_FOR_MODEL",
+                        "HUGGINGFACE_WAIT_FOR_MODEL"
+                )));
+
+                setOptionalOption(huggingFaceBuilder, "timeoutSeconds", parseInteger(getConfigValue(
+                        "ai.huggingface.timeoutSeconds",
+                        "AI_HUGGINGFACE_TIMEOUT_SECONDS",
+                        "HUGGINGFACE_TIMEOUT_SECONDS"
+                )));
+
+                configBuilder.provider("huggingface", huggingFaceBuilder.build());
             }
 
             // Add Ollama provider (default, no API key required if running locally)
@@ -99,10 +176,10 @@ public class AIPlugin implements RoyaPlugin {
             String geminiApiKey = getConfigValue("ai.gemini.apiKey", "AI_GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY");
             String geminiProject = getConfigValue("ai.gemini.project", "AI_GEMINI_PROJECT", "GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID");
             String geminiLocation = getConfigValue("ai.gemini.location", "AI_GEMINI_LOCATION", "GOOGLE_CLOUD_LOCATION", "GCP_REGION");
-            
+
             if (geminiApiKey != null && !geminiApiKey.isBlank()) {
                 // Gemini requires project, location, and API key
-                var geminiConfig = geminiProject != null && !geminiProject.isBlank() && 
+                var geminiConfig = geminiProject != null && !geminiProject.isBlank() &&
                                   geminiLocation != null && !geminiLocation.isBlank()
                     ? AILibraryConfig.ProviderConfig.gemini(geminiApiKey, geminiProject, geminiLocation)
                     : AILibraryConfig.ProviderConfig.simple(geminiApiKey); // Fallback if project/location not set
@@ -181,6 +258,43 @@ public class AIPlugin implements RoyaPlugin {
         return null;
     }
 
+    private static void setOptionalOption(AILibraryConfig.ProviderConfig.Builder builder, String key, Object value) {
+        if (value != null) {
+            builder.option(key, value);
+        }
+    }
+
+    private static Boolean parseBoolean(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return Boolean.parseBoolean(value);
+    }
+
+    private static Integer parseInteger(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            System.out.println("⚠️  Invalid integer for Hugging Face configuration: " + value);
+            return null;
+        }
+    }
+
+    private static Double parseDouble(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException ex) {
+            System.out.println("⚠️  Invalid double for Hugging Face configuration: " + value);
+            return null;
+        }
+    }
+
     @Override
     public void setup(Application app) {
         // Initialize CronJobRegistry (Quartz scheduler)
@@ -190,7 +304,7 @@ public class AIPlugin implements RoyaPlugin {
             System.out.println("⚠️  CronJobRegistry initialization failed: " + e.getMessage());
             System.out.println("   Scheduled workflows will not be available");
         }
-        
+
         // Initialize FileWatchRegistry (WatchService)
         try {
             FileWatchRegistry.getInstance().initialize();
@@ -198,7 +312,7 @@ public class AIPlugin implements RoyaPlugin {
             System.out.println("⚠️  FileWatchRegistry initialization failed: " + e.getMessage());
             System.out.println("   File watch workflows will not be available");
         }
-        
+
         // Initialize PollingRegistry (ScheduledExecutorService)
         try {
             PollingRegistry.getInstance().initialize();
@@ -206,10 +320,10 @@ public class AIPlugin implements RoyaPlugin {
             System.out.println("⚠️  PollingRegistry initialization failed: " + e.getMessage());
             System.out.println("   Polling workflows will not be available");
         }
-        
+
         // Register webhook routes with the Roya application
         WebhookRegistry.getInstance().registerRoutes(app);
-        
+
         // Initialize webhook persistence (if Database plugin is available)
         if (services.has(Database.class)) {
             try {
@@ -220,7 +334,7 @@ public class AIPlugin implements RoyaPlugin {
                 webhookPersistenceService.initialize(app);
                 webhookPersistenceService.loadAndRegisterAll();
                 System.out.println("✓ Webhook persistence enabled (Database)");
-                
+
                 // Register webhook management API endpoints
                 WebhookManagementAPI managementAPI = new WebhookManagementAPI(webhookPersistenceService);
                 managementAPI.registerRoutes(app);
@@ -229,7 +343,7 @@ public class AIPlugin implements RoyaPlugin {
                 // Error initializing persistence - use in-memory
                 System.out.println("⚠️  Webhook persistence initialization failed: " + e.getMessage());
                 System.out.println("   Using in-memory webhook storage (no persistence)");
-                
+
                 // Still register API with in-memory store
                 webhookPersistenceService = new WebhookPersistenceService(
                     new WebhookPersistenceService.InMemoryWebhookStore()
@@ -275,6 +389,13 @@ public class AIPlugin implements RoyaPlugin {
         if (openaiKey != null) providers.add("openai");
         if (anthropicKey != null) providers.add("anthropic");
         if (geminiKey != null) providers.add("gemini");
+        String huggingFaceKey = getConfigValue(
+                "ai.huggingface.apiKey",
+                "AI_HUGGINGFACE_API_KEY",
+                "HUGGINGFACE_API_KEY",
+                "HF_API_KEY"
+        );
+        if (huggingFaceKey != null) providers.add("huggingface");
         String mistralKey = getConfigValue("ai.mistral.apiKey", "AI_MISTRAL_API_KEY", "MISTRAL_API_KEY");
         if (mistralKey != null) providers.add("mistral");
         return String.join(", ", providers);
@@ -288,14 +409,14 @@ public class AIPlugin implements RoyaPlugin {
         } catch (Exception e) {
             System.err.println("Error shutting down PollingRegistry: " + e.getMessage());
         }
-        
+
         // Shutdown FileWatchRegistry
         try {
             FileWatchRegistry.getInstance().shutdown();
         } catch (Exception e) {
             System.err.println("Error shutting down FileWatchRegistry: " + e.getMessage());
         }
-        
+
         // Shutdown CronJobRegistry
         try {
             CronJobRegistry.getInstance().shutdown();

@@ -3,8 +3,10 @@ package com.akilisha.oss.roya.plugins.ai.llm;
 import com.akilisha.oss.roya.plugins.ai.library.AILibraryConfig;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
+import dev.langchain4j.model.huggingface.HuggingFaceEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 
+import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -53,6 +55,12 @@ public class EmbeddingModelFactory {
             return createOpenAiEmbeddingModel(openaiConfig.get());
         }
 
+        // 3. Try Hugging Face embeddings (if API key available)
+        var huggingFaceConfig = config.provider("huggingface");
+        if (huggingFaceConfig.isPresent() && huggingFaceConfig.get().apiKey() != null && !huggingFaceConfig.get().apiKey().isEmpty()) {
+            return createHuggingFaceEmbeddingModel(huggingFaceConfig.get());
+        }
+
         // 3. Try AllMiniLmL6V2EmbeddingModel (default, local, no API key required)
         // This is a good default as it runs locally and doesn't require external services
         // The dependency is in build.gradle, so it's always available
@@ -97,6 +105,9 @@ public class EmbeddingModelFactory {
         if (options.containsKey("embeddingModel")) {
             return options.get("embeddingModel").toString();
         }
+        if (options.containsKey("modelId")) {
+            return options.get("modelId").toString();
+        }
         return defaultModel;
     }
 
@@ -122,6 +133,24 @@ public class EmbeddingModelFactory {
     }
 
     /**
+     * Create Hugging Face EmbeddingModel.
+     */
+    private static EmbeddingModel createHuggingFaceEmbeddingModel(AILibraryConfig.ProviderConfig config) {
+        String modelId = getModelName(config, "sentence-transformers/all-MiniLM-L6-v2");
+        Integer timeoutSeconds = getOptionAsInteger(config, "timeoutSeconds");
+
+        var builder = HuggingFaceEmbeddingModel.builder()
+                .accessToken(config.apiKey())
+                .modelId(modelId);
+
+        if (timeoutSeconds != null) {
+            builder = builder.timeout(Duration.ofSeconds(timeoutSeconds));
+        }
+
+        return builder.build();
+    }
+
+    /**
      * Create EmbeddingModel for a specific provider.
      */
     private static EmbeddingModel createEmbeddingModelForProvider(String provider, AILibraryConfig config) {
@@ -133,9 +162,34 @@ public class EmbeddingModelFactory {
                 }
                 yield createOpenAiEmbeddingModel(openaiConfig.get());
             }
+            case "huggingface" -> {
+                var huggingFaceConfig = config.provider("huggingface");
+                if (huggingFaceConfig.isEmpty() || huggingFaceConfig.get().apiKey() == null || huggingFaceConfig.get().apiKey().isEmpty()) {
+                    throw new IllegalArgumentException("Hugging Face embedding provider requires API key");
+                }
+                yield createHuggingFaceEmbeddingModel(huggingFaceConfig.get());
+            }
             case "all-minilm-l6-v2", "allminilml6v2", "local" -> createAllMiniLmL6V2EmbeddingModel();
             default -> throw new IllegalArgumentException("Unknown embedding provider: " + provider);
         };
+    }
+
+    private static Integer getOptionAsInteger(AILibraryConfig.ProviderConfig config, String key) {
+        if (config == null) {
+            return null;
+        }
+        Object value = config.options().get(key);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String str && !str.isBlank()) {
+            try {
+                return Integer.parseInt(str);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 }
 

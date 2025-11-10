@@ -115,6 +115,7 @@ public class ResponseImpl implements Response {
             String json = objectMapper.writeValueAsString(data);
             helidonResponse.send(json);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Failed to serialize JSON", e);
         }
     }

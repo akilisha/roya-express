@@ -1,8 +1,13 @@
 import { Link } from 'wouter';
+import { Seo } from '../components/Seo';
 
 export function Architecture() {
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Seo
+        title="Architecture"
+        description="Understand Roya's layered architecture: Helidon Níma foundation, LangChain4j integration, and workflow orchestration."
+      />
       <div class="mb-10">
         <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
           Roya AI Architecture

@@ -1,4 +1,5 @@
 import { useRoute, Link } from 'wouter';
+import { Seo } from '../components/Seo';
 
 export function Tutorials() {
   const [, params] = useRoute('/tutorials/:id');
@@ -115,6 +116,10 @@ RAGResponse response = ai.ragApi().ask("Question?",
     
     return (
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Seo
+          title={tutorial ? `Tutorial ${tutorialId}: ${tutorial.title}` : 'Tutorial'}
+          description={tutorial?.description ?? 'Roya tutorial'}
+        />
         <div class="mb-8">
           <Link href="/tutorials" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark mb-6 inline-flex items-center gap-2 font-medium transition-colors">
             <span>←</span>
@@ -140,6 +145,7 @@ RAGResponse response = ai.ragApi().ask("Question?",
 
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Seo title="Tutorials" description="Twelve LangChain4j tutorials recreated with Roya's AI integration." />
       <div class="mb-10">
         <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight font-sans">
           Roya Tutorials

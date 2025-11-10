@@ -21,16 +21,28 @@ export function Guide() {
       highlight: 'Centralized error handling and recovery'
     },
     {
-      title: 'Database',
+      title: 'Database Integration',
       href: '/docs/guide/database',
       description: 'Integrate databases with JOOQ, transactions, and migrations',
       highlight: 'Type-safe database operations with Flyway'
+    },
+    {
+      title: 'Database Internals',
+      href: '/docs/guide/database-internals',
+      description: 'Dive into connection pooling, migration workflow, and secrets precedence',
+      highlight: 'Operational view of the database plugin'
     },
     {
       title: 'Plugins',
       href: '/docs/guide/plugins',
       description: 'Extend Roya with plugins and understand the plugin system',
       highlight: 'Modular architecture for extending functionality'
+    },
+    {
+      title: 'Production Hardening',
+      href: '/docs/guide/production',
+      description: 'Deployment checklist, observability, and scaling strategies',
+      highlight: 'Everything you need before hitting production'
     }
   ];
   

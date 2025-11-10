@@ -185,3 +185,7 @@ After updating each file, verify:
 4. Verify accessibility (contrast ratios)
 5. Update any remaining callout boxes (Pro Tips, etc.)
 
+
+
+
+

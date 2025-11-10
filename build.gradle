@@ -1,3 +1,6 @@
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
 allprojects {
     group = 'com.akilisha.oss'
     version = '1.0.0-SNAPSHOT'
@@ -49,5 +52,51 @@ subprojects {
 
     tasks.named('test') {
         useJUnitPlatform()
+    }
+}
+
+def javaProjects = subprojects.findAll { it.plugins.hasPlugin('java') || it.plugins.hasPlugin('java-library') }
+
+tasks.register('aggregateJavadoc', Javadoc) {
+    group = 'documentation'
+    description = 'Generates aggregated Javadoc for all Roya modules.'
+
+    def toolchainProject = javaProjects.find()
+    if (toolchainProject != null) {
+        def toolchains = toolchainProject.extensions.getByType(JavaToolchainService)
+        javadocTool.set(toolchains.javadocToolFor {
+            languageVersion = JavaLanguageVersion.of(23)
+        })
+    }
+
+    dependsOn javaProjects.collect { it.tasks.named('classes') }
+
+    source javaProjects.collect { project -> project.sourceSets.main.allJava }
+    classpath = files(javaProjects.collect { project -> project.sourceSets.main.compileClasspath })
+
+    destinationDir = layout.buildDirectory.dir("docs/javadoc").get().asFile
+
+    options.encoding = 'UTF-8'
+    if (options instanceof StandardJavadocDocletOptions) {
+        def docletOptions = (StandardJavadocDocletOptions) options
+        docletOptions.addBooleanOption('html5', true)
+        docletOptions.addStringOption('source', '23')
+        docletOptions.addBooleanOption('Xdoclint:none', true)
+    }
+
+    doFirst {
+        if (options instanceof StandardJavadocDocletOptions) {
+            def docletOptions = (StandardJavadocDocletOptions) options
+            File previewOpts = File.createTempFile("javadoc-preview", ".opts", temporaryDir)
+            previewOpts.text = "--enable-preview\n"
+            def existingOptionFiles = docletOptions.optionFiles ?: []
+            docletOptions.optionFiles = existingOptionFiles + previewOpts
+        }
+
+        if (javadocTool.present) {
+            println "Using Javadoc tool: ${javadocTool.get().metadata.installationPath} (Java ${javadocTool.get().metadata.languageVersion.asInt()})"
+        } else {
+            println "Using default Javadoc tool from current JDK"
+        }
     }
 }

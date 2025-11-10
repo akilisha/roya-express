@@ -1,8 +1,13 @@
 import { Link } from 'wouter';
+import { Seo } from '../components/Seo';
 
 export function Home() {
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Seo
+        title="Build AI-Powered Apps"
+        description="Roya is an Express-inspired Java framework with first-class AI, workflow orchestration, and Helidon Níma performance."
+      />
       {/* Hero Section */}
       <div class="text-center mb-20">
         <h1 class="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-roya-primary via-roya-primary to-roya-accent bg-clip-text text-transparent tracking-tight font-sans">

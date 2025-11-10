@@ -5,6 +5,7 @@ import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.huggingface.HuggingFaceChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.model.mistralai.MistralAiStreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
@@ -12,6 +13,7 @@ import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 
+import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -43,6 +45,7 @@ public class ChatModelFactory {
      * 3. Mistral AI (if API key available)
      * 4. OpenAI (if API key available)
      * 5. Anthropic (if API key available)
+     * 6. Hugging Face Inference API (if API key available)
      * 
      * @param config AI library configuration
      * @return ChatModel instance
@@ -79,9 +82,15 @@ public class ChatModelFactory {
             return createAnthropicChatModel(anthropicConfig.get());
         }
 
+        // 6. Try Hugging Face (if API key available)
+        var huggingFaceConfig = config.provider("huggingface");
+        if (huggingFaceConfig.isPresent() && huggingFaceConfig.get().apiKey() != null && !huggingFaceConfig.get().apiKey().isEmpty()) {
+            return createHuggingFaceChatModel(huggingFaceConfig.get());
+        }
+
         throw new IllegalArgumentException(
             "No ChatModel provider available. " +
-            "Configure one of: 'ollama' (default, no API key), 'mistral', 'openai', or 'anthropic' in providers."
+            "Configure one of: 'ollama' (default, no API key), 'mistral', 'openai', 'anthropic', or 'huggingface' in providers."
         );
     }
 
@@ -184,8 +193,37 @@ public class ChatModelFactory {
         if (options.containsKey("modelName")) {
             return options.get("modelName").toString();
         }
+        if (options.containsKey("modelId")) {
+            return options.get("modelId").toString();
+        }
         return defaultModel;
     }
+    private static ChatModel createHuggingFaceChatModel(AILibraryConfig.ProviderConfig config) {
+        String modelId = getModelName(config, "tiiuae/falcon-7b-instruct");
+        Double temperature = getOptionAsDouble(config, "temperature");
+        Integer maxNewTokens = getOptionAsInteger(config, "maxNewTokens");
+        Boolean waitForModel = getOptionAsBoolean(config, "waitForModel");
+        Integer timeout = getOptionAsInteger(config, "timeoutSeconds");
+
+        HuggingFaceChatModel.Builder builder = HuggingFaceChatModel.builder()
+                .accessToken(config.apiKey())
+                .modelId(modelId);
+
+        if (temperature != null) {
+            builder = builder.temperature(temperature);
+        }
+        if (maxNewTokens != null) {
+            builder = builder.maxNewTokens(maxNewTokens);
+        }
+        if (waitForModel != null) {
+            builder = builder.waitForModel(waitForModel);
+        }
+        if (timeout != null) {
+            builder = builder.timeout(Duration.ofSeconds(timeout));
+        }
+        return builder.build();
+    }
+
 
     // ========== Provider-Specific Creation Methods ==========
 
@@ -298,6 +336,13 @@ public class ChatModelFactory {
                 }
                 yield createAnthropicChatModel(anthropicConfig.get());
             }
+            case "huggingface" -> {
+                var huggingFaceConfig = config.provider("huggingface");
+                if (huggingFaceConfig.isEmpty() || huggingFaceConfig.get().apiKey() == null || huggingFaceConfig.get().apiKey().isEmpty()) {
+                    throw new IllegalArgumentException("Hugging Face provider requires API key");
+                }
+                yield createHuggingFaceChatModel(huggingFaceConfig.get());
+            }
             default -> throw new IllegalArgumentException("Unknown provider: " + provider);
         };
     }
@@ -326,8 +371,61 @@ public class ChatModelFactory {
                 }
                 yield createAnthropicStreamingChatModel(anthropicConfig.get());
             }
+            case "huggingface" -> {
+                yield null; // Streaming currently not supported for Hugging Face models
+            }
             default -> null;
         };
+    }
+
+    private static Double getOptionAsDouble(AILibraryConfig.ProviderConfig config, String key) {
+        if (config == null) {
+            return null;
+        }
+        Object value = config.options().get(key);
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+        if (value instanceof String str && !str.isBlank()) {
+            try {
+                return Double.parseDouble(str);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static Integer getOptionAsInteger(AILibraryConfig.ProviderConfig config, String key) {
+        if (config == null) {
+            return null;
+        }
+        Object value = config.options().get(key);
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String str && !str.isBlank()) {
+            try {
+                return Integer.parseInt(str);
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static Boolean getOptionAsBoolean(AILibraryConfig.ProviderConfig config, String key) {
+        if (config == null) {
+            return null;
+        }
+        Object value = config.options().get(key);
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        if (value instanceof String str && !str.isBlank()) {
+            return Boolean.parseBoolean(str);
+        }
+        return null;
     }
 }
 

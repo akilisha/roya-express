@@ -43,18 +43,25 @@ public class LangChainLibrary implements AILibrary {
     }
 
     private ChatModel createChatModel(AILibraryConfig config) {
-        // Use ChatModelFactory for uniform provider selection with intelligent fallback
-        // Priority: Ollama (default) -> Mistral -> OpenAI -> Anthropic
-        // Gemini (Vertex AI) is handled separately as it requires special configuration
-        
-        // Try Gemini (Vertex AI) first if configured (requires special handling)
-        var geminiConfig = config.provider("gemini");
-        if (geminiConfig.isPresent()) {
-            return createGeminiChatModel(geminiConfig.get());
+        // Respect explicit provider overrides before falling back
+        var explicitProvider = resolveExplicitProvider(config);
+        if ("gemini".equals(explicitProvider)) {
+            var geminiConfig = config.provider("gemini")
+                    .orElseThrow(() -> new IllegalArgumentException("Gemini provider selected but not configured"));
+            return createGeminiChatModel(geminiConfig);
         }
 
-        // Use factory for all other providers (Ollama, Mistral, OpenAI, Anthropic)
-        return ChatModelFactory.createChatModel(config);
+        try {
+            // Use factory for standard providers (ollama, mistral, openai, anthropic)
+            return ChatModelFactory.createChatModel(config);
+        } catch (IllegalArgumentException ex) {
+            // If no standard provider available but Gemini is configured, fall back to it
+            var geminiConfig = config.provider("gemini");
+            if (geminiConfig.isPresent()) {
+                return createGeminiChatModel(geminiConfig.get());
+            }
+            throw ex;
+        }
     }
 
     /**
@@ -114,19 +121,35 @@ public class LangChainLibrary implements AILibrary {
      * Uses ChatModelFactory for uniform provider selection.
      */
     private StreamingChatModel createStreamingChatModel(AILibraryConfig config) {
-        // Try Gemini (Vertex AI) first if configured
-        // Note: VertexAiChatModel in 1.8.0-beta15 does NOT implement StreamingChatModel.
-        // Streaming is not currently supported for Gemini in this version.
-        var geminiConfig = config.provider("gemini");
-        if (geminiConfig.isPresent()) {
-            // Gemini streaming not supported in langchain4j-vertex-ai 1.8.0-beta15
+        var explicitProvider = resolveExplicitProvider(config);
+        if ("gemini".equals(explicitProvider)) {
+            // Gemini streaming not supported in current langchain4j version
             return null;
         }
 
-        // Use factory for all other providers (Ollama, Mistral, OpenAI, Anthropic)
-        return ChatModelFactory.createStreamingChatModel(config);
+        var streamingChatModel = ChatModelFactory.createStreamingChatModel(config);
+        if (streamingChatModel != null) {
+            return streamingChatModel;
+        }
+
+        // No streaming-capable provider available. If explicit provider was not set but Gemini
+        // is configured, fall back to null (Gemini has no streaming support).
+        return null;
     }
 
+    private String resolveExplicitProvider(AILibraryConfig config) {
+        Object provider = config.libraryOptions().get("provider");
+        if (provider != null) {
+            return provider.toString().toLowerCase();
+        }
+
+        String envProvider = System.getenv("AI_PROVIDER");
+        if (envProvider != null && !envProvider.isBlank()) {
+            return envProvider.toLowerCase();
+        }
+
+        return null;
+    }
 }
 
 

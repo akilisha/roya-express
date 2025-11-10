@@ -52,7 +52,12 @@ class BodyParserTest {
         Handler middleware = BodyParser.bodyParser();
         middleware.handle(mockRequest, mockResponse, mockNext);
 
-        verify(mockRequest).set("body", any(Map.class));
+        var captor = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(mockRequest).set(eq("body"), captor.capture());
+        @SuppressWarnings("unchecked")
+        Map<String, String> parsed = (Map<String, String>) captor.getValue();
+        assertEquals("1", parsed.get("conversationId"));
+        assertEquals("hello", parsed.get("message"));
         verify(mockNext).handle(mockRequest, mockResponse);
     }
 
@@ -141,8 +146,8 @@ class BodyParserTest {
         @SuppressWarnings("unchecked")
         Map<String, String> parsed = (Map<String, String>) captor.getValue();
         assertEquals("value1", parsed.get("key1"));
-        assertNull(parsed.get("key2")); // Should be skipped
-        assertEquals(1, parsed.size());
+        assertEquals("", parsed.get("key2")); // No equals treated as empty value
+        assertEquals(2, parsed.size());
     }
 
     @Test

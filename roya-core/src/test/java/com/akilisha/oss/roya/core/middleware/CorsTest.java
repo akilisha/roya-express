@@ -4,10 +4,12 @@ import com.akilisha.oss.roya.api.Handler;
 import com.akilisha.oss.roya.api.Next;
 import com.akilisha.oss.roya.api.Request;
 import com.akilisha.oss.roya.api.Response;
+import com.akilisha.oss.roya.api.Headers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -21,19 +23,25 @@ class CorsTest {
     private Request mockRequest;
     private Response mockResponse;
     private Next mockNext;
+    private Headers mockHeaders;
 
     @BeforeEach
     void setUp() {
         mockRequest = mock(Request.class);
         mockResponse = mock(Response.class);
         mockNext = mock(Next.class);
+        mockHeaders = mock(Headers.class);
+
+        when(mockRequest.headers()).thenReturn(mockHeaders);
+        when(mockResponse.header(anyString(), anyString())).thenReturn(mockResponse);
+        when(mockResponse.status(anyInt())).thenReturn(mockResponse);
     }
 
     @Test
     @DisplayName("should set CORS headers")
     void shouldSetCorsHeaders() throws Exception {
         when(mockRequest.method()).thenReturn("POST");
-        when(mockRequest.headers().get("Origin")).thenReturn(java.util.Optional.of("https://example.com"));
+        when(mockHeaders.get("Origin")).thenReturn(java.util.Optional.of("https://example.com"));
 
         Handler middleware = Cors.cors();
         middleware.handle(mockRequest, mockResponse, mockNext);
@@ -60,7 +68,7 @@ class CorsTest {
     @DisplayName("should allow custom CORS options")
     void shouldAllowCustomCorsOptions() throws Exception {
         when(mockRequest.method()).thenReturn("POST");
-        when(mockRequest.headers().get("Origin")).thenReturn(java.util.Optional.of("https://mydomain.com"));
+        when(mockHeaders.get("Origin")).thenReturn(java.util.Optional.of("https://mydomain.com"));
 
         Cors.CorsOptions options = Cors.CorsOptions.builder()
             .origin("https://mydomain.com")

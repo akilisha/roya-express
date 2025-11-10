@@ -1,0 +1,36 @@
+plugins {
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+dependencies {
+    implementation project(':roya-api')
+    implementation project(':roya-core')
+    implementation project(':roya-workflow')
+    implementation project(':roya-plugins:ai')
+    implementation project(':roya-plugins:database')
+    implementation project(':roya-plugins:cache')
+    implementation project(':roya-plugins:auth')
+    implementation project(':roya-plugins:email')
+    implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    implementation "org.jooq:jooq:${jooqVersion}"
+    implementation("org.postgresql:postgresql:${postgresVersion}")
+}
+
+application {
+    mainClass = 'com.akilisha.oss.roya.examples.supportdesk.SupportDeskApplication'
+}
+
+tasks.named('shadowJar') {
+    zip64 true
+    mergeServiceFiles()
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += ['--enable-preview']
+}

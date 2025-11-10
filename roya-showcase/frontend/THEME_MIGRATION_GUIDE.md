@@ -252,3 +252,7 @@ After migration, verify:
 - Use gradient variant only for hero sections
 - Maintain accessibility - ensure sufficient contrast
 
+
+
+
+

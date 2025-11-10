@@ -157,32 +157,39 @@ class MiddlewareChainTest {
             next.handle(req, res);
         };
 
-        Request mockReq = mock(Request.class);
-        Response mockRes = mock(Response.class);
-        Next mockNext = mock(Next.class);
+        Request unauthReq = mock(Request.class);
+        Response unauthRes = mock(Response.class);
+        Next unauthNext = mock(Next.class);
+        Headers unauthHeaders = mock(Headers.class);
+        when(unauthReq.headers()).thenReturn(unauthHeaders);
+        when(unauthHeaders.authorization()).thenReturn(java.util.Optional.empty());
 
         // Test 1: No auth token - should short-circuit
         executionOrder.clear();
-        when(mockReq.headers().authorization()).thenReturn(java.util.Optional.empty());
 
-        authMiddleware.handle(mockReq, mockRes, (req, resp) -> {
-            protectedHandler.handle(req, resp, mockNext);
+        authMiddleware.handle(unauthReq, unauthRes, (req, resp) -> {
+            protectedHandler.handle(req, resp, unauthNext);
         });
 
         assertThat(executionOrder).containsExactly("auth-failed");
         assertThat(executionOrder).doesNotContain("protectedHandler");
-        verify(mockNext, never()).handle(mockReq, mockRes);
+        verify(unauthNext, never()).handle(any(), any());
 
         // Test 2: With auth token - should continue chain
         executionOrder.clear();
-        when(mockReq.headers().authorization()).thenReturn(java.util.Optional.of("Bearer token123"));
+        Request authReq = mock(Request.class);
+        Response authRes = mock(Response.class);
+        Next authNext = mock(Next.class);
+        Headers authHeaders = mock(Headers.class);
+        when(authReq.headers()).thenReturn(authHeaders);
+        when(authHeaders.authorization()).thenReturn(java.util.Optional.of("Bearer token123"));
 
-        authMiddleware.handle(mockReq, mockRes, (req, resp) -> {
-            protectedHandler.handle(req, resp, mockNext);
+        authMiddleware.handle(authReq, authRes, (req, resp) -> {
+            protectedHandler.handle(req, resp, authNext);
         });
 
         assertThat(executionOrder).containsExactly("auth-passed", "protectedHandler");
-        verify(mockNext).handle(mockReq, mockRes);
+        verify(authNext).handle(authReq, authRes);
     }
 
     @Test

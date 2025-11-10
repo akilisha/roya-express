@@ -166,8 +166,8 @@ class RouterImplTest {
 
         // First handler should be called
         verify(handler1).handle(any(Request.class), any(Response.class), any(Next.class));
-        // Second handler should also be called (multiple handlers per route)
-        verify(handler2).handle(any(Request.class), any(Response.class), any(Next.class));
+        // Second handler should not be called unless the first delegates via next()
+        verify(handler2, never()).handle(any(Request.class), any(Response.class), any(Next.class));
     }
 
     // ========== Middleware ==========
@@ -210,6 +210,12 @@ class RouterImplTest {
     void shouldExecuteMultipleHandlers() throws Exception {
         Handler handler1 = mock(Handler.class);
         Handler handler2 = mock(Handler.class);
+
+        doAnswer(invocation -> {
+            Next next = invocation.getArgument(2);
+            next.handle(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(handler1).handle(any(Request.class), any(Response.class), any(Next.class));
 
         router.get("/users", handler1, handler2);
 

@@ -7,6 +7,7 @@ import { Architecture } from './pages/Architecture';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { AnalyticsTracker } from './components/AnalyticsTracker';
+import { Seo } from './components/Seo';
 
 // Getting Started
 import { GettingStarted } from './pages/docs/GettingStarted';
@@ -38,8 +39,10 @@ import { Guide } from './pages/docs/Guide';
 import { MiddlewareGuide } from './pages/docs/MiddlewareGuide';
 import { PluginsGuide } from './pages/docs/PluginsGuide';
 import { DatabaseGuide } from './pages/docs/DatabaseGuide';
+import { DatabaseInternals } from './pages/docs/DatabaseInternals';
 import { ErrorHandlingGuide } from './pages/docs/ErrorHandlingGuide';
 import { UsingMiddlewareGuide } from './pages/docs/UsingMiddlewareGuide';
+import { ProductionGuide } from './pages/docs/ProductionGuide';
 
 // Migration Guides
 import { MigrationGuides } from './pages/docs/MigrationGuides';
@@ -50,6 +53,7 @@ import { QuarkusMigration } from './pages/docs/QuarkusMigration';
 export function App() {
   return (
     <div class="min-h-screen flex flex-col bg-roya-surface dark:bg-roya-bgDark transition-colors duration-300">
+      <Seo />
       <Header />
       <main class="flex-1">
         <Router>
@@ -95,7 +99,9 @@ export function App() {
           <Route path="/docs/guide/using-middleware" component={UsingMiddlewareGuide} />
           <Route path="/docs/guide/error-handling" component={ErrorHandlingGuide} />
           <Route path="/docs/guide/database" component={DatabaseGuide} />
+          <Route path="/docs/guide/database-internals" component={DatabaseInternals} />
           <Route path="/docs/guide/plugins" component={PluginsGuide} />
+          <Route path="/docs/guide/production" component={ProductionGuide} />
           
           {/* Migration Guides */}
           <Route path="/docs/migration" component={MigrationGuides} />

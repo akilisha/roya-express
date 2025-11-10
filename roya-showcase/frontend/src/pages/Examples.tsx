@@ -1,4 +1,5 @@
 import { Link, useRoute } from 'wouter';
+import { Seo } from '../components/Seo';
 
 interface Example {
   id: string;
@@ -284,6 +285,10 @@ Workflow travelWorkflow = ai.workflow("adaptive-travel")
     
     return (
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Seo
+          title={example ? `${example.title} Example` : 'Example'}
+          description={example?.description ?? 'Detailed Roya example'}
+        />
         <div class="mb-8">
           <Link href="/examples" class="text-roya-primary dark:text-roya-primary hover:text-roya-primaryDark dark:hover:text-roya-primaryDark mb-6 inline-flex items-center gap-2 font-medium transition-colors">
             <span>←</span>
@@ -338,6 +343,10 @@ Workflow travelWorkflow = ai.workflow("adaptive-travel")
   // Show list view
   return (
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Seo
+        title="Examples"
+        description="Explore Roya examples for workflow orchestration, RAG, MCP integrations, and production-ready AI agents."
+      />
       <div class="mb-10">
         <h1 class="text-4xl md:text-5xl font-bold mb-4 text-roya-text dark:text-roya-textDark tracking-tight">
           Real-World Examples
