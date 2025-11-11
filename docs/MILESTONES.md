@@ -1,6 +1,6 @@
 # Roya Framework - Milestones
 
-**Last Updated**: January 2025
+**Last Updated**: November 11, 2025
 
 This document tracks our progress against the roadmap, capturing accomplishments, challenges, and design changes.
 
@@ -2082,6 +2082,8 @@ ai.workflow("multimodal")
 ### Next Steps
 - ⏳ Produce the “Zero-to-Hero” video tutorial series and embed on docs landing pages
 - ⏳ Automate aggregated Javadoc publishing in CI/CD (artifact upload + DigitalOcean deploy hook)
+- ⏳ Formalise configuration/secrets precedence documentation and automated tests across plugins
+- ⏳ Launch community feedback loop (survey + GitHub templates) ahead of alpha announce
 - ⏳ Re-introduce curated interactive snippets once the playground infrastructure returns
 - ⏳ Build lightweight analytics dashboards on top of GA data (docs engagement, conversion)
 

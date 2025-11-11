@@ -1,6 +1,6 @@
 # Roya Framework - Implementation Roadmap
 
-**Last Updated**: January 2025
+**Last Updated**: November 11, 2025
 
 This roadmap outlines the phased implementation plan for Roya Framework. Each phase has clear objectives and success criteria to keep us honest.
 
@@ -531,38 +531,38 @@ int id = req.param("id", Integer.class);     # ⏳ Returns String for now
 
 ## Next Priorities (Post-Foundation)
 
-Based on completed foundation work, the following items are recommended for the next development cycle:
+**Updated focus areas after the November 2025 docs and configuration work:**
 
 ### High Priority (P1)
 
-1. **RAG Observability & Metrics** (Proper Implementation)
-   - Replace placeholder metrics with production-grade implementation
-   - Integrate with Micrometer/Prometheus
-   - See `docs/BACKLOG.md` for details
+1. **Configuration & Secrets Precedence Finalisation**
+   - Harden precedence rules across environment variables, system properties, classpath configs, and Vault overrides
+   - Add integration tests in consuming plugins (Database, Secrets, Support Desk)
+   - Document precedence rules prominently in docs site
 
-2. **RAG Configuration System** (Proper Implementation)
-   - Replace placeholder config with proper configuration library
-   - Support multiple sources with precedence
-   - See `docs/BACKLOG.md` for details
+2. **RAG Observability & Metrics**
+   - Instrument LangChain4j/Qdrant interactions with Micrometer + Prometheus exporters
+   - Capture Support Desk RAG request traces and surface dashboards (Grafana JSON snippets)
+   - Add acceptance checklist steps validating observability plumbing
 
-3. **Vector & RAG Polishing** (Phase 7 Continuation)
-   - LLM-based reranking (already implemented ✅)
-   - Collection management APIs (already implemented ✅)
-   - Enhanced chunking presets (already implemented ✅)
-   - Remaining: Production-grade observability and config (see above)
+3. **Production Hardening Follow-Through (Phase 10)**
+   - Run security audit (OWASP ZAP, dependency review) and document remediation
+   - Finish load/perf benchmarking suite and publish baseline numbers
+   - Validate DigitalOcean deployment flow, including automated sitemap + Javadoc sync in CI/CD
 
 ### Medium Priority (P2)
 
-4. **Remaining Trigger Nodes** (if needed)
-   - SubscriptionTrigger (WebSocket/SSE)
-   - ChatTrigger (chat interface)
-   - EmailTrigger (email-triggered workflows)
-   - AppEventTrigger (internal event triggers)
-   - CustomTrigger (generic trigger pattern)
+4. **Trigger & Workflow Enhancements**
+   - Finalise Webhook/Cron/Queue trigger coverage with regression tests
+   - Expand docs with end-to-end trigger configuration recipes
 
-5. **LangChain4j Demo Recreation Project**
-   - Comprehensive showcase project
-   - See `docs/FUTURE_PROJECTS.md` for details
+5. **Community & Ecosystem Prep**
+   - Launch developer feedback survey and GitHub templates
+   - Prepare launch assets (blog, social, mailing list) for alpha announcement
+
+6. **Interactive Snippets (Optional polish)**
+   - Reintroduce curated playground snippets once infra stabilises
+   - Capture analytics to validate engagement before rolling out broadly
 
 ---
 
@@ -731,11 +731,12 @@ Based on completed foundation work, the following items are recommended for the 
 - [x] Create additional example applications ✅
 - [x] Publish Support Desk acceptance checklist and automation ✅
 - [x] Generate aggregated API docs from Javadoc (`./gradlew aggregateJavadoc`)
+- [x] Sync aggregated Javadoc into docs site (`npm run sync:javadoc`, `/javadoc/index.html`)
 - [x] Complete remaining documentation pages (database deep-dive, production guide)
-- [x] Link aggregated Javadoc from docs site (`npm run sync:javadoc`, `/javadoc/index.html`)
-- [ ] Record video tutorials
-- [x] Add SEO metadata/sitemap automation
-- [ ] Get community feedback on docs
+- [x] Add SEO metadata, sitemap automation, and robots directives
+- [ ] Record video tutorials (“faceless” series)
+- [ ] Automate aggregated Javadoc publication in CI/CD + DigitalOcean deploy
+- [ ] Gather community feedback on docs (survey + issue template)
 
 ---
 
