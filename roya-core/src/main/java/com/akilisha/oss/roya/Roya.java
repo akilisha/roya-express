@@ -7,10 +7,12 @@ import com.akilisha.oss.roya.api.plugin.Services;
 import com.akilisha.oss.roya.core.HandlebarsEngine;
 import com.akilisha.oss.roya.core.RequestImpl;
 import com.akilisha.oss.roya.core.ResponseImpl;
+import com.akilisha.oss.roya.core.config.RoyaConfig;
 import com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.helidon.config.Config;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.websocket.WsRouting;
 import io.helidon.websocket.WsListener;
@@ -52,6 +54,8 @@ public class Roya implements Handler, Application {
     private Roya() {
         // Register ObjectMapper as singleton service
         services.singleton(ObjectMapper.class, () -> objectMapper);
+        Config config = RoyaConfig.create();
+        services.singleton(Config.class, () -> config);
     }
 
     /**

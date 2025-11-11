@@ -40,18 +40,24 @@ export function ProductionGuide() {
       <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark border border-roya-border dark:border-roya-borderDark p-8 space-y-6">
         <SectionHeader title="Configuration & Secrets" />
         <p class="text-roya-text dark:text-roya-textDark leading-relaxed">
-          Combine <code class="font-mono text-sm">ConfigMiddleware</code> and <code class="font-mono text-sm">SecretsMiddleware</code> to centralize precedence rules.
-          Environment variables should override system properties inside container environments like DigitalOcean.
+          Roya now bootstraps Helidon Config during application startup via <code class="font-mono text-sm">RoyaConfig</code>.
+          The resolved <code class="font-mono text-sm">Config</code> instance is registered in the service registry, so any
+          plugin or handler can call <code class="font-mono text-sm">app.services().get(Config.class)</code> or
+          <code class="font-mono text-sm">req.get(Config.class)</code>. Precedence remains environment variables → system
+          properties → classpath files.
         </p>
-        <pre class="bg-black text-roya-primary text-sm p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code>{`app.use(ConfigMiddleware.builder()
-    .override(ConfigSources.file("conf/override.yaml").build())
-    .includeSystemProperties(true)
-    .includeEnvironmentVariables(true)
-    .build());
+        <pre class="bg-black text-roya-primary text-sm p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code>{`// Inside startup
+Config config = app.services().get(Config.class);
 
-app.use(SecretsMiddleware.defaults());`}</code></pre>
+// Inside a handler
+app.get("/config-demo", (req, res) -> {
+    Config cfg = req.get(Config.class);
+    String dbUrl = cfg.get("database.url").asString().orElse("jdbc:postgresql://localhost:5432/docuRoya");
+    res.json(Map.of("databaseUrl", dbUrl));
+});`}</code></pre>
         <p class="text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
-          For DigitalOcean App Platform, define environment variables and secrets via the control panel or <code class="font-mono text-sm">doctl apps update</code>.
+          Secrets still use <code class="font-mono text-sm">SecretsMiddleware</code>—combine it with the built-in config to
+          mirror precedence across credentials and application settings.
         </p>
       </section>
 

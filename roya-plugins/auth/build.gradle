@@ -45,4 +45,5 @@ tasks.withType(JavaCompile).configureEach {
 tasks.named('test') {
     useJUnitPlatform()
     jvmArgs += ['--enable-preview']
+    systemProperty "net.bytebuddy.experimental", "true"
 }

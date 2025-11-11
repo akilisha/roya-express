@@ -575,7 +575,7 @@ Based on completed foundation work, the following items are recommended for the 
 - ✅ Tracing via Helidon Tracing (backend configurable)
 - ✅ CORS via Helidon `CorsSupport`
 - ✅ Structured Morgan logging (Logstash JSON) with redaction and trace/span IDs
-- ✅ ConfigMiddleware (Helidon Config) registered as a service
+- ✅ `RoyaConfig` bootstrap (Helidon Config) registered as a service
 - ✅ SecretsMiddleware with Vault-backed `Secrets` (KV v2) and config fallback
 - ✅ Object Storage plugin (S3/MinIO) with presigned GET/PUT and multipart
 - ✅ Demos: WebSocket, SSE, Fault Tolerance, Scheduling

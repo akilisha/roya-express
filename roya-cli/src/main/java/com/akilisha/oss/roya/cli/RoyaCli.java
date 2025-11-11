@@ -5,6 +5,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ScopeType;
+import picocli.CommandLine.ParentCommand;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +34,8 @@ public class RoyaCli implements Callable<Integer> {
 
     @Command(name = "new", description = "Scaffold a new Roya app")
     static class New implements Callable<Integer> {
+        @ParentCommand
+        RoyaCli parent;
         @Parameters(index = "0", description = "Project directory name")
         String name;
 
@@ -40,6 +43,7 @@ public class RoyaCli implements Callable<Integer> {
         String group;
 
         @Override public Integer call() throws Exception {
+            RoyaCli.DRY_RUN = parent != null && parent.dryRun;
             Path root = Path.of(name);
             if (Files.exists(root)) {
                 System.err.println("Directory already exists: " + root);
@@ -81,6 +85,8 @@ public class Main {
 
     @Command(name = "run", description = "Run a class via Gradle :run or JavaExec")
     static class Run implements Callable<Integer> {
+        @ParentCommand
+        RoyaCli parent;
         @Option(names = "--class", required = true, description = "Main class to run")
         String mainClass;
         @Option(names = "--module", description = "Gradle module (default :roya-examples)", defaultValue = ":roya-examples")
@@ -89,6 +95,7 @@ public class Main {
         String args;
 
         @Override public Integer call() throws Exception {
+            RoyaCli.DRY_RUN = parent != null && parent.dryRun;
             String cmd = String.format("./gradlew %s:run --no-daemon -DmainClass=%s", module, mainClass);
             if (args != null && !args.isBlank()) {
                 cmd += " --args=\"" + args.replace("\"", "\\\"") + "\"";
@@ -100,10 +107,13 @@ public class Main {
 
     @Command(name = "dev", description = "Run example with preview and .env support")
     static class Dev implements Callable<Integer> {
+        @ParentCommand
+        RoyaCli parent;
         @Parameters(index = "0", description = "Example main class (e.g., HelloWorld)")
         String exampleMain;
 
         @Override public Integer call() throws Exception {
+            RoyaCli.DRY_RUN = parent != null && parent.dryRun;
             String cmd = String.format("./gradlew :roya-examples:run --no-daemon --args=\"%s\"", exampleMain);
             System.out.println(cmd);
             return exec(cmd);
@@ -112,12 +122,15 @@ public class Main {
 
     @Command(name = "compose", description = "Shortcuts for docker compose up/down services")
     static class Compose implements Callable<Integer> {
+        @ParentCommand
+        RoyaCli parent;
         @Parameters(index = "0", description = "up|down")
         String action;
         @Option(names = "--service", description = "Service name (qdrant|minio|postgres|vault)")
         String service;
 
         @Override public Integer call() throws Exception {
+            RoyaCli.DRY_RUN = parent != null && parent.dryRun;
             String base = isWindows() ? "docker-compose" : "docker compose";
             String cmd;
             if ("up".equals(action)) {

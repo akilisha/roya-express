@@ -34,8 +34,8 @@ public class DatabasePlugin implements RoyaPlugin {
     }
 
     private Database createDatabase(Services services) {
-        // Access Config from Services (created by ConfigMiddleware if registered)
-        // If Config not available, create default (supports env vars, system props, etc.)
+        // Access Config from Services (registered by RoyaConfig during bootstrap)
+        // If Config not available (e.g. in isolated tests), fall back to Helidon's default resolution.
         Config config = services.has(Config.class)
             ? services.get(Config.class)
             : Config.create();

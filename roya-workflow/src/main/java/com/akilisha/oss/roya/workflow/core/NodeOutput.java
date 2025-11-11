@@ -17,7 +17,7 @@ public record NodeOutput(
      * Create a successful node output
      */
     public static NodeOutput success(Map<String, Object> data) {
-        return new NodeOutput(data, NodeStatus.SUCCESS, Optional.empty());
+        return new NodeOutput(new java.util.HashMap<>(data), NodeStatus.SUCCESS, Optional.empty());
     }
     
     /**

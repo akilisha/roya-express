@@ -52,15 +52,26 @@ class CacheServiceTest {
     }
 
     @Test
-    @DisplayName("Should support different types")
+    @DisplayName("Should support different primitive types")
     void testDifferentTypes() {
         cache.set("string", "test");
         cache.set("integer", 42);
-        cache.set("map", Map.of("key", "value"));
-        
+        cache.set("map", new java.util.HashMap<>(Map.of("key", "value")));
+
         assertEquals("test", cache.get("string", String.class).orElse(null));
         assertEquals(42, cache.get("integer", Integer.class).orElse(null));
-        assertNotNull(cache.get("map", Map.class).orElse(null));
+        Map<?, ?> retrievedMap = cache.get("map", Map.class).orElse(null);
+        assertNotNull(retrievedMap);
+        assertEquals("value", retrievedMap.get("key"));
+    }
+
+    @Test
+    @DisplayName("Serializer should round-trip maps")
+    void testSerializerRoundTrip() {
+        var serializer = new com.akilisha.oss.roya.plugins.cache.serialization.JsonSerializer();
+        byte[] data = serializer.serialize(Map.of("key", "value"));
+        Map<?, ?> map = serializer.deserialize(data, Map.class);
+        assertEquals("value", map.get("key"));
     }
 
     @Test

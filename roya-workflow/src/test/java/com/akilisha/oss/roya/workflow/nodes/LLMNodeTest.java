@@ -63,7 +63,9 @@ class LLMNodeTest {
         // Arrange
         LLMNode node = new LLMNode("anthropic", "claude-sonnet-4", "Test prompt");
         ExecutionContext context = new ExecutionContext();
-        NodeInput input = new NodeInput(Map.of("message", null), context);
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("message", null);
+        NodeInput input = new NodeInput(data, context);
 
         // Act
         CompletableFuture<NodeOutput> future = node.execute(input);

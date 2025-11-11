@@ -266,6 +266,9 @@ public class FFMCacheBackend {
             byte[] data = dataSegment.toArray(ValueLayout.JAVA_BYTE);
 
             // Deserialize
+            if (type == Boolean.class) {
+                System.out.println("DEBUG get key=" + key + " dataSize=" + dataSize + " offset=" + dataOffset);
+            }
             T value = serializer.deserialize(data, type);
 
             // Update eviction metadata (for LRU/LFU)
@@ -285,39 +288,45 @@ public class FFMCacheBackend {
     public void set(String key, Object value, Duration ttl) {
         lock.writeLock().lock();
         try {
-            // Check capacity and evict if needed
             if (needsEviction()) {
                 evict();
             }
 
-            // Serialize value
             byte[] data = serializer.serialize(value);
             int dataSize = data.length;
-
-            // Calculate total entry size
             int entrySize = METADATA_SIZE + dataSize;
 
-            // Check if we have space
-            if (writeOffset + entrySize > cacheFile.byteSize()) {
-                // Need to evict or wrap around
+            long dataOffset;
+            while (true) {
+                long alignedOffset = alignTo8((int) writeOffset);
+                if (alignedOffset != writeOffset) {
+                    writeOffset = alignedOffset;
+                }
+
+                if (writeOffset + entrySize <= cacheFile.byteSize()) {
+                    dataOffset = writeOffset;
+                    break;
+                }
+
                 evict();
-                // Reset write offset if still no space
+
                 if (writeOffset + entrySize > cacheFile.byteSize()) {
-                    writeOffset = METADATA_SIZE; // Wrap around to start
+                    writeOffset = METADATA_SIZE; // wrap to start
+
+                    if (entrySize > cacheFile.byteSize() - METADATA_SIZE) {
+                        throw new IllegalStateException("Cache entry too large for cache file");
+                    }
+                    continue;
                 }
             }
 
-            // Write to cache file (append-only, like Kafka)
-            // Ensure write offset is 8-byte aligned
-            long dataOffset = alignTo8((int) writeOffset);
             long timestamp = System.currentTimeMillis();
             long ttlNanos = ttl.toNanos();
 
             cacheFile.set(ValueLayout.JAVA_LONG, dataOffset, timestamp);
             cacheFile.set(ValueLayout.JAVA_LONG, dataOffset + 8, ttlNanos);
-            cacheFile.set(ValueLayout.JAVA_LONG, dataOffset + 16, (long) dataSize); // Store as long for alignment
+            cacheFile.set(ValueLayout.JAVA_LONG, dataOffset + 16, (long) dataSize);
 
-            // Write data using FFM (after aligned metadata)
             long dataWriteOffset = dataOffset + METADATA_SIZE;
             MemorySegment dataSegment = MemorySegment.ofArray(data);
             MemorySegment.copy(
@@ -326,7 +335,6 @@ public class FFMCacheBackend {
                     dataSize
             );
 
-            // Update index
             long keyHash = hashKey(key);
             long slot = findIndexSlot(keyHash);
             long slotOffset = slot * INDEX_SLOT_SIZE;
@@ -334,14 +342,12 @@ public class FFMCacheBackend {
             indexFile.set(ValueLayout.JAVA_LONG, slotOffset, keyHash);
             indexFile.set(ValueLayout.JAVA_LONG, slotOffset + 8, dataOffset);
 
-            // Update metadata
             entryMetadata.put(keyHash, new EntryMetadata(key, timestamp, dataSize));
             keyToHash.put(key, keyHash);
             allKeys.add(key);
 
-            // Update write offset
-            writeOffset += entrySize;
-            cacheFile.set(ValueLayout.JAVA_LONG, 0, writeOffset); // Store in header
+            writeOffset = dataOffset + entrySize;
+            cacheFile.set(ValueLayout.JAVA_LONG, 0, writeOffset);
 
             currentSize++;
         } finally {

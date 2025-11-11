@@ -14,20 +14,62 @@ export function GettingStarted() {
         <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">
           <SectionHeader title="Installation" />
           <p class="text-base text-roya-text dark:text-roya-textDark mb-4 leading-relaxed">
-            Roya requires <strong class="text-roya-primary dark:text-roya-primary">Java 21+</strong> (LTS). That's it!
+            Roya is built and tested on <strong class="text-roya-primary dark:text-roya-primary">Java 23+</strong>.
+            We rely on preview features (virtual threads, foreign memory access, string templates) so the runtime
+            version must match the compiler version. Older JDKs such as 21 are theoretically possible, but are not
+            currently validated in CI.
           </p>
-          
-          <SubsectionHeader title="Using Gradle" />
+
+          <SubsectionHeader title="Core Modules" />
+          <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark mb-3 leading-relaxed">
+            At a minimum you need both <code class="font-mono text-xs">roya-api</code> (the HTTP abstraction) and
+            <code class="font-mono text-xs">roya-core</code> (the Helidon-backed implementation).
+          </p>
           <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`dependencies {
+    implementation 'com.akilisha.oss.roya:roya-api:1.0.0-SNAPSHOT'
     implementation 'com.akilisha.oss.roya:roya-core:1.0.0-SNAPSHOT'
 }`}</code></pre>
-          
-          <SubsectionHeader title="Using Maven" />
-          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`<dependency>
-    <groupId>com.akilisha.oss.roya</groupId>
-    <artifactId>roya-core</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>`}</code></pre>
+
+          <SubsectionHeader title="Optional Modules" />
+          <p class="text-sm text-roya-textMuted dark:text-roya-textMutedDark mb-3 leading-relaxed">
+            The ecosystem is split into focused artifacts. Pull in the pieces you need:
+          </p>
+          <ul class="list-disc list-inside text-sm text-roya-text dark:text-roya-textDark space-y-2 leading-relaxed">
+            <li><code class="font-mono text-xs">com.akilisha.oss.roya:roya-plugins</code> &mdash; database, cache, AI, email, metrics, storage helpers.</li>
+            <li><code class="font-mono text-xs">com.akilisha.oss.roya:roya-workflow</code> &mdash; workflow runtime, triggers, AI/RAG orchestration.</li>
+            <li><code class="font-mono text-xs">com.akilisha.oss.roya:roya-cli</code> &mdash; scaffolding/utility CLI (install with <code class="font-mono text-xs">./gradlew :roya-cli:installDist</code>).</li>
+          </ul>
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark mt-3"><code class="font-mono text-sm">{`dependencies {
+    implementation 'com.akilisha.oss.roya:roya-api:1.0.0-SNAPSHOT'
+    implementation 'com.akilisha.oss.roya:roya-core:1.0.0-SNAPSHOT'
+    implementation 'com.akilisha.oss.roya:roya-plugins:1.0.0-SNAPSHOT'     // optional
+    implementation 'com.akilisha.oss.roya:roya-workflow:1.0.0-SNAPSHOT'   // optional
+}`}</code></pre>
+
+          <SubsectionHeader title="Maven Coordinates" />
+          <pre class="bg-black dark:bg-black text-roya-primary dark:text-roya-primary p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code class="font-mono text-sm">{`<dependencies>
+    <dependency>
+        <groupId>com.akilisha.oss.roya</groupId>
+        <artifactId>roya-api</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>com.akilisha.oss.roya</groupId>
+        <artifactId>roya-core</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <!-- Optional helpers -->
+    <dependency>
+        <groupId>com.akilisha.oss.roya</groupId>
+        <artifactId>roya-plugins</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+        <groupId>com.akilisha.oss.roya</groupId>
+        <artifactId>roya-workflow</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+</dependencies>`}</code></pre>
         </section>
         
         <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark p-8 border border-roya-border dark:border-roya-borderDark">

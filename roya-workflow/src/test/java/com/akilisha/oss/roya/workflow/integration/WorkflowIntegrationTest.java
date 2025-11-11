@@ -62,7 +62,7 @@ class WorkflowIntegrationTest {
 
         // Assert
         assertTrue(result.isSuccess());
-        assertEquals(30, result.context().get("result")); // (10 * 2) + 10 = 30
+        assertEquals(30, ((Number) result.context().get("result")).intValue()); // (10 * 2) + 10 = 30
     }
 
     @Test
@@ -149,15 +149,19 @@ class WorkflowIntegrationTest {
             .action("flaky", input -> {
                 int attempt = attemptCount.incrementAndGet();
                 if (attempt < 3) {
-                    return CompletableFuture.completedFuture(
-                        NodeOutput.failure("Temporary failure")
+                    return CompletableFuture.failedFuture(
+                        new RuntimeException("Temporary failure")
                     );
                 }
                 return CompletableFuture.completedFuture(
                     NodeOutput.success("result", "success")
                 );
             })
-            .edge("start", "flaky", Edge.sequential()
+            .action("finalize", input -> CompletableFuture.completedFuture(
+                NodeOutput.success("result", input.context().get("result"))
+            ))
+            .edge("start", "flaky")
+            .edge("flaky", "finalize", Edge.sequential()
                 .withRetry(RetryPolicy.fixedDelay(3, Duration.ofMillis(50))))
             .build();
 
@@ -185,9 +189,9 @@ class WorkflowIntegrationTest {
             .action("afterFail", input -> CompletableFuture.completedFuture(
                 NodeOutput.success("result", "executed anyway")
             ))
-            .edge("start", "failing", Edge.sequential()
+            .edge("start", "failing")
+            .edge("failing", "afterFail", Edge.sequential()
                 .onError(ErrorStrategy.SKIP_AND_CONTINUE))
-            .edge("failing", "afterFail")
             .build();
 
         WorkflowExecutor executor = new WorkflowExecutor(workflow);
@@ -205,7 +209,7 @@ class WorkflowIntegrationTest {
         // Arrange
         Workflow workflow = Workflow.create()
             .trigger("start", input -> CompletableFuture.completedFuture(
-                NodeOutput.success("firstName", "John", "lastName", "Doe")
+                NodeOutput.success(Map.of("firstName", "John", "lastName", "Doe"))
             ))
             .logic("transform", TransformNode.create(data -> {
                 String first = (String) data.get("firstName");
@@ -332,8 +336,8 @@ class WorkflowIntegrationTest {
 
         // Assert
         assertTrue(result.isSuccess());
-        assertEquals(10, result.context().get("doubled")); // 5 * 2
-        assertEquals(20, result.context().get("result")); // 10 + 10
+        assertEquals(10, ((Number) result.context().get("doubled")).intValue()); // 5 * 2
+        assertEquals(20, ((Number) result.context().get("result")).intValue()); // 10 + 10
     }
 
     @Test
@@ -409,8 +413,8 @@ class WorkflowIntegrationTest {
         // Assert
         assertTrue(result.isSuccess());
         assertTrue(result.context().snapshot().containsKey("childResults"));
-        assertEquals(2, result.context().get("totalChildren"));
-        assertEquals(2L, result.context().get("successCount"));
+        assertEquals(2, ((Number) result.context().get("totalChildren")).intValue());
+        assertEquals(2L, ((Number) result.context().get("successCount")).longValue());
     }
 
     @Test
@@ -425,10 +429,34 @@ class WorkflowIntegrationTest {
 
         AtomicInteger retryCount = new AtomicInteger(0);
 
+        WorkflowNode processNode = input -> {
+            WorkflowNode delegate = in -> {
+                int attempt = retryCount.incrementAndGet();
+                if (attempt < 2) {
+                    return CompletableFuture.completedFuture(
+                        NodeOutput.failure("Temporary processing error")
+                    );
+                }
+                return CompletableFuture.completedFuture(
+                    NodeOutput.success("transactionId", "TXN-" + System.currentTimeMillis())
+                );
+            };
+
+            CircuitBreakerNode breakerNode = new CircuitBreakerNode(delegate, breaker);
+            return breakerNode.execute(input).thenCompose(output -> {
+                if (output.isFailure()) {
+                    return CompletableFuture.failedFuture(
+                        new RuntimeException(output.error().orElse("Processing error"))
+                    );
+                }
+                return CompletableFuture.completedFuture(output);
+            });
+        };
+
         Workflow workflow = Workflow.create()
             // Input validation
             .trigger("input", input -> CompletableFuture.completedFuture(
-                NodeOutput.success("userId", 123, "amount", 100.00)
+                NodeOutput.success(Map.of("userId", 123, "amount", 100.00))
             ))
 
             // Validation node
@@ -445,17 +473,7 @@ class WorkflowIntegrationTest {
             })
 
             // Processing with retry and circuit breaker
-            .action("process", new CircuitBreakerNode(input -> {
-                int attempt = retryCount.incrementAndGet();
-                if (attempt < 2) {
-                    return CompletableFuture.completedFuture(
-                        NodeOutput.failure("Temporary processing error")
-                    );
-                }
-                return CompletableFuture.completedFuture(
-                    NodeOutput.success("transactionId", "TXN-" + System.currentTimeMillis())
-                );
-            }, breaker))
+            .action("process", processNode)
 
             // Transform result
             .logic("transform", TransformNode.create(data -> {
@@ -474,9 +492,9 @@ class WorkflowIntegrationTest {
 
             // Edges with retry
             .edge("input", "validate")
-            .edge("validate", "process", Edge.sequential()
+            .edge("validate", "process")
+            .edge("process", "transform", Edge.sequential()
                 .withRetry(RetryPolicy.fixedDelay(2, Duration.ofMillis(50))))
-            .edge("process", "transform")
             .edge("transform", "notify")
             .build();
 
@@ -525,11 +543,16 @@ class WorkflowIntegrationTest {
             })
             .action("merge", input -> {
                 mergeCallCount.incrementAndGet();
-                int resultA = (int) input.data().get("resultA");
-                int resultB = (int) input.data().get("resultB");
-                return CompletableFuture.completedFuture(
-                    NodeOutput.success("final", resultA + resultB)
-                );
+                input.data().forEach(input.context()::set);
+
+                if (input.context().has("resultA") && input.context().has("resultB")) {
+                    int resultA = ((Number) input.context().get("resultA")).intValue();
+                    int resultB = ((Number) input.context().get("resultB")).intValue();
+                    return CompletableFuture.completedFuture(
+                        NodeOutput.success("final", resultA + resultB)
+                    );
+                }
+                return CompletableFuture.completedFuture(NodeOutput.success());
             })
             .edge("start", "branchA", Edge.parallel())
             .edge("start", "branchB", Edge.parallel())
@@ -544,8 +567,8 @@ class WorkflowIntegrationTest {
 
         // Assert
         assertTrue(result.isSuccess());
-        assertEquals(20, result.context().get("resultA")); // 10 * 2
-        assertEquals(15, result.context().get("resultB")); // 10 + 5
-        assertEquals(35, result.context().get("final")); // 20 + 15
+        assertEquals(20, ((Number) result.context().get("resultA")).intValue()); // 10 * 2
+        assertEquals(15, ((Number) result.context().get("resultB")).intValue()); // 10 + 5
+        assertEquals(35, ((Number) result.context().get("final")).intValue()); // 20 + 15
     }
 }

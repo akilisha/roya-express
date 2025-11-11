@@ -523,7 +523,7 @@ Begin implementation of Vector Store & RAG per `PHASE7_DESIGN.md`:
 - Health/Tracing via Helidon
 - CORS via Helidon `CorsSupport`
 - Morgan structured logging (JSON)
-- ConfigMiddleware + SecretsMiddleware (Vault-backed, config fallback)
+- Application-level `RoyaConfig` bootstrap + SecretsMiddleware (Vault-backed, config fallback)
 - Object Storage (S3/MinIO) with presigned URLs + multipart
 - Demos: WebSocket, SSE, Fault Tolerance, Scheduling
 
@@ -2016,8 +2016,8 @@ ai.workflow("multimodal")
   - Added first-class Hugging Face Inference support alongside OpenAI, Ollama, Mistral, Gemini  
   - Updated acceptance docs, GA instrumentation, and cache wiring to recognise the new provider
 - ✅ **Config & Secrets Precedence Refinement**  
-  - Builders now expose `override`, `fallback`, and source toggles for deterministic configuration layering  
-  - Added focused unit suites (`ConfigMiddlewareTest`, `SecretsMiddlewareTest`) covering precedence and Vault detection
+  - Introduced `RoyaConfig` bootstrap with environment/system/classpath layering and expression resolution  
+  - Added focused unit suites (`ExpressionFilterTest`, `SecretsMiddlewareTest`) covering precedence and Vault detection
 - ✅ **Google Analytics Live** – Hard-coded GA tag applied across docs site and showcase app with route tracking component
 - ✅ **SEO Foundations** – Route-aware `<Seo />` component, sitemap automation, and robots.txt
 

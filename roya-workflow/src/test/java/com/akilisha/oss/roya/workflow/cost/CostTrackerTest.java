@@ -301,18 +301,12 @@ class CostTrackerTest {
     void testOutputBasedCostCalculator() {
         // Arrange
         // Cost based on output size (e.g., AI tokens)
-        NodeCostCalculator outputCalculator = NodeCostCalculator.outputBased(
-            output -> {
-                String text = (String) output.data().get("text");
-                return text != null ? text.length() : 0;
-            },
-            0.0001 // $0.0001 per character
-        );
+        NodeCostCalculator outputCalculator = NodeCostCalculator.outputBased("tokens", 0.0001); // $0.0001 per token
 
         CostTracker tracker = new CostTracker(10.00)
             .withNodeCost("llmNode", outputCalculator);
 
-        NodeOutput output = NodeOutput.success("text", "A".repeat(1000)); // 1000 chars
+        NodeOutput output = NodeOutput.success("tokens", 1000); // 1000 tokens
         Duration executionTime = Duration.ofSeconds(1);
 
         // Act

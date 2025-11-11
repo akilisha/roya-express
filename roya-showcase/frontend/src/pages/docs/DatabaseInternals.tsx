@@ -38,20 +38,21 @@ export function DatabaseInternals() {
       <section class="bg-roya-bg dark:bg-roya-surfaceDark rounded-xl shadow-soft dark:shadow-soft-dark border border-roya-border dark:border-roya-borderDark p-8 space-y-6">
         <SectionHeader title="Configuration Precedence" />
         <p class="text-roya-text dark:text-roya-textDark leading-relaxed">
-          Use <code class="font-mono text-sm">ConfigMiddleware</code> to register Helidon Config. The middleware now
-          exposes an explicit builder so you can set overrides/fallbacks and choose which default sources to include.
+          Roya initializes Helidon Config at application startup via <code class="font-mono text-sm">RoyaConfig</code>.
+          The resulting <code class="font-mono text-sm">Config</code> is registered with <code class="font-mono text-sm">services()</code>,
+          so the database plugin (and your handlers) receive a consistent view: environment variables → system properties →
+          classpath files.
         </p>
-        <pre class="bg-black text-roya-primary text-sm p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code>{`app.use(ConfigMiddleware.builder()
-    .override(ConfigSources.file("conf/secrets.yml").build())
-    .includeSystemProperties(true)
-    .includeEnvironmentVariables(true)
-    .includeDefaultFiles(true)
-    .fallback(ConfigSources.classpath("defaults.yml").build())
-    .build());`}</code></pre>
+        <pre class="bg-black text-roya-primary text-sm p-4 rounded-lg overflow-x-auto border border-roya-borderDark"><code>{`Config config = app.services().get(Config.class);
+
+var database = app.services().get(Database.class);
+String url = config.get("database.url")
+        .asString()
+        .orElse("jdbc:postgresql://localhost:5432/docuRoya");`}</code></pre>
         <p class="text-roya-textMuted dark:text-roya-textMutedDark leading-relaxed">
-          The middleware registers a singleton <code class="font-mono text-sm">Config</code> instance in the service
-          registry. Any plugin or handler can fetch it, guaranteeing consistent precedence between application code and
-          infrastructure code.
+          Tests can override precedence by creating their own <code class="font-mono text-sm">Config</code> instance and
+          registering it with <code class="font-mono text-sm">services().singleton(Config.class, () -> customConfig)</code>
+          before installing the plugin.
         </p>
       </section>
 

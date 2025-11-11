@@ -68,7 +68,7 @@ public class DocuRoyaApp {
         // Database: JOOQ + Flyway migrations
         new DatabasePlugin().register(services);
         var db = services.get(Database.class);
-        db.migrate(); // Run migrations
+//        db.migrate(); // Run migrations
         db.generateModel(); // Generate JOOQ classes
 
         // Auth: JWT + sessions

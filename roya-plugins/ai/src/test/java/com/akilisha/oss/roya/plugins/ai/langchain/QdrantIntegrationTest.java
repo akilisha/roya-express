@@ -12,16 +12,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive integration tests for Qdrant vector store and RAG functionality.
@@ -47,6 +54,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class QdrantIntegrationTest {
 
+    private static final boolean REQUIRE_QDRANT = Boolean.parseBoolean(
+            System.getenv().getOrDefault("REQUIRE_QDRANT_TESTS", "false"));
+    private static final boolean ENV_SKIP = Boolean.parseBoolean(
+            System.getenv().getOrDefault("SKIP_QDRANT_TESTS", "false"));
+    private static final boolean QDRANT_AVAILABLE = isQdrantAvailable();
+
     private ChatModel chatModel;
     private EmbeddingModel embeddingModel;
     private LangChainAdapter adapter;
@@ -55,6 +68,16 @@ class QdrantIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        if (ENV_SKIP) {
+            assumeTrue(false, "SKIP_QDRANT_TESTS=true - skipping Qdrant integration tests");
+        }
+        if (!QDRANT_AVAILABLE) {
+            if (REQUIRE_QDRANT) {
+                fail("REQUIRE_QDRANT_TESTS=true but Qdrant is not reachable. Please start Qdrant (docker compose up -d qdrant).");
+            }
+            assumeTrue(false, "Qdrant (gRPC) is not reachable on the configured host/port. Set REQUIRE_QDRANT_TESTS=true to enforce execution.");
+        }
+
         // Create mock ChatModel for testing (doesn't require API keys)
         // Mock returns a simple response when asked
         chatModel = mock(ChatModel.class);
@@ -107,6 +130,31 @@ class QdrantIntegrationTest {
 
         // Use unique collection name for each test run
         testCollection = "test-collection-" + System.currentTimeMillis();
+    }
+
+    private static boolean isQdrantAvailable() {
+        try {
+            String qdrantUrl = System.getenv("QDRANT_URL");
+            if (qdrantUrl == null || qdrantUrl.isBlank()) {
+                qdrantUrl = "http://localhost:6333";
+            }
+            URI uri = URI.create(qdrantUrl);
+            String host = uri.getHost() != null ? uri.getHost() : "localhost";
+            int port = uri.getPort();
+            if (port <= 0) {
+                port = 6334; // default gRPC
+            }
+            if (port == 6333) {
+                port = 6334; // REST specified, adjust to gRPC
+            }
+
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(host, port), 500);
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
