@@ -11,6 +11,7 @@ import com.akilisha.oss.roya.core.config.RoyaConfig;
 import com.akilisha.oss.roya.core.plugin.ServiceRegistryImpl;
 import com.akilisha.oss.roya.core.routing.RouterImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.helidon.config.Config;
 import io.helidon.webserver.WebServer;
@@ -40,7 +41,7 @@ public class Roya implements Handler, Application {
     private final Router router = RouterImpl.create();
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
-            .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private final Services services = new ServiceRegistryImpl();
     // WebSocket registration disabled to maintain compatibility across Helidon versions
     private final Map<String, WsListener> wsRegistrations = new LinkedHashMap<>();

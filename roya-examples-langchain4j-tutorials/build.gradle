@@ -7,7 +7,7 @@ dependencies {
     implementation project(":roya-core")
     implementation project(":roya-plugins:ai")
     implementation project(":roya-plugins:database")
-    implementation project(":roya-workflow")
+    implementation ("com.akilisha.oss:roya-workflow:1.0.0-SNAPSHOT")
 
     // LangChain4j core (for Prompt and PromptTemplate types)
     implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
@@ -181,7 +181,7 @@ tasks.register('runTutorial12', JavaExec) {
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
     }
-    
+
     // Pass Qdrant URL from environment (default: http://localhost:6333)
     String qdrantUrl = System.getenv('QDRANT_URL')
     if (qdrantUrl != null && !qdrantUrl.isEmpty()) {
@@ -202,7 +202,7 @@ tasks.register('runCoffeeShopAssistant', JavaExec) {
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
     }
-    
+
     // Pass Qdrant URL from environment (default: http://localhost:6333)
     String qdrantUrl = System.getenv('QDRANT_URL')
     if (qdrantUrl != null && !qdrantUrl.isEmpty()) {
@@ -223,7 +223,7 @@ tasks.register('runMcpGithubExample', JavaExec) {
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
     }
-    
+
     // Pass GitHub token from environment (optional, for private repos)
     String githubToken = System.getenv('GITHUB_PERSONAL_ACCESS_TOKEN')
     if (githubToken != null && !githubToken.isEmpty()) {
@@ -245,7 +245,7 @@ tasks.register('runCustomerSupportAgent', JavaExec) {
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
     }
-    
+
     // Optional: Pass document path as argument
     if (project.hasProperty('documentPath')) {
         args = [project.property('documentPath')]
@@ -266,7 +266,7 @@ tasks.register('runCustomerInquiryWorkflow', JavaExec) {
         environment 'OPENAI_API_KEY', apiKey
         systemProperty 'ai.openai.apiKey', apiKey
     }
-    
+
     // Pass Qdrant URL from environment (default: http://localhost:6333)
     String qdrantUrl = System.getenv('QDRANT_URL')
     if (qdrantUrl != null && !qdrantUrl.isEmpty()) {

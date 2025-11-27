@@ -9,6 +9,7 @@ import com.akilisha.oss.roya.plugins.auth.oauth.OAuthConfig;
 import com.akilisha.oss.roya.plugins.database.Database;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -84,7 +85,7 @@ public class AuthPlugin implements RoyaPlugin {
             OAuthConfig githubConfig = new OAuthConfig(
                 githubClientId,
                 githubClientSecret,
-                Arrays.asList("user:email")
+                    List.of("user:email")
             );
             oauthService.registerProvider(new GitHubOAuthProvider(githubConfig));
             System.out.println("✓ OAuth: GitHub provider registered");

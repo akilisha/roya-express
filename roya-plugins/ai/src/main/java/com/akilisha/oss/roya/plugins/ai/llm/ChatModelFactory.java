@@ -52,40 +52,42 @@ public class ChatModelFactory {
      * @throws IllegalArgumentException if no provider is available
      */
     public static ChatModel createChatModel(AILibraryConfig config) {
-        // 1. Check for explicit provider configuration (highest priority)
+        // 1. Check for explicit provider override (highest priority - user explicitly requested)
         var explicitProvider = getExplicitProvider(config);
         if (explicitProvider.isPresent()) {
             return createChatModelForProvider(explicitProvider.get(), config);
         }
 
-        // 2. Try Ollama (default, no API key required)
-        var ollamaConfig = config.provider("ollama");
-        if (ollamaConfig.isPresent() || isOllamaAvailable()) {
-            return createOllamaChatModel(ollamaConfig.orElse(null));
-        }
-
-        // 3. Try Mistral AI (if API key available)
-        var mistralConfig = config.provider("mistral");
-        if (mistralConfig.isPresent() && mistralConfig.get().apiKey() != null && !mistralConfig.get().apiKey().isEmpty()) {
-            return createMistralChatModel(mistralConfig.get());
-        }
-
-        // 4. Try OpenAI (if API key available)
+        // 2. Use the provider registered by AIPlugin (precedence already applied there)
+        // AIPlugin registers only one provider based on precedence, so we just use it
         var openaiConfig = config.provider("openai");
         if (openaiConfig.isPresent() && openaiConfig.get().apiKey() != null && !openaiConfig.get().apiKey().isEmpty()) {
             return createOpenAiChatModel(openaiConfig.get());
         }
 
-        // 5. Try Anthropic (if API key available)
         var anthropicConfig = config.provider("anthropic");
         if (anthropicConfig.isPresent() && anthropicConfig.get().apiKey() != null && !anthropicConfig.get().apiKey().isEmpty()) {
             return createAnthropicChatModel(anthropicConfig.get());
         }
 
-        // 6. Try Hugging Face (if API key available)
         var huggingFaceConfig = config.provider("huggingface");
         if (huggingFaceConfig.isPresent() && huggingFaceConfig.get().apiKey() != null && !huggingFaceConfig.get().apiKey().isEmpty()) {
             return createHuggingFaceChatModel(huggingFaceConfig.get());
+        }
+
+        var mistralConfig = config.provider("mistral");
+        if (mistralConfig.isPresent() && mistralConfig.get().apiKey() != null && !mistralConfig.get().apiKey().isEmpty()) {
+            return createMistralChatModel(mistralConfig.get());
+        }
+
+        var ollamaConfig = config.provider("ollama");
+        if (ollamaConfig.isPresent()) {
+            return createOllamaChatModel(ollamaConfig.get());
+        }
+        
+        // 3. Fallback: Check if Ollama is available locally (only if no providers registered)
+        if (isOllamaAvailable()) {
+            return createOllamaChatModel(null);
         }
 
         throw new IllegalArgumentException(
@@ -103,34 +105,37 @@ public class ChatModelFactory {
      * @return StreamingChatModel instance, or null if streaming not supported
      */
     public static StreamingChatModel createStreamingChatModel(AILibraryConfig config) {
-        // 1. Check for explicit provider configuration
+        // 1. Check for explicit provider override (highest priority - user explicitly requested)
         var explicitProvider = getExplicitProvider(config);
         if (explicitProvider.isPresent()) {
             return createStreamingChatModelForProvider(explicitProvider.get(), config);
         }
 
-        // 2. Try Ollama (default)
-        var ollamaConfig = config.provider("ollama");
-        if (ollamaConfig.isPresent() || isOllamaAvailable()) {
-            return createOllamaStreamingChatModel(ollamaConfig.orElse(null));
-        }
-
-        // 3. Try Mistral AI (if API key available)
-        var mistralConfig = config.provider("mistral");
-        if (mistralConfig.isPresent() && mistralConfig.get().apiKey() != null && !mistralConfig.get().apiKey().isEmpty()) {
-            return createMistralStreamingChatModel(mistralConfig.get());
-        }
-
-        // 4. Try OpenAI (if API key available)
+        // 2. Use the provider registered by AIPlugin (precedence already applied there)
+        // AIPlugin registers only one provider based on precedence, so we just use it
         var openaiConfig = config.provider("openai");
         if (openaiConfig.isPresent() && openaiConfig.get().apiKey() != null && !openaiConfig.get().apiKey().isEmpty()) {
             return createOpenAiStreamingChatModel(openaiConfig.get());
         }
 
-        // 5. Try Anthropic (if API key available)
         var anthropicConfig = config.provider("anthropic");
         if (anthropicConfig.isPresent() && anthropicConfig.get().apiKey() != null && !anthropicConfig.get().apiKey().isEmpty()) {
             return createAnthropicStreamingChatModel(anthropicConfig.get());
+        }
+
+        var mistralConfig = config.provider("mistral");
+        if (mistralConfig.isPresent() && mistralConfig.get().apiKey() != null && !mistralConfig.get().apiKey().isEmpty()) {
+            return createMistralStreamingChatModel(mistralConfig.get());
+        }
+
+        var ollamaConfig = config.provider("ollama");
+        if (ollamaConfig.isPresent()) {
+            return createOllamaStreamingChatModel(ollamaConfig.get());
+        }
+        
+        // 3. Fallback: Check if Ollama is available locally (only if no providers registered)
+        if (isOllamaAvailable()) {
+            return createOllamaStreamingChatModel(null);
         }
 
         // Return null if no streaming provider available (streaming will be disabled)

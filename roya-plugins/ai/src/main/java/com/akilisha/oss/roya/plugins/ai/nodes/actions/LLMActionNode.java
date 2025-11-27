@@ -2,9 +2,11 @@ package com.akilisha.oss.roya.plugins.ai.nodes.actions;
 
 import com.akilisha.oss.roya.plugins.ai.AI;
 import com.akilisha.oss.roya.plugins.ai.AIOptions;
+import com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter;
 import com.akilisha.oss.roya.workflow.core.NodeInput;
 import com.akilisha.oss.roya.workflow.core.NodeOutput;
 import com.akilisha.oss.roya.workflow.core.WorkflowNode;
+import dev.langchain4j.memory.ChatMemory;
 // Note: ContentRetriever, ChatMemory, and ToolSpecification are configured
 // via AiServices.builder() pattern, not as direct dependencies.
 // We store them as Object to avoid package dependencies.
@@ -42,7 +44,7 @@ public class LLMActionNode implements WorkflowNode {
     private final AIOptions options;
     private final String inputKey;
     private final String outputKey;
-    
+
     // AI Services features (stored as Object to avoid package dependencies)
     // These are configured via AiServices.builder() pattern
     private final Object contentRetriever;  // dev.langchain4j.data.retriever.ContentRetriever
@@ -84,7 +86,7 @@ public class LLMActionNode implements WorkflowNode {
                 }
 
                 String response;
-                
+
                 // Use AI Services if RAG, tools, or memory are configured
                 if (contentRetriever != null || tools != null || chatMemory != null) {
                     // Create specialized AI Service with RAG/tools/memory
@@ -104,7 +106,7 @@ public class LLMActionNode implements WorkflowNode {
             }
         });
     }
-    
+
     /**
      * Execute LLM call using AI Services with RAG/tools/memory support.
      */
@@ -116,14 +118,14 @@ public class LLMActionNode implements WorkflowNode {
             // Fallback to simple call if not using LangChain
             return ai.llm().ask(systemPrompt, userMessage, options);
         }
-        
+
         // Create a simple interface for this specific call
         interface SimpleLLMService {
             @dev.langchain4j.service.SystemMessage("{{systemPrompt}}")
             @dev.langchain4j.service.UserMessage("{{userMessage}}")
             String ask(String systemPrompt, String userMessage);
         }
-        
+
         // Build AI Service with RAG/tools/memory support
         SimpleLLMService service = langChainAdapter.aiService(SimpleLLMService.class, builder -> {
             // Configure RAG if enabled
@@ -136,7 +138,7 @@ public class LLMActionNode implements WorkflowNode {
                     throw new RuntimeException("Failed to configure ContentRetriever: " + e.getMessage(), e);
                 }
             }
-            
+
             // Configure tools if enabled
             if (tools != null) {
                 try {
@@ -147,7 +149,7 @@ public class LLMActionNode implements WorkflowNode {
                     throw new RuntimeException("Failed to configure tools: " + e.getMessage(), e);
                 }
             }
-            
+
             // Configure memory if enabled
             if (chatMemory != null && memoryIdKey != null) {
                 String memoryId = input.getString(memoryIdKey);
@@ -164,29 +166,28 @@ public class LLMActionNode implements WorkflowNode {
                 }
             }
         });
-        
+
         return service.ask(systemPrompt != null ? systemPrompt : "", userMessage);
     }
-    
+
     /**
      * Get LangChainAdapter from AI service if available.
      */
-    private com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter getLangChainAdapter() {
-        if (ai instanceof com.akilisha.oss.roya.plugins.ai.UnifiedAIService) {
-            var unified = (com.akilisha.oss.roya.plugins.ai.UnifiedAIService) ai;
+    private LangChainAdapter getLangChainAdapter() {
+        if (ai instanceof com.akilisha.oss.roya.plugins.ai.UnifiedAIService unified) {
             return unified.langChain();
-        } else if (ai instanceof com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter) {
-            return (com.akilisha.oss.roya.plugins.ai.langchain.LangChainAdapter) ai;
+        } else if (ai instanceof LangChainAdapter langChainAdapter) {
+            return langChainAdapter;
         }
         return null;
     }
-    
+
     /**
      * Create a ChatMemory instance with the specified ID.
      * This is a helper to configure memory with a specific conversation ID.
      */
     @SuppressWarnings("unchecked")
-    private dev.langchain4j.memory.ChatMemory createMemoryWithId(Object memory, String memoryId) {
+    private ChatMemory createMemoryWithId(Object memory, String memoryId) {
         // If memory is already a ChatMemory, we need to create a new one with the ID
         // For now, we'll assume the memory object can be used directly
         // In practice, you'd create a new MessageWindowChatMemory with the ID
@@ -195,10 +196,10 @@ public class LLMActionNode implements WorkflowNode {
             var memoryClass = Class.forName("dev.langchain4j.memory.chat.MessageWindowChatMemory");
             var builderMethod = memoryClass.getMethod("builder");
             var builder = builderMethod.invoke(null);
-            
+
             var idMethod = builder.getClass().getMethod("id", String.class);
             idMethod.invoke(builder, memoryId);
-            
+
             // Copy maxMessages from existing memory if possible
             try {
                 var maxMessagesMethod = memory.getClass().getMethod("maxMessages");
@@ -210,12 +211,12 @@ public class LLMActionNode implements WorkflowNode {
                 var maxMessagesBuilderMethod = builder.getClass().getMethod("maxMessages", int.class);
                 maxMessagesBuilderMethod.invoke(builder, 10);
             }
-            
+
             var buildMethod = builder.getClass().getMethod("build");
-            return (dev.langchain4j.memory.ChatMemory) buildMethod.invoke(builder);
+            return (ChatMemory) buildMethod.invoke(builder);
         } catch (Exception e) {
             // Fallback: return the original memory if we can't create a new one
-            return (dev.langchain4j.memory.ChatMemory) memory;
+            return (ChatMemory) memory;
         }
     }
 
@@ -235,7 +236,7 @@ public class LLMActionNode implements WorkflowNode {
         private AIOptions options = AIOptions.defaults();
         private String inputKey = "message";
         private String outputKey = "response";
-        
+
         // AI Services features (stored as Object to avoid package dependencies)
         private Object contentRetriever;  // dev.langchain4j.data.retriever.ContentRetriever
         private Object tools;  // List<dev.langchain4j.agent.tool.ToolSpecification>
@@ -265,13 +266,13 @@ public class LLMActionNode implements WorkflowNode {
             this.outputKey = key;
             return this;
         }
-        
+
         /**
          * Enable RAG (Retrieval-Augmented Generation).
-         * 
+         *
          * The ContentRetriever will automatically retrieve relevant context
          * from a vector store before generating the response.
-         * 
+         *
          * @param retriever ContentRetriever instance (dev.langchain4j.data.retriever.ContentRetriever)
          * @return This builder
          */
@@ -279,12 +280,12 @@ public class LLMActionNode implements WorkflowNode {
             this.contentRetriever = retriever;
             return this;
         }
-        
+
         /**
          * Enable tool calling (function calling).
-         * 
+         *
          * The AI can automatically decide when to call tools and execute them.
-         * 
+         *
          * @param toolSpecs List of ToolSpecification instances (List&lt;dev.langchain4j.agent.tool.ToolSpecification&gt;)
          * @return This builder
          */
@@ -292,14 +293,14 @@ public class LLMActionNode implements WorkflowNode {
             this.tools = toolSpecs;
             return this;
         }
-        
+
         /**
          * Enable conversation memory.
-         * 
+         *
          * Maintains conversation history across multiple interactions.
          * The memoryIdKey should point to a value in the workflow context
          * that contains the unique conversation ID (e.g., user ID, session ID).
-         * 
+         *
          * @param memory ChatMemory instance (dev.langchain4j.memory.ChatMemory)
          * @param memoryIdKey Key in context to get memory ID
          * @return This builder

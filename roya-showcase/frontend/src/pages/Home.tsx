@@ -19,13 +19,21 @@ export function Home() {
         <p class="text-lg md:text-xl text-roya-textMuted dark:text-roya-textMutedDark mb-10 max-w-2xl mx-auto leading-relaxed">
           Inspired by Express.js • Built on Helidon Níma • Powered by LangChain4j • Orchestrated by Roya Workflow
         </p>
-        <div class="flex gap-4 justify-center">
+        <div class="flex gap-4 justify-center flex-wrap">
           <Link href="/docs" class="bg-roya-primary hover:bg-roya-primaryDark text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-glow-green transition-all duration-300 transform hover:scale-105">
             Get Started
           </Link>
           <Link href="/tutorials" class="bg-roya-bg dark:bg-roya-surfaceDark text-roya-primary dark:text-roya-primary px-8 py-4 rounded-xl font-bold text-lg border-2 border-roya-primary dark:border-roya-primary hover:bg-roya-primary/10 dark:hover:bg-roya-primary/20 transition-all duration-300 shadow-lg">
             View Tutorials
           </Link>
+          <a
+            href="https://discordapp.com/users/akilishans"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-glow-blue transition-all duration-300 transform hover:scale-105"
+          >
+            Join the Roya Discord
+          </a>
         </div>
       </div>
 
@@ -358,6 +366,24 @@ Workflow workflow = ai.workflow("customer-support")
     .build();
 
 app.listen(3000);`}</code></pre>
+      </div>
+
+      {/* Community CTA */}
+      <div class="mt-16 bg-roya-bg dark:bg-roya-surfaceDark rounded-2xl border border-roya-primary/40 dark:border-roya-primary/40 shadow-soft dark:shadow-soft-dark p-10 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-roya-text dark:text-roya-textDark font-sans">Join the Roya Community</h2>
+        <p class="text-lg text-roya-textMuted dark:text-roya-textMutedDark max-w-3xl mx-auto mb-6 leading-relaxed">
+          Hang out with the team, share builds, and get help from other developers in <span class="font-semibold text-roya-primary dark:text-roya-primary">#roya-express</span>.
+          No more “contact us” forms — just real-time conversation.
+        </p>
+        <a
+          href="https://discordapp.com/users/akilishans"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-3 bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-glow-blue"
+        >
+          <span>Join the Roya Discord</span>
+          <span>→</span>
+        </a>
       </div>
     </div>
   );

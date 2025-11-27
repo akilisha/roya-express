@@ -16,7 +16,7 @@ dependencies {
     implementation "org.jooq:jooq:${jooqVersion}"
 
     // Workflow framework for AI agent workflows
-    implementation project(':roya-workflow')
+    implementation ("com.akilisha.oss:roya-workflow:1.0.0-SNAPSHOT")
 
     // AI Provider SDKs
     // OpenAI Java SDK (unofficial but popular)

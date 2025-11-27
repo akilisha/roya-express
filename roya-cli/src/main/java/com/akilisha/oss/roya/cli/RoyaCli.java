@@ -15,6 +15,9 @@ import java.util.concurrent.Callable;
 @Command(name = "roya", mixinStandardHelpOptions = true, version = "0.1",
     subcommands = {RoyaCli.New.class, RoyaCli.Run.class, RoyaCli.Dev.class, RoyaCli.Compose.class})
 public class RoyaCli implements Callable<Integer> {
+    private static final String DISCORD_URL = "https://discordapp.com/users/akilishans";
+    private static final String DISCORD_CHANNEL = "#roya-express";
+
     @Option(names = "--dry-run", description = "Print commands without executing", scope = ScopeType.INHERIT)
     boolean dryRun;
 
@@ -29,6 +32,7 @@ public class RoyaCli implements Callable<Integer> {
     public Integer call() {
         DRY_RUN = dryRun;
         CommandLine.usage(this, System.out);
+        printCommunityCta();
         return 0;
     }
 
@@ -79,6 +83,7 @@ public class Main {
 }
 """);
             System.out.println("Scaffolded Roya app in " + root.toAbsolutePath());
+            printCommunityCta();
             return 0;
         }
     }
@@ -101,7 +106,11 @@ public class Main {
                 cmd += " --args=\"" + args.replace("\"", "\\\"") + "\"";
             }
             System.out.println(cmd);
-            return exec(cmd);
+            int exit = exec(cmd);
+            if (exit == 0) {
+                printCommunityCta();
+            }
+            return exit;
         }
     }
 
@@ -116,7 +125,11 @@ public class Main {
             RoyaCli.DRY_RUN = parent != null && parent.dryRun;
             String cmd = String.format("./gradlew :roya-examples:run --no-daemon --args=\"%s\"", exampleMain);
             System.out.println(cmd);
-            return exec(cmd);
+            int exit = exec(cmd);
+            if (exit == 0) {
+                printCommunityCta();
+            }
+            return exit;
         }
     }
 
@@ -142,7 +155,11 @@ public class Main {
                 return 1;
             }
             System.out.println(cmd);
-            return exec(cmd);
+            int exit = exec(cmd);
+            if (exit == 0) {
+                printCommunityCta();
+            }
+            return exit;
         }
     }
 
@@ -160,6 +177,10 @@ public class Main {
     static String shell() { return isWindows() ? "cmd" : "bash"; }
     static String shellArg() { return isWindows() ? "/c" : "-lc"; }
     static boolean isWindows() { return System.getProperty("os.name").toLowerCase().contains("win"); }
+
+    static void printCommunityCta() {
+        System.out.printf("%nJoin the Roya Discord (%s): %s%n", DISCORD_CHANNEL, DISCORD_URL);
+    }
 
     static void write(Path file, String content) throws IOException {
         Files.writeString(file, content);

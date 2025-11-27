@@ -23,8 +23,8 @@ export function Footer() {
             <h4 class="text-white font-semibold mb-4">Community</h4>
             <ul class="space-y-2 text-sm">
               <li><a href="https://github.com/akilisha/roya-express" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">GitHub</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Discord</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Twitter</a></li>
+              <li><a href="https://discordapp.com/users/akilishans" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Discord (#roya-express)</a></li>
+              <li><a href="https://mastodon.social/@akilisha" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">Mastodon</a></li>
             </ul>
           </div>
           

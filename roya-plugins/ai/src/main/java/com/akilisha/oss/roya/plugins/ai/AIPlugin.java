@@ -16,6 +16,8 @@ import com.akilisha.oss.roya.plugins.ai.watching.FileWatchRegistry;
 import com.akilisha.oss.roya.plugins.ai.polling.PollingRegistry;
 import com.akilisha.oss.roya.plugins.database.Database;
 
+import java.util.ArrayList;
+
 /**
  * AI plugin - unified AI/LLM integration orchestrating multiple libraries.
  * <p>
@@ -31,7 +33,6 @@ import com.akilisha.oss.roya.plugins.database.Database;
 public class AIPlugin implements RoyaPlugin {
 
     private Services services; // Store for use in setup()
-    private WebhookPersistenceService webhookPersistenceService; // Store for API access
 
     @Override
     public String id() {
@@ -76,79 +77,11 @@ public class AIPlugin implements RoyaPlugin {
                 configBuilder.libraryOption("embeddingProvider", embeddingProviderOverride.toLowerCase());
             }
 
-            // Add OpenAI provider if configured
-            String openaiKey = getConfigValue("ai.openai.apiKey", "AI_OPENAI_API_KEY", "OPENAI_API_KEY");
-            if (openaiKey != null && !openaiKey.isBlank()) {
-                configBuilder.provider("openai", AILibraryConfig.ProviderConfig.simple(openaiKey));
-            }
+            // Check providers in order of precedence - stop at first one found
+            // Only add Ollama as fallback if no other provider is configured
+            boolean providerFound = false;
 
-            // Add Anthropic provider if configured
-            String anthropicKey = getConfigValue("ai.anthropic.apiKey", "AI_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY");
-            if (anthropicKey != null && !anthropicKey.isBlank()) {
-                configBuilder.provider("anthropic", AILibraryConfig.ProviderConfig.simple(anthropicKey));
-            }
-
-            // Add Hugging Face provider if configured
-            String huggingFaceKey = getConfigValue(
-                    "ai.huggingface.apiKey",
-                    "AI_HUGGINGFACE_API_KEY",
-                    "HUGGINGFACE_API_KEY",
-                    "HF_API_KEY"
-            );
-            if (huggingFaceKey != null && !huggingFaceKey.isBlank()) {
-                var huggingFaceBuilder = AILibraryConfig.ProviderConfig.builder()
-                        .apiKey(huggingFaceKey);
-
-                String huggingFaceEndpoint = getConfigValue(
-                        "ai.huggingface.endpoint",
-                        "AI_HUGGINGFACE_ENDPOINT",
-                        "HUGGINGFACE_ENDPOINT"
-                );
-                if (huggingFaceEndpoint != null && !huggingFaceEndpoint.isBlank()) {
-                    huggingFaceBuilder.endpoint(huggingFaceEndpoint);
-                }
-
-                setOptionalOption(huggingFaceBuilder, "model", getConfigValue(
-                        "ai.huggingface.modelId",
-                        "AI_HUGGINGFACE_MODEL_ID",
-                        "HUGGINGFACE_MODEL_ID"
-                ));
-
-                setOptionalOption(huggingFaceBuilder, "task", getConfigValue(
-                        "ai.huggingface.task",
-                        "AI_HUGGINGFACE_TASK",
-                        "HUGGINGFACE_TASK"
-                ));
-
-                setOptionalOption(huggingFaceBuilder, "temperature", parseDouble(getConfigValue(
-                        "ai.huggingface.temperature",
-                        "AI_HUGGINGFACE_TEMPERATURE",
-                        "HUGGINGFACE_TEMPERATURE"
-                )));
-
-                setOptionalOption(huggingFaceBuilder, "maxNewTokens", parseInteger(getConfigValue(
-                        "ai.huggingface.maxNewTokens",
-                        "AI_HUGGINGFACE_MAX_NEW_TOKENS",
-                        "HUGGINGFACE_MAX_NEW_TOKENS"
-                )));
-
-                setOptionalOption(huggingFaceBuilder, "waitForModel", parseBoolean(getConfigValue(
-                        "ai.huggingface.waitForModel",
-                        "AI_HUGGINGFACE_WAIT_FOR_MODEL",
-                        "HUGGINGFACE_WAIT_FOR_MODEL"
-                )));
-
-                setOptionalOption(huggingFaceBuilder, "timeoutSeconds", parseInteger(getConfigValue(
-                        "ai.huggingface.timeoutSeconds",
-                        "AI_HUGGINGFACE_TIMEOUT_SECONDS",
-                        "HUGGINGFACE_TIMEOUT_SECONDS"
-                )));
-
-                configBuilder.provider("huggingface", huggingFaceBuilder.build());
-            }
-
-            // Add Ollama provider (default, no API key required if running locally)
-            // Check for explicit configuration, otherwise will use default localhost:11434
+            // 1. Check for explicit Ollama URL (highest precedence for Ollama)
             String ollamaUrl = getConfigValue("ai.ollama.baseUrl", "OLLAMA_BASE_URL", "OLLAMA_HOST");
             if (ollamaUrl != null && !ollamaUrl.isBlank()) {
                 // If OLLAMA_HOST is set without http://, prepend it
@@ -158,32 +91,120 @@ public class AIPlugin implements RoyaPlugin {
                 configBuilder.provider("ollama", AILibraryConfig.ProviderConfig.builder()
                         .endpoint(ollamaUrl)
                         .build());
-            } else {
-                // No explicit config, but Ollama is the default (will use localhost:11434)
-                // Add empty config to enable Ollama as default
+                providerFound = true;
+            }
+
+            // 2. Check OpenAI (if Ollama not explicitly configured)
+            if (!providerFound) {
+                String openaiKey = getConfigValue("ai.openai.apiKey", "AI_OPENAI_API_KEY", "OPENAI_API_KEY");
+                if (openaiKey != null && !openaiKey.isBlank()) {
+                    configBuilder.provider("openai", AILibraryConfig.ProviderConfig.simple(openaiKey));
+                    providerFound = true;
+                }
+            }
+
+            // 3. Check Anthropic (if no provider found yet)
+            if (!providerFound) {
+                String anthropicKey = getConfigValue("ai.anthropic.apiKey", "AI_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY");
+                if (anthropicKey != null && !anthropicKey.isBlank()) {
+                    configBuilder.provider("anthropic", AILibraryConfig.ProviderConfig.simple(anthropicKey));
+                    providerFound = true;
+                }
+            }
+
+            // 4. Check HuggingFace (if no provider found yet)
+            if (!providerFound) {
+                String huggingFaceKey = getConfigValue(
+                        "ai.huggingface.apiKey",
+                        "AI_HUGGINGFACE_API_KEY",
+                        "HUGGINGFACE_API_KEY",
+                        "HF_API_KEY"
+                );
+                if (huggingFaceKey != null && !huggingFaceKey.isBlank()) {
+                    var huggingFaceBuilder = AILibraryConfig.ProviderConfig.builder()
+                            .apiKey(huggingFaceKey);
+
+                    String huggingFaceEndpoint = getConfigValue(
+                            "ai.huggingface.endpoint",
+                            "AI_HUGGINGFACE_ENDPOINT",
+                            "HUGGINGFACE_ENDPOINT"
+                    );
+                    if (huggingFaceEndpoint != null && !huggingFaceEndpoint.isBlank()) {
+                        huggingFaceBuilder.endpoint(huggingFaceEndpoint);
+                    }
+
+                    setOptionalOption(huggingFaceBuilder, "model", getConfigValue(
+                            "ai.huggingface.modelId",
+                            "AI_HUGGINGFACE_MODEL_ID",
+                            "HUGGINGFACE_MODEL_ID"
+                    ));
+
+                    setOptionalOption(huggingFaceBuilder, "task", getConfigValue(
+                            "ai.huggingface.task",
+                            "AI_HUGGINGFACE_TASK",
+                            "HUGGINGFACE_TASK"
+                    ));
+
+                    setOptionalOption(huggingFaceBuilder, "temperature", parseDouble(getConfigValue(
+                            "ai.huggingface.temperature",
+                            "AI_HUGGINGFACE_TEMPERATURE",
+                            "HUGGINGFACE_TEMPERATURE"
+                    )));
+
+                    setOptionalOption(huggingFaceBuilder, "maxNewTokens", parseInteger(getConfigValue(
+                            "ai.huggingface.maxNewTokens",
+                            "AI_HUGGINGFACE_MAX_NEW_TOKENS",
+                            "HUGGINGFACE_MAX_NEW_TOKENS"
+                    )));
+
+                    setOptionalOption(huggingFaceBuilder, "waitForModel", parseBoolean(getConfigValue(
+                            "ai.huggingface.waitForModel",
+                            "AI_HUGGINGFACE_WAIT_FOR_MODEL",
+                            "HUGGINGFACE_WAIT_FOR_MODEL"
+                    )));
+
+                    setOptionalOption(huggingFaceBuilder, "timeoutSeconds", parseInteger(getConfigValue(
+                            "ai.huggingface.timeoutSeconds",
+                            "AI_HUGGINGFACE_TIMEOUT_SECONDS",
+                            "HUGGINGFACE_TIMEOUT_SECONDS"
+                    )));
+
+                    configBuilder.provider("huggingface", huggingFaceBuilder.build());
+                    providerFound = true;
+                }
+            }
+
+            // 5. Check Mistral (if no provider found yet)
+            if (!providerFound) {
+                String mistralKey = getConfigValue("ai.mistral.apiKey", "AI_MISTRAL_API_KEY", "MISTRAL_API_KEY");
+                if (mistralKey != null && !mistralKey.isBlank()) {
+                    configBuilder.provider("mistral", AILibraryConfig.ProviderConfig.simple(mistralKey));
+                    providerFound = true;
+                }
+            }
+
+            // 6. Check Gemini (if no provider found yet)
+            if (!providerFound) {
+                String geminiApiKey = getConfigValue("ai.gemini.apiKey", "AI_GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY");
+                String geminiProject = getConfigValue("ai.gemini.project", "AI_GEMINI_PROJECT", "GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID");
+                String geminiLocation = getConfigValue("ai.gemini.location", "AI_GEMINI_LOCATION", "GOOGLE_CLOUD_LOCATION", "GCP_REGION");
+
+                if (geminiApiKey != null && !geminiApiKey.isBlank()) {
+                    // Gemini requires project, location, and API key
+                    var geminiConfig = geminiProject != null && !geminiProject.isBlank() &&
+                                      geminiLocation != null && !geminiLocation.isBlank()
+                        ? AILibraryConfig.ProviderConfig.gemini(geminiApiKey, geminiProject, geminiLocation)
+                        : AILibraryConfig.ProviderConfig.simple(geminiApiKey); // Fallback if project/location not set
+                    configBuilder.provider("gemini", geminiConfig);
+                    providerFound = true;
+                }
+            }
+
+            // 7. Fallback to Ollama default (only if no provider found)
+            if (!providerFound) {
                 configBuilder.provider("ollama", AILibraryConfig.ProviderConfig.builder()
                         .endpoint("http://localhost:11434")
                         .build());
-            }
-
-            // Add Mistral AI provider if configured
-            String mistralKey = getConfigValue("ai.mistral.apiKey", "AI_MISTRAL_API_KEY", "MISTRAL_API_KEY");
-            if (mistralKey != null && !mistralKey.isBlank()) {
-                configBuilder.provider("mistral", AILibraryConfig.ProviderConfig.simple(mistralKey));
-            }
-
-            // Add Google Gemini provider if configured
-            String geminiApiKey = getConfigValue("ai.gemini.apiKey", "AI_GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY");
-            String geminiProject = getConfigValue("ai.gemini.project", "AI_GEMINI_PROJECT", "GOOGLE_CLOUD_PROJECT", "GCP_PROJECT_ID");
-            String geminiLocation = getConfigValue("ai.gemini.location", "AI_GEMINI_LOCATION", "GOOGLE_CLOUD_LOCATION", "GCP_REGION");
-
-            if (geminiApiKey != null && !geminiApiKey.isBlank()) {
-                // Gemini requires project, location, and API key
-                var geminiConfig = geminiProject != null && !geminiProject.isBlank() &&
-                                  geminiLocation != null && !geminiLocation.isBlank()
-                    ? AILibraryConfig.ProviderConfig.gemini(geminiApiKey, geminiProject, geminiLocation)
-                    : AILibraryConfig.ProviderConfig.simple(geminiApiKey); // Fallback if project/location not set
-                configBuilder.provider("gemini", geminiConfig);
             }
 
             var config = configBuilder.build();
@@ -211,8 +232,8 @@ public class AIPlugin implements RoyaPlugin {
     private LangChainAdapter createLangChain(AILibraryConfig config) {
         var langChainLibrary = AILibraryFactory.create("langchain");
         AI ai = langChainLibrary.create(config);
-        if (ai instanceof LangChainAdapter) {
-            return (LangChainAdapter) ai;
+        if (ai instanceof LangChainAdapter langChainAdapter) {
+            return langChainAdapter;
         }
         throw new IllegalStateException("LangChain library did not return LangChainAdapter");
     }
@@ -325,6 +346,8 @@ public class AIPlugin implements RoyaPlugin {
         WebhookRegistry.getInstance().registerRoutes(app);
 
         // Initialize webhook persistence (if Database plugin is available)
+        // Store for API access
+        WebhookPersistenceService webhookPersistenceService;
         if (services.has(Database.class)) {
             try {
                 Database db = services.get(Database.class);
@@ -384,7 +407,7 @@ public class AIPlugin implements RoyaPlugin {
     }
 
     private String buildProviderList(String openaiKey, String anthropicKey, String geminiKey) {
-        var providers = new java.util.ArrayList<String>();
+        var providers = new ArrayList<String>();
         providers.add("ollama"); // Always include Ollama as default
         if (openaiKey != null) providers.add("openai");
         if (anthropicKey != null) providers.add("anthropic");

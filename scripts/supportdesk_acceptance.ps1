@@ -183,5 +183,6 @@ if ($failed.Count -gt 0) {
     exit 1
 } else {
     Write-Host "`nSupport Desk acceptance checks completed successfully." -ForegroundColor Green
+    Write-Host "Join the Roya Discord (#roya-express): https://discordapp.com/users/akilishans" -ForegroundColor Cyan
 }
 

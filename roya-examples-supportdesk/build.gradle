@@ -6,12 +6,12 @@ plugins {
 dependencies {
     implementation project(':roya-api')
     implementation project(':roya-core')
-    implementation project(':roya-workflow')
     implementation project(':roya-plugins:ai')
     implementation project(':roya-plugins:database')
     implementation project(':roya-plugins:cache')
     implementation project(':roya-plugins:auth')
     implementation project(':roya-plugins:email')
+    implementation ("com.akilisha.oss:roya-workflow:1.0.0-SNAPSHOT")
     implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation "org.jooq:jooq:${jooqVersion}"

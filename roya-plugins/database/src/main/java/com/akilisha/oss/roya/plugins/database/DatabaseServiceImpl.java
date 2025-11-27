@@ -7,6 +7,13 @@ import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.function.Function;
+
 /**
  * Database implementation - provides JOOQ + HikariCP + Flyway.
  *
@@ -47,7 +54,7 @@ public class DatabaseServiceImpl implements Database {
     }
 
     @Override
-    public <T> T transaction(java.util.function.Function<DSLContext, T> work) {
+    public <T> T transaction(Function<DSLContext, T> work) {
         return dsl.transactionResult(configuration -> {
             DSLContext ctx = DSL.using(configuration);
             return work.apply(ctx);
@@ -75,7 +82,7 @@ public class DatabaseServiceImpl implements Database {
             .locations("classpath:db/migration")
             .baselineOnMigrate(true) // If schema exists but no history table, baseline it (mark existing as applied)
             .load();
-        
+
         var result = flyway.migrate();
         return result.migrationsExecuted;
     }
@@ -87,39 +94,39 @@ public class DatabaseServiceImpl implements Database {
         try {
             // Find jooq-config.xml - try multiple possible locations
             // When running via Gradle, working directory is project root
-            java.nio.file.Path configPath = null;
-            
+            Path configPath = null;
+
             // Try classpath resource first (most reliable)
-            java.net.URL configUrl = Thread.currentThread().getContextClassLoader().getResource("jooq-config.xml");
+            URL configUrl = Thread.currentThread().getContextClassLoader().getResource("jooq-config.xml");
             if (configUrl != null && "file".equals(configUrl.getProtocol())) {
                 try {
-                    configPath = java.nio.file.Paths.get(configUrl.toURI());
-                } catch (java.net.URISyntaxException e) {
+                    configPath = Paths.get(configUrl.toURI());
+                } catch (URISyntaxException e) {
                     // Fall through to path-based lookup
                 }
             }
-            
+
             // Fallback: try relative paths (for Gradle run, working dir is project root)
-            if (configPath == null || !java.nio.file.Files.exists(configPath)) {
+            if (configPath == null || !Files.exists(configPath)) {
                 // Try docuRoya/src/main/resources/jooq-config.xml (when running from project root)
-                java.nio.file.Path docuRoyaPath = java.nio.file.Paths.get("docuRoya/src/main/resources/jooq-config.xml");
-                if (java.nio.file.Files.exists(docuRoyaPath)) {
+                Path docuRoyaPath = Paths.get("docuRoya/src/main/resources/jooq-config.xml");
+                if (Files.exists(docuRoyaPath)) {
                     configPath = docuRoyaPath;
                 } else {
                     // Try src/main/resources/jooq-config.xml (when running from module dir)
-                    java.nio.file.Path relativePath = java.nio.file.Paths.get("src/main/resources/jooq-config.xml");
-                    if (java.nio.file.Files.exists(relativePath)) {
+                    Path relativePath = Paths.get("src/main/resources/jooq-config.xml");
+                    if (Files.exists(relativePath)) {
                         configPath = relativePath;
                     }
                 }
             }
-            
-            if (configPath == null || !java.nio.file.Files.exists(configPath)) {
+
+            if (configPath == null || !Files.exists(configPath)) {
                 throw new RuntimeException("jooq-config.xml not found. Searched classpath, docuRoya/src/main/resources/, and src/main/resources/");
             }
-            
+
             org.jooq.codegen.GenerationTool.generate(
-                java.nio.file.Files.readString(configPath)
+                Files.readString(configPath)
             );
             return 1; // Return count of generated files
         } catch (Exception e) {
@@ -128,11 +135,11 @@ public class DatabaseServiceImpl implements Database {
     }
 
     // Helper executors (not part of Database interface; keep API minimal)
-    public <R> R withContext(java.util.function.Function<DSLContext, R> handler) {
+    public <R> R withContext(Function<DSLContext, R> handler) {
         return handler.apply(dsl);
     }
 
-    public <R> R withTransactionFn(java.util.function.Function<DSLContext, R> handler) {
+    public <R> R withTransactionFn(Function<DSLContext, R> handler) {
         return transaction(handler);
     }
 

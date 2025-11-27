@@ -110,16 +110,16 @@ public class DocuRoyaApp {
             System.out.printf("DocuRoya running on http://localhost:%d%n", port);
 
             // Verify features are actually available (not just registered)
-            Services s = app.services();
-            String dbClass = s.has(com.akilisha.oss.roya.plugins.database.Database.class) ? "✅" : "❌";
-            String auth = s.has(com.akilisha.oss.roya.plugins.auth.Auth.class) ? "✅" : "❌";
-            String ai = s.has(com.akilisha.oss.roya.plugins.ai.AI.class) ? "✅" : "❌";
-            String email = s.has(com.akilisha.oss.roya.plugins.email.Email.class) ? "✅" : "❌";
-            String cache = s.has(com.akilisha.oss.roya.plugins.cache.Cache.class) ? "✅" : "❌";
-            String storage = s.has(com.akilisha.oss.roya.plugins.objectstorage.ObjectStorage.class) ? "✅" : "❌";
-            String metrics = s.has(com.akilisha.oss.roya.plugins.metrics.Metrics.class) ? "✅" : "❌";
+            Services srvs = app.services();
+            String dbClass = srvs.has(Database.class) ? "✅" : "❌";
+            String auth = srvs.has(Auth.class) ? "✅" : "❌";
+            String ai = srvs.has(AI.class) ? "✅" : "❌";
+            String email = srvs.has(Email.class) ? "✅" : "❌";
+            String cache = srvs.has(Cache.class) ? "✅" : "❌";
+            String storage = srvs.has(ObjectStorage.class) ? "✅" : "❌";
+            String metrics = srvs.has(Metrics.class) ? "✅" : "❌";
 
-            System.out.printf("Features: Database %s Auth %s AI %s Email %s Cache %s Object Storage %s Metrics %s%n",
+            System.out.printf("Features: Database %srvs Auth %srvs AI %srvs Email %srvs Cache %srvs Object Storage %srvs Metrics %srvs%n",
                     dbClass, auth, ai, email, cache, storage, metrics);
         });
     }
